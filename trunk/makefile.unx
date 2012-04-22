@@ -1,0 +1,10 @@
+
+CFLAGS = -O
+ChrOBJS = test.o expr2tree.o
+ChrFILES = test.c expr2tree.c
+LIBS = -lm
+
+################### The OperPrec staff: ##################
+
+test:	${ChrOBJS}
+	cc -o test ${CFLAGS} ${ChrOBJS} ${LIBS}
