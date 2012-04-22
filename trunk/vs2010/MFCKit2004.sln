@@ -1,6 +1,6 @@
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MFCKit2004", "MFCKit2004.vcproj", "{2A5B8D14-F874-4D63-A577-B1CE5263A345}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MFCKit2004", "MFCKit2004.vcxproj", "{2A5B8D14-F874-4D63-A577-B1CE5263A345}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
