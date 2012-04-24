@@ -136,5 +136,7 @@ CCagdPoint cross(const CCagdPoint& p1, const CCagdPoint& p2);
 double length(const CCagdPoint& p1);
 // norm (vector)
 CCagdPoint normalize(const CCagdPoint& p1);
+// cmp ==(vector, vector)
+bool operator==(const CCagdPoint& p1, const CCagdPoint& p2);
 
 #endif

@@ -81,6 +81,9 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_ANIMATION_STOP, OnAnimationStop)
 	ON_COMMAND(ID_FILE_NEW, OnFileNew)
 	ON_COMMAND(ID_FILE_OPEN, OnFileOpen)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_TORSION, OnUpdateTorsion)
+	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CURVATURE, OnUpdateCurvature)
+
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -811,6 +814,7 @@ void CMFCKit2004View::OnUpdateFrenetShowaxes(CCmdUI *pCmdUI) {
 
 void CMFCKit2004View::OnFrenetShowfrenetframe() {
 	// TODO: Add your command handler code here
+	bool OK = true;
 }
 
 void CMFCKit2004View::OnUpdateFrenetShowfrenetframe(CCmdUI *pCmdUI) {
@@ -883,18 +887,44 @@ void CMFCKit2004View::DrawCurve()
 
 	cagdAddPolyline(&m_curvePts[0], CURVE_PTS_COUNT, CAGD_SEGMENT_POLYLINE);
 
-	// draw vector 
+	// draw Frenet frame 
 	FrenetFrame ff;
 	ff.SetEquations(m_curveNodes[0],m_curveNodes[1], m_curveNodes[2]);
 	double tval = m_paramStartVal + (m_curveIdx*step);
 	ff.Calculate(tval);
-	CCagdPoint ptOnCurve = m_curvePts[m_curveIdx];
-	CCagdPoint Tvec[2];
-	Tvec[0] = ptOnCurve;
-	Tvec[1] = ptOnCurve + (ff.m_T*5.0);
+	m_lastTorsion = ff.m_torsion;
+	m_lastCurvature = ff.m_k;
+	ff.DrawAll(5, &tval);
 
-	cagdAddPolyline(Tvec, 2, CAGD_SEGMENT_POLYLINE);
 
+}
+
+afx_msg void CMFCKit2004View::OnUpdateTorsion(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+	CString strPage;
+	strPage.Format( "Torsion: %f     ",  m_lastTorsion);
+	CMainFrame * pmw = (CMainFrame *)AfxGetMainWnd();
+	pmw->m_wndStatusBar.SetPaneText(
+		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_TORSION),
+		strPage);
+
+	pmw->m_wndStatusBar.SetPaneInfo(
+		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_TORSION),
+		ID_INDICATOR_TORSION, 0, 120);
 	
+}
+afx_msg void CMFCKit2004View::OnUpdateCurvature(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+	CString strPage;
+	strPage.Format( "Curvature: %f     ",  m_lastCurvature);
+	CMainFrame * pmw = (CMainFrame *)AfxGetMainWnd();
+	pmw->m_wndStatusBar.SetPaneText(
+		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_CURVATURE),
+		strPage);
 
+	pmw->m_wndStatusBar.SetPaneInfo(
+		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_CURVATURE),
+		ID_INDICATOR_CURVATURE, 0, 120);
 }

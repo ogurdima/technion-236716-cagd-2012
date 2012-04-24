@@ -49,6 +49,8 @@
 #define ID_STUFF_3                      32778
 #define ID_STUFF_4                      32779
 #define ID_STUFF_5                      32780
+#define ID_INDICATOR_CURVATURE          61205
+#define ID_INDICATOR_TORSION            61206
 
 // Next default values for new objects
 // 

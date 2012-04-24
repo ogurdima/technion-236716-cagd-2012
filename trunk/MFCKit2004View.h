@@ -15,6 +15,7 @@
 #include "cagd.h"
 #include <string>
 #include "FrenetParser.h"
+#include "MainFrm.h"
 #include <vector>
 struct e2t_expr_node;
 
@@ -80,6 +81,9 @@ public:
 	double m_paramEndVal;
 	std::vector<CCagdPoint> m_curvePts;
 	
+	double m_lastCurvature;
+	double m_lastTorsion;
+
 
 	/// Added methods
 	void DrawCurve();
@@ -167,6 +171,10 @@ public:
 	afx_msg void OnAnimationStop();
 	afx_msg void OnFileNew();
 	afx_msg void OnFileOpen();
+
+
+	afx_msg void OnUpdateTorsion(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateCurvature(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp
