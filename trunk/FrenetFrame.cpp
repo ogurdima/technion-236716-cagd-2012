@@ -272,7 +272,7 @@ void FrenetFrameMgr::DrawFrenetFrame(int idx)
 
 void FrenetFrameMgr::DrawOscCircle(int idx)
 {
-	ClearLastCircle();
+	ClearLastOscCircle();
 	FrenetFrame ff =  GetFrame(idx);
 	m_oscCircleId = DrawCircle(m_evolute[idx], ff.m_N, ff.m_B, (1.0/ff.m_k));
 	cagdSetSegmentColor(m_oscCircleId, 255, 255, 0);
