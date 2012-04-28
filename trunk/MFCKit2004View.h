@@ -17,6 +17,7 @@
 #include "FrenetParser.h"
 #include "MainFrm.h"
 #include <vector>
+#include "FrenetFrame.h"
 struct e2t_expr_node;
 
 class CMFCKit2004View : public CView
@@ -58,16 +59,19 @@ public:
 	bool LButtonDown, RButtonDown;
 	bool CtrlKeyDown; // not needed?
 	double selectedT;
-	double minT, maxT;
 	double step; // stepping delta for the curve parameter
 	CString xt,yt,zt; // the expressions for the parametric functions
 	int animSpeed;
-	double offsetD;
+	double m_offsetD;
 
 	UINT draggedPolyline;		
 	int draggedPoint;			
 	UINT draggedCircle;			
 	CCagdPoint * draggedCtlPt;	
+
+	LARGE_INTEGER liStart;
+	LARGE_INTEGER liEnd;
+	LARGE_INTEGER liFreq;
 
 
 	/// Added members
@@ -77,17 +81,27 @@ public:
 	FrenetParser m_parser;
 	std::vector<std::string> m_curveParamEqn; //x(t),y(t),z(t)
 	e2t_expr_node* m_curveNodes[3];
+	FrenetFrameMgr m_ffmgr;
 	double m_paramStartVal;
 	double m_paramEndVal;
-	std::vector<CCagdPoint> m_curvePts;
+	double m_paramStepIncr;
 	
 	double m_lastCurvature;
 	double m_lastTorsion;
 
+	bool m_showEvolute;
+	bool m_showOffset;
+	bool m_showCurvature;
+	bool m_showFrenetFrame;
+	bool m_showTorsion;
+
+	//CPoint m_selectedCurvePt;
 
 	/// Added methods
 	void DrawCurve();
 	void TestCagdMath();
+	void RecalculateCurve();
+	void DrawFrenetComponents(int idx);
 
 // Overrides
 	// ClassWizard generated virtual function overrides

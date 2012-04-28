@@ -1,0 +1,7 @@
+# a bit late for valentine's day
+
+t
+(sqrt(cos(t))*cos(300*t)+sqrt(sqrt(t^2))-0.7)*(4-t*t)^0.01
+1
+
+-4.5, 4.5

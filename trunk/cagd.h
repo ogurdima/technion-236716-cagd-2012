@@ -139,4 +139,12 @@ CCagdPoint normalize(const CCagdPoint& p1);
 // cmp ==(vector, vector)
 bool operator==(const CCagdPoint& p1, const CCagdPoint& p2);
 
+
+/*********************************************************************
+* Custom drawing
+*********************************************************************/
+UINT DrawVector(const CCagdPoint& pt, const CCagdPoint& dir, double length, BYTE color[3]);
+UINT DrawLineSegment(const CCagdPoint& p1, const CCagdPoint& p2, double length, BYTE color[3]);
+UINT DrawCircle(const CCagdPoint& center, const CCagdPoint& planar, const CCagdPoint& normal, double radius, int ptCount = 360);
+
 #endif

@@ -14,6 +14,7 @@
 #include "FrenetFrame.h"
 #include <string>
 
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -94,8 +95,6 @@ CMFCKit2004View::CMFCKit2004View() {
 	SSense = RSense = TSense = 0.5;
 	RButtonDown = LButtonDown = false;
 	CtrlKeyDown = false;
-	minT = 0;
-	maxT = 1;
 	selectedT = -1; // outside of bounds -> nothing drawn
 	draggedPolyline = 0;		
 	draggedPoint = -1;			
@@ -103,7 +102,7 @@ CMFCKit2004View::CMFCKit2004View() {
 	draggedCtlPt = NULL;	
 	step = 0.01; 
 	animSpeed = 50;
-	offsetD = 0.5;
+	m_offsetD = 0.5;
 
 	m_curveParamEqn.push_back("0");
 	m_curveParamEqn.push_back("0");
@@ -112,11 +111,21 @@ CMFCKit2004View::CMFCKit2004View() {
 	{
 		m_curveNodes[i] = NULL;
 	}
-	m_paramStartVal = 0;
-	m_paramEndVal = 0;
-	m_curvePts.resize(CURVE_PTS_COUNT);
 
 	m_curveIdx = 0;
+	m_lastCurvature = -1;
+	m_lastTorsion = -1;
+	m_paramStartVal = 0;
+	m_paramEndVal = 1;
+	m_paramStepIncr = 0.05;
+
+	m_showEvolute = false;
+	m_showOffset = false;
+	m_showCurvature = false;
+	m_showFrenetFrame = false;
+	m_showTorsion = false;
+
+	::QueryPerformanceFrequency(&liFreq);
 }
 
 CMFCKit2004View::~CMFCKit2004View() {
@@ -159,18 +168,13 @@ void CMFCKit2004View::OnFileOpen() {
 
 	m_paramStartVal = m_parser.m_paramA;
 	m_paramEndVal = m_parser.m_paramB;
-	for (int i = 0; i < 3; i++)
+	for(int i=0; i<3; ++i)
 	{
 		m_curveParamEqn[i] = m_parser.m_equations[i];
 		m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
-		if (m_curveNodes[i] != NULL)
-		{
-			e2t_freetree(m_curveNodes[i]);
-		}
-		m_curveNodes[i] = e2t_expr2tree(m_curveParamEqn[i].c_str());
 	}
-	
-	DrawCurve();
+	RecalculateCurve();
+	//DrawCurve();
 	Invalidate();
 }
 
@@ -418,6 +422,16 @@ void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 	prevMouseLocation = point;
 	LButtonDown = true;
 	findCtlPoint(point.x, point.y);
+
+	int frameIdx = m_ffmgr.PickFrame(point.x, point.y);
+	if(frameIdx >= 0) 
+	{
+		ASSERT(m_ffmgr.GetFrameCount() > frameIdx);
+		m_curveIdx = frameIdx;
+		DrawFrenetComponents(m_curveIdx);
+	}
+
+	
 }
 
 void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
@@ -475,25 +489,30 @@ BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
 	UINT state = ::GetAsyncKeyState(VK_CONTROL);
 	if(state)
 	{
+		if(NULL == m_curveNodes[0])
+		{
+			Invalidate();
+			return true;
+		}
 		int newVal;
 		if(zDelta>0) 
 		{
-			newVal = m_curveIdx + 5;
+			newVal = m_curveIdx + 1;
 		}
 		else
 		{
-			newVal = m_curveIdx - 5;
+			newVal = m_curveIdx - 1;
 		}
 		if(newVal < 0) 
 		{
-			newVal = CURVE_PTS_COUNT-1;
+			newVal = m_ffmgr.GetFrameCount()-1;
 		} 
-		else if(newVal > CURVE_PTS_COUNT-1)
+		else if(newVal > m_ffmgr.GetFrameCount() -1)
 		{
 			newVal = 0;
 		}
 		m_curveIdx = newVal;
-		DrawCurve();
+		DrawFrenetComponents(m_curveIdx);
 	}
 	else
 	{
@@ -782,24 +801,37 @@ void CMFCKit2004View::TestCagdMath()
 
 void CMFCKit2004View::OnFrenetProperties() {
 	CPropDlg dlg;
-	dlg.m_minT = minT;
-	dlg.m_maxT = maxT;
+	dlg.m_minT = m_paramStartVal;
+	dlg.m_maxT = m_paramEndVal;
 	dlg.m_animSpeed = animSpeed;
-	dlg.m_offsetD = offsetD;
-	dlg.m_step = step;
-	dlg.m_xt = xt;
-	dlg.m_yt = yt;
-	dlg.m_zt = zt;
+	dlg.m_offsetD = m_offsetD;
+	dlg.m_step = m_paramStepIncr;
+	dlg.m_xt = CString(m_curveParamEqn[0].c_str());
+	dlg.m_yt = CString(m_curveParamEqn[1].c_str());
+	dlg.m_zt = CString(m_curveParamEqn[2].c_str());
 	if (dlg.DoModal() == IDOK) {
-		minT = dlg.m_minT;
-		maxT = dlg.m_maxT;
-		step = dlg.m_step;
+		m_paramStartVal = dlg.m_minT;
+		m_paramEndVal = dlg.m_maxT;
+		m_paramStepIncr = dlg.m_step;
 		animSpeed = dlg.m_animSpeed;
-		offsetD = dlg.m_offsetD;
-		xt = dlg.m_xt;
-		yt = dlg.m_yt;
-		zt = dlg.m_zt;
+		m_offsetD = dlg.m_offsetD;
+		m_curveParamEqn[0] = std::string((LPCSTR)dlg.m_xt);
+		//m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
+		m_curveParamEqn[1] = std::string((LPCSTR)dlg.m_yt);
+		//m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
+		m_curveParamEqn[2] = std::string((LPCSTR)dlg.m_zt);
+		//m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
 		// do the rest of your stuff here:
+		RecalculateCurve();
+
+		//::QueryPerformanceCounter(&liStart);
+
+		//::QueryPerformanceCounter(&liEnd);
+		//double timeElapsedS = double(liEnd.QuadPart-liStart.QuadPart) / double(liFreq.QuadPart);
+		//CString msg;
+		//msg.Format("Recalculate Curve Time: %f s", timeElapsedS);
+		//::OutputDebugString(msg);
+
 	}
 	Invalidate();
 }
@@ -814,19 +846,24 @@ void CMFCKit2004View::OnUpdateFrenetShowaxes(CCmdUI *pCmdUI) {
 
 void CMFCKit2004View::OnFrenetShowfrenetframe() {
 	// TODO: Add your command handler code here
-	bool OK = true;
+	m_showFrenetFrame = !m_showFrenetFrame;
+	DrawFrenetComponents(m_curveIdx);
 }
 
 void CMFCKit2004View::OnUpdateFrenetShowfrenetframe(CCmdUI *pCmdUI) {
 	// TODO: Add your command update UI handler code here
+	pCmdUI->SetCheck(m_showFrenetFrame);
 }
 
 void CMFCKit2004View::OnFrenetShowcurvature() {
 	// TODO: Add your command handler code here
+	m_showCurvature = !m_showCurvature;
+	DrawFrenetComponents(m_curveIdx);
 }
 
 void CMFCKit2004View::OnUpdateFrenetShowcurvature(CCmdUI *pCmdUI) {
 	// TODO: Add your command update UI handler code here
+	pCmdUI->SetCheck(m_showCurvature);
 }
 
 void CMFCKit2004View::OnFrenetShowtorsion() {
@@ -843,22 +880,29 @@ void CMFCKit2004View::OnFrenetShow() {
 
 void CMFCKit2004View::OnUpdateFrenetShow(CCmdUI *pCmdUI) {
 	// TODO: Add your command update UI handler code here
+	
 }
 
 void CMFCKit2004View::OnFrenetDrawevolute() {
 	// TODO: Add your command handler code here
+	m_showEvolute = ! m_showEvolute;
+	m_ffmgr.ShowEvolute(m_showEvolute);
 }
 
 void CMFCKit2004View::OnUpdateFrenetDrawevolute(CCmdUI *pCmdUI) {
 	// TODO: Add your command update UI handler code here
+	pCmdUI->SetCheck(m_showEvolute);
 }
 
 void CMFCKit2004View::OnFrenetDrawoffset() {
 	// TODO: Add your command handler code here
+	m_showOffset = ! m_showOffset;
+	m_ffmgr.ShowOffset(m_showOffset);
 }
 
 void CMFCKit2004View::OnUpdateFrenetDrawoffset(CCmdUI *pCmdUI) {
 	// TODO: Add your command update UI handler code here
+	pCmdUI->SetCheck(m_showOffset);
 }
 
 void CMFCKit2004View::OnAnimationStart() {
@@ -869,35 +913,57 @@ void CMFCKit2004View::OnAnimationStop() {
 	// TODO: Add your command handler code here
 }
 
-
-void CMFCKit2004View::DrawCurve()
+void CMFCKit2004View::RecalculateCurve()
 {
-	cagdFreeAllSegments();
-	int i = 0;
-	double step = (m_paramEndVal - m_paramStartVal)/m_curvePts.size();
-	double currT = m_paramStartVal;
-	for (i = 0; i < m_curvePts.size(); i++, currT+=step)
+	// 
+	for (int i = 0; i < 3; i++)
 	{
-		e2t_setparamvalue(currT, E2T_PARAM_T);
-		double xCoord = e2t_evaltree(m_curveNodes[0]);
-		double yCoord = e2t_evaltree(m_curveNodes[1]);
-		double zCoord = e2t_evaltree(m_curveNodes[2]);
-		m_curvePts[i] = CCagdPoint(xCoord, yCoord, zCoord);
+		if (NULL != m_curveNodes[i])
+		{
+			e2t_freetree(m_curveNodes[i]);
+			m_curveNodes[i] = NULL;
+		}
+		m_curveNodes[i] = e2t_expr2tree(m_curveParamEqn[i].c_str());
 	}
 
-	cagdAddPolyline(&m_curvePts[0], CURVE_PTS_COUNT, CAGD_SEGMENT_POLYLINE);
-
-	// draw Frenet frame 
-	FrenetFrame ff;
-	ff.SetEquations(m_curveNodes[0],m_curveNodes[1], m_curveNodes[2]);
-	double tval = m_paramStartVal + (m_curveIdx*step);
-	ff.Calculate(tval);
-	m_lastTorsion = ff.m_torsion;
-	m_lastCurvature = ff.m_k;
-	ff.DrawAll(5, &tval);
+	m_curveIdx = 0;
+	cagdFreeAllSegments();
+	m_ffmgr.SetEquations(m_curveNodes[0], m_curveNodes[1], m_curveNodes[2]);
+	m_ffmgr.SetD(m_offsetD);
+	m_ffmgr.Calculate(m_paramStartVal, m_paramEndVal, m_paramStepIncr);
+	m_ffmgr.DrawCurve();
+	m_ffmgr.ShowEvolute(m_showEvolute);
+	m_ffmgr.ShowOffset(m_showOffset);
+	DrawFrenetComponents(m_curveIdx);
 
 
 }
+
+void CMFCKit2004View::DrawFrenetComponents(int idx)
+{
+	if (m_showFrenetFrame)
+	{
+		m_ffmgr.DrawFrenetFrame(idx);
+	}
+	else
+	{
+		m_ffmgr.ClearLastFrame();
+	}
+	if (m_showCurvature)
+	{
+		m_ffmgr.DrawOscCircle(idx);
+	}
+	else
+	{
+		m_ffmgr.ClearLastOscCircle();
+	}
+	if (m_showTorsion)
+	{
+		//TODO
+	}
+}
+
+
 
 afx_msg void CMFCKit2004View::OnUpdateTorsion(CCmdUI *pCmdUI)
 {

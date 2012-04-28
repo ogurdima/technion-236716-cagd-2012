@@ -417,3 +417,42 @@ bool operator==(const CCagdPoint& p1, const CCagdPoint& p2)
 {
 	return (p1.x == p2.x && p1.y == p2.y && p1.z == p2.z);
 }
+
+
+UINT DrawVector(const CCagdPoint& pt, const CCagdPoint& dir, double length, BYTE color[3])
+{
+	CCagdPoint vec[2];
+	vec[0] = pt;
+	vec[1] = pt + (normalize(dir)*length);
+	BYTE r = color[0];
+	BYTE g = color[1];
+	BYTE b = color[2];
+	UINT res = cagdAddPolyline(vec, 2, CAGD_SEGMENT_POLYLINE);
+	cagdSetSegmentColor(res, r, g, b);
+	return res;
+}
+
+UINT DrawLineSegment(const CCagdPoint& p1, const CCagdPoint& p2, double length, BYTE color[3])
+{
+	return DrawVector(p1, (p2-p1), length, color);
+}
+
+UINT DrawCircle(const CCagdPoint& center, const CCagdPoint& planar, const CCagdPoint& normal, double radius, int ptCount)
+{
+	CCagdPoint* pts = new CCagdPoint[ptCount + 1];
+	double incr = 2*PI / double(ptCount);
+	//++ptCount;
+	CCagdPoint nPlanar = normalize(planar);
+	CCagdPoint lastAxis = normalize(cross(normal, nPlanar));
+	CCagdPoint ptOnCircle(0,0,0);
+
+	int i = 0;
+	for(double t = 0; t<2*PI; t+=incr, ++i) 
+	{
+		ptOnCircle = center + (radius*cos(t)*nPlanar) + ((radius * sin(t))*lastAxis);
+		pts[i] = ptOnCircle;
+	}
+	UINT res = cagdAddPolyline(pts, ptCount, CAGD_SEGMENT_POLYLINE);
+	delete pts;
+	return res;
+}

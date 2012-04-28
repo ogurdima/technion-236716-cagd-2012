@@ -1,16 +1,38 @@
 #include "stdafx.h"
 #include "FrenetFrame.h"
 #include "expr2tree.h"
+#include "assert.h"
 
-
-FrenetFrame::FrenetFrame(void)
+//-----------------------------------------------------------------------------
+FrenetFrameMgr::FrenetFrameMgr(void)
 : m_eqnX(NULL)
 , m_eqnY(NULL)
 , m_eqnZ(NULL)
+, m_paramStart(0)
+, m_paramFinish(0)
+, m_D(0)
+, m_incr(0)
+, m_Tid(0)
+, m_Nid(0)
+, m_Bid(0)
+, m_dxdt1(NULL)
+, m_dydt1(NULL)
+, m_dzdt1(NULL)
+, m_dxdt2(NULL)
+, m_dydt2(NULL)
+, m_dzdt2(NULL)
+, m_dxdt3(NULL)
+, m_dydt3(NULL)
+, m_dzdt3(NULL)
+, m_evoluteId(0)
+, m_offsetId(0)
+, m_oscCircleId(0)
 {
+	
 }
 
-FrenetFrame::~FrenetFrame(void)
+//-----------------------------------------------------------------------------
+FrenetFrameMgr::~FrenetFrameMgr(void)
 {
 	//e2t_freetree(m_eqnX);
 	m_eqnX = NULL;
@@ -20,148 +42,245 @@ FrenetFrame::~FrenetFrame(void)
 	m_eqnZ = NULL;
 }
 
-void FrenetFrame::SetEquations(e2t_expr_node* eqnX, e2t_expr_node* eqnY, e2t_expr_node* eqnZ)
+//-----------------------------------------------------------------------------
+void FrenetFrameMgr::SetEquations(e2t_expr_node* eqnX, e2t_expr_node* eqnY, e2t_expr_node* eqnZ)
 {
 	m_eqnX = eqnX;
 	m_eqnY = eqnY;
 	m_eqnZ = eqnZ;
 }
-bool FrenetFrame::Calculate(double t)
+
+//-----------------------------------------------------------------------------
+void FrenetFrameMgr::SetD(double d)
+{
+	m_D = d;
+}
+
+//-----------------------------------------------------------------------------
+FrenetFrame FrenetFrameMgr::CalculateAtPoint(double t)
 {
 	if((!m_eqnX) || (!m_eqnY) || (!m_eqnZ))
 	{
-		return false;
+		assert(false);
+		return FrenetFrame();
 	}
+	FrenetFrame ff;
 
-	m_lastParamVal = t;
-
-	// calculate 1st, 2nd, 3rd derivates for curve(x,y,z) 
-	e2t_expr_node* dxdt1 = e2t_derivtree(m_eqnX, E2T_PARAM_T);
-	e2t_expr_node* dydt1 = e2t_derivtree(m_eqnY, E2T_PARAM_T);
-	e2t_expr_node* dzdt1 = e2t_derivtree(m_eqnZ, E2T_PARAM_T);
-	e2t_expr_node* dxdt2 = e2t_derivtree(dxdt1, E2T_PARAM_T);
-	e2t_expr_node* dydt2 = e2t_derivtree(dydt1, E2T_PARAM_T);
-	e2t_expr_node* dzdt2 = e2t_derivtree(dzdt1, E2T_PARAM_T);
-	e2t_expr_node* dxdt3 = e2t_derivtree(dxdt2, E2T_PARAM_T);
-	e2t_expr_node* dydt3 = e2t_derivtree(dydt2, E2T_PARAM_T);
-	e2t_expr_node* dzdt3 = e2t_derivtree(dzdt2, E2T_PARAM_T);
-
-	// evaluate 1st, 2nd, 3rd derivates of curve in the given point
+	// evaluate 0th, 1st, 2nd, 3rd derivates of curve in the given point
 	e2t_setparamvalue(t, E2T_PARAM_T);
-	CCagdPoint curvePtd1 = CCagdPoint(e2t_evaltree(dxdt1), e2t_evaltree(dydt1), e2t_evaltree(dzdt1));
-	CCagdPoint curvePtd2 = CCagdPoint(e2t_evaltree(dxdt2), e2t_evaltree(dydt2), e2t_evaltree(dzdt2));
-	CCagdPoint curvePtd3 = CCagdPoint(e2t_evaltree(dxdt3), e2t_evaltree(dydt3), e2t_evaltree(dzdt3));
+	ff.m_origin = CCagdPoint(e2t_evaltree(m_eqnX), e2t_evaltree(m_eqnY), e2t_evaltree(m_eqnZ));
+	CCagdPoint curvePtd1 = CCagdPoint(e2t_evaltree(m_dxdt1), e2t_evaltree(m_dydt1), e2t_evaltree(m_dzdt1));
+	CCagdPoint curvePtd2 = CCagdPoint(e2t_evaltree(m_dxdt2), e2t_evaltree(m_dydt2), e2t_evaltree(m_dzdt2));
+	CCagdPoint curvePtd3 = CCagdPoint(e2t_evaltree(m_dxdt3), e2t_evaltree(m_dydt3), e2t_evaltree(m_dzdt3));
 
 	// calculate T = B'(t) / |B'(t)|
-	m_T = curvePtd1;
-	m_T = normalize(m_T);
+	ff.m_T = curvePtd1;
+	ff.m_T = normalize(ff.m_T);
 	
-	m_B = cross(curvePtd1, curvePtd2);
-	m_B = normalize(m_B);
+	ff.m_B = cross(curvePtd1, curvePtd2);
+	ff.m_B = normalize(ff.m_B);
 
-	m_N = cross(cross(curvePtd1, curvePtd2), curvePtd1);
-	m_N = normalize(m_N);
+	ff.m_N = cross(cross(curvePtd1, curvePtd2), curvePtd1);
+	ff.m_N = normalize(ff.m_N);
 
 	
-	m_k = ( length(cross(curvePtd1, curvePtd2)) ) / ( length(curvePtd1)*length(curvePtd1)*length(curvePtd1) );
+	ff.m_k = ( length(cross(curvePtd1, curvePtd2)) ) / ( length(curvePtd1)*length(curvePtd1)*length(curvePtd1) );
 
-	m_torsion = ( length( dot(curvePtd3 , cross(curvePtd1, curvePtd2) ) ) ) / ( length(cross(curvePtd1, curvePtd2))*length(cross(curvePtd1, curvePtd2)) );
+	ff.m_torsion = ( length( dot(curvePtd3 , cross(curvePtd1, curvePtd2) ) ) ) / ( length(cross(curvePtd1, curvePtd2))*length(cross(curvePtd1, curvePtd2)) );
+
+
+	return ff;
+}
+
+//-----------------------------------------------------------------------------
+bool FrenetFrameMgr::Calculate(double start, double finish, double stepIncr)
+{
+	m_paramStart = start;
+	m_paramFinish = finish;
+	m_incr = stepIncr;
+	m_data.clear();
+	m_evolute.clear();
+	m_offset.clear();
+
+	if((!m_eqnX) || (!m_eqnY) || (!m_eqnZ))
+	{
+		assert(false);
+		return false;
+	}
+
+	// calculate 1st, 2nd, 3rd derivates for curve(x,y,z) 
+	m_dxdt1 = e2t_derivtree(m_eqnX, E2T_PARAM_T);
+	m_dydt1 = e2t_derivtree(m_eqnY, E2T_PARAM_T);
+	m_dzdt1 = e2t_derivtree(m_eqnZ, E2T_PARAM_T);
+	m_dxdt2 = e2t_derivtree(m_dxdt1, E2T_PARAM_T);
+	m_dydt2 = e2t_derivtree(m_dydt1, E2T_PARAM_T);
+	m_dzdt2 = e2t_derivtree(m_dzdt1, E2T_PARAM_T);
+	m_dxdt3 = e2t_derivtree(m_dxdt2, E2T_PARAM_T);
+	m_dydt3 = e2t_derivtree(m_dydt2, E2T_PARAM_T);
+	m_dzdt3 = e2t_derivtree(m_dzdt2, E2T_PARAM_T);
+
+	CCagdPoint oscCircleCenter(0,0,0);
+	CCagdPoint offsetPt(0,0,0);
+	for (double t = m_paramStart; t < m_paramFinish; t += m_incr)
+	{
+		// calculate Frenet frame
+		m_data.push_back(CalculateAtPoint(t));
+		// calculate evolute
+		const FrenetFrame& lastFrame = m_data[m_data.size()-1];
+		double radius = 1 / lastFrame.m_k;
+		oscCircleCenter = (lastFrame.m_origin + (lastFrame.m_N*radius));
+		m_evolute.push_back(oscCircleCenter);
+		// calculate offset
+		offsetPt = (lastFrame.m_origin + (lastFrame.m_N*m_D));
+		m_offset.push_back(offsetPt);
+	}
 
 	// free everything
-	e2t_freetree(dxdt1);
-	e2t_freetree(dydt1);
-	e2t_freetree(dzdt1);
-	e2t_freetree(dxdt2);
-	e2t_freetree(dydt2);
-	e2t_freetree(dzdt2);
-	e2t_freetree(dxdt3);
-	e2t_freetree(dydt3);
-	e2t_freetree(dzdt3);
-
-
-
-}
-
-bool FrenetFrame::DrawAll(double multFactor, double* tptr)
-{
-	if (!StateIsLegal())
-	{
-		return false;
-	}
-	if (tptr != NULL && *tptr == m_lastParamVal)
-	{
-		Calculate(*tptr);
-	}
-
-	return DrawTangent(multFactor, NULL) && DrawNormal(multFactor, NULL) && DrawBinormal(multFactor, NULL);
-}
-bool FrenetFrame::DrawTangent(double multFactor, double* tptr)
-{
-	return DrawVector(m_T, multFactor, tptr);
-}
-bool FrenetFrame::DrawBinormal(double multFactor, double* tptr)
-{
-	return DrawVector(m_B, multFactor, tptr);
-}
-bool FrenetFrame::DrawNormal(double multFactor, double* tptr)
-{
-	return DrawVector(m_N, multFactor, tptr);
-}
-
-bool FrenetFrame::DrawVector(CCagdPoint second, double multFactor, double* tptr)
-{
-	double t;
-	if (!StateIsLegal())
-	{
-		return false;
-	}
-	if (tptr != NULL && *tptr == m_lastParamVal)
-	{
-		Calculate(*tptr);
-	}
-	t = m_lastParamVal;
-
-	e2t_setparamvalue(t, E2T_PARAM_T);
-	double xCoord = e2t_evaltree(m_eqnX);
-	double yCoord = e2t_evaltree(m_eqnY);
-	double zCoord = e2t_evaltree(m_eqnZ);
-	CCagdPoint ptOnCurve = CCagdPoint(xCoord, yCoord, zCoord);
-
-	// draw vector 
-	CCagdPoint vec[2];
-	vec[0] = ptOnCurve;
-	vec[1] = ptOnCurve + (second*multFactor);
-
-	//White color by default
-	BYTE r = 255;
-	BYTE g = 255;
-	BYTE b = 255;
-	if (second == m_T)
-	{
-		g = 0;
-		b = 0;
-	}
-	if (second == m_N)
-	{
-		r = 0;
-		b = 0;
-	}
-	if (second == m_B)
-	{
-		g = 0;
-		r = 0;
-	}
-
-	cagdSetSegmentColor(cagdAddPolyline(vec, 2, CAGD_SEGMENT_POLYLINE), r, g, b);
+	e2t_freetree(m_dxdt1);
+	e2t_freetree(m_dydt1);
+	e2t_freetree(m_dzdt1);
+	e2t_freetree(m_dxdt2);
+	e2t_freetree(m_dydt2);
+	e2t_freetree(m_dzdt2);
+	e2t_freetree(m_dxdt3);
+	e2t_freetree(m_dydt3);
+	e2t_freetree(m_dzdt3);
+	m_dxdt1 = NULL;
+	m_dydt1 = NULL;
+	m_dzdt1 = NULL;
+	m_dxdt2 = NULL;
+	m_dydt2 = NULL;
+	m_dzdt2 = NULL;
+	m_dxdt3 = NULL;
+	m_dydt3 = NULL;
+	m_dzdt3 = NULL;
 	return true;
 }
 
-bool FrenetFrame::StateIsLegal()
+//-----------------------------------------------------------------------------
+void FrenetFrameMgr::ClearLastFrame()
 {
-	if (m_eqnX == NULL || m_eqnY == NULL || m_eqnZ == NULL)
+	cagdFreeSegment(m_Tid);
+	cagdFreeSegment(m_Nid);
+	cagdFreeSegment(m_Bid);
+}
+
+//-----------------------------------------------------------------------------
+void FrenetFrameMgr::DrawCurve()
+{
+	std::vector<CCagdPoint> curvePts;
+
+	for (size_t i = 0; i < m_data.size(); i++)
 	{
-		return false;
+		curvePts.push_back(m_data[i].m_origin);
 	}
-	return true;
+	cagdAddPolyline(&curvePts[0], curvePts.size(), CAGD_SEGMENT_POLYLINE);
+
+	DrawEvolute();
+	DrawOffset();
+}
+
+//-----------------------------------------------------------------------------
+void FrenetFrameMgr::DrawEvolute()
+{
+	m_evoluteId = cagdAddPolyline(&m_evolute[0], m_evolute.size(), CAGD_SEGMENT_POLYLINE);
+	cagdSetSegmentColor(m_evoluteId, 255, 128, 0);
+	cagdHideSegment(m_evoluteId);
+}
+
+//-----------------------------------------------------------------------------
+void FrenetFrameMgr::DrawOffset()
+{
+	m_offsetId = cagdAddPolyline(&m_offset[0], m_offset.size(), CAGD_SEGMENT_POLYLINE);
+	cagdSetSegmentColor(m_offsetId, 0, 128, 255);
+	cagdHideSegment(m_offsetId);
+}
+
+//-----------------------------------------------------------------------------
+void FrenetFrameMgr::ShowEvolute(bool show)
+{
+	if(show)
+	{
+		cagdShowSegment(m_evoluteId);
+	}
+	else 
+	{
+		cagdHideSegment(m_evoluteId);
+	}
+}
+//-----------------------------------------------------------------------------
+void FrenetFrameMgr::ShowOffset(bool show)
+{
+	if(show)
+	{
+		cagdShowSegment(m_offsetId);
+	}
+	else 
+	{
+		cagdHideSegment(m_offsetId);
+	}
+}
+
+//-----------------------------------------------------------------------------
+int FrenetFrameMgr::PickFrame(int x, int y, double thresh) const
+{
+	int ptX = 0;
+	int ptY = 0;
+	CCagdPoint pickpt(x, y, 0);
+	CCagdPoint curvept(0,0,0);
+	CCagdPoint diff(0,0,0);
+	for(size_t i=0; i<m_data.size(); ++i)
+	{
+		cagdToWindow(const_cast<CCagdPoint*>(&m_data[i].m_origin), &ptX, &ptY);
+		curvept.x = ptX;
+		curvept.y = ptY;
+		if(length(pickpt-curvept) < thresh)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+//-----------------------------------------------------------------------------
+size_t FrenetFrameMgr::GetFrameCount() const
+{
+	return m_data.size();
+}
+
+//-----------------------------------------------------------------------------
+const FrenetFrame& FrenetFrameMgr::GetFrame(int idx) const
+{
+	return m_data[idx];
+}
+
+//-----------------------------------------------------------------------------
+void FrenetFrameMgr::DrawFrenetFrame(int idx)
+{
+	ClearLastFrame();
+	FrenetFrame ff =  GetFrame(idx);
+	BYTE R[3] = {255, 0, 0};
+	BYTE G[3] = {0, 255, 0};
+	BYTE B[3] = {30, 30, 255};
+	m_Tid = DrawVector(ff.m_origin, ff.m_T, 2, R);
+	m_Nid = DrawVector(ff.m_origin, ff.m_N, 2, G);
+	m_Bid = DrawVector(ff.m_origin, ff.m_B, 2, B);
+
+	
+}
+
+
+void FrenetFrameMgr::DrawOscCircle(int idx)
+{
+	ClearLastCircle();
+	FrenetFrame ff =  GetFrame(idx);
+	m_oscCircleId = DrawCircle(m_evolute[idx], ff.m_N, ff.m_B, (1.0/ff.m_k));
+	cagdSetSegmentColor(m_oscCircleId, 255, 255, 0);
+}
+
+
+void FrenetFrameMgr::ClearLastOscCircle()
+{
+	cagdFreeSegment(m_oscCircleId);
 }
 
