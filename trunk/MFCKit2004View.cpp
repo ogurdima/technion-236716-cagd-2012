@@ -359,6 +359,34 @@ void CMFCKit2004View::OnPaint() {
 	CPaintDC dc(this); // device context for painting
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		// clear screen and zbuffer
 	drawSegments(GL_RENDER);
+
+
+  //if(0 < m_ffmgr.GetFrameCount())
+  //{
+  //  const FrenetFrame& ff = m_ffmgr.GetFrame(0);
+  //  CCagdPoint ctr = ff.m_origin;
+  //  CCagdPoint edge1(ctr.x + 1.0, ctr.y + 1.0, ctr.z);
+  //  CCagdPoint edge4(ctr.x - 1.0, ctr.y + 1.0, ctr.z);
+  //  CCagdPoint edge3(ctr.x - 1.0, ctr.y - 1.0, ctr.z);
+  //  CCagdPoint edge2(ctr.x + 1.0, ctr.y - 1.0, ctr.z);
+  //  glColor4ub(0, 50, 0, 255);
+  //  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+  //  glEnable(GL_BLEND);
+  //  glDisable(GL_DEPTH_TEST);
+	 // glPointSize(3);
+	 // glBegin(GL_TRIANGLES);
+  //    glVertex3dv((GLdouble *)&edge1);
+  //    glVertex3dv((GLdouble *)&edge2);
+  //    glVertex3dv((GLdouble *)&edge3);
+  //    glVertex3dv((GLdouble *)&edge1);
+  //    glVertex3dv((GLdouble *)&edge3);
+  //    glVertex3dv((GLdouble *)&edge4);
+	 // glEnd();
+
+  //  glDisable(GL_BLEND);
+  // glEnable(GL_DEPTH_TEST);
+  //}
+
 	glFlush();
 	SwapBuffers(wglGetCurrentDC());
 
