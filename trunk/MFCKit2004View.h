@@ -102,6 +102,7 @@ public:
 	void TestCagdMath();
 	void RecalculateCurve();
 	void DrawFrenetComponents(int idx);
+	void FrenetOnPaintExtend();
 
 // Overrides
 	// ClassWizard generated virtual function overrides

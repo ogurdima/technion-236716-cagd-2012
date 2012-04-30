@@ -360,32 +360,7 @@ void CMFCKit2004View::OnPaint() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		// clear screen and zbuffer
 	drawSegments(GL_RENDER);
 
-
-  //if(0 < m_ffmgr.GetFrameCount())
-  //{
-  //  const FrenetFrame& ff = m_ffmgr.GetFrame(0);
-  //  CCagdPoint ctr = ff.m_origin;
-  //  CCagdPoint edge1(ctr.x + 1.0, ctr.y + 1.0, ctr.z);
-  //  CCagdPoint edge4(ctr.x - 1.0, ctr.y + 1.0, ctr.z);
-  //  CCagdPoint edge3(ctr.x - 1.0, ctr.y - 1.0, ctr.z);
-  //  CCagdPoint edge2(ctr.x + 1.0, ctr.y - 1.0, ctr.z);
-  //  glColor4ub(0, 50, 0, 255);
-  //  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-  //  glEnable(GL_BLEND);
-  //  glDisable(GL_DEPTH_TEST);
-	 // glPointSize(3);
-	 // glBegin(GL_TRIANGLES);
-  //    glVertex3dv((GLdouble *)&edge1);
-  //    glVertex3dv((GLdouble *)&edge2);
-  //    glVertex3dv((GLdouble *)&edge3);
-  //    glVertex3dv((GLdouble *)&edge1);
-  //    glVertex3dv((GLdouble *)&edge3);
-  //    glVertex3dv((GLdouble *)&edge4);
-	 // glEnd();
-
-  //  glDisable(GL_BLEND);
-  // glEnable(GL_DEPTH_TEST);
-  //}
+	FrenetOnPaintExtend();
 
 	glFlush();
 	SwapBuffers(wglGetCurrentDC());
@@ -991,7 +966,44 @@ void CMFCKit2004View::DrawFrenetComponents(int idx)
 	}
 }
 
+void CMFCKit2004View::FrenetOnPaintExtend()
+{
+	if(0 < m_ffmgr.GetFrameCount())
+	{
+		if (m_showCurvature)
+		{
+			const FrenetFrame& ff = m_ffmgr.GetFrame(m_curveIdx);
+			CCagdPoint ctr = ff.m_origin;
+			CCagdPoint tpt = ff.m_T*3*(1/ff.m_k) + ctr;
+			CCagdPoint mtpt = ctr - ff.m_T*3*(1/ff.m_k);
+			CCagdPoint tr = (tpt - ff.m_N*3*(1/ff.m_k)); // top right
+			CCagdPoint tl = (tpt + ff.m_N*3*(1/ff.m_k)); // top left
+			CCagdPoint br = (mtpt - ff.m_N*3*(1/ff.m_k)); // bottom right
+			CCagdPoint bl = (mtpt + ff.m_N*3*(1/ff.m_k)); // bottom left
 
+			//glColor4ub(0, 50, 0, 240); // dark green, with alpha less than 1
+			glColor4ub(20, 100, 0, 50);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE); // need for blending
+			glEnable(GL_BLEND); // turn on blending
+			glDisable(GL_DEPTH_TEST); // don't think we need this
+			glPointSize(40);
+
+			// make a counter-clockwise set of 2 triangles
+			glBegin(GL_TRIANGLES);
+			glVertex3dv((GLdouble *)&tr);
+			glVertex3dv((GLdouble *)&br);
+			glVertex3dv((GLdouble *)&bl);
+			glVertex3dv((GLdouble *)&tr);
+			glVertex3dv((GLdouble *)&bl);
+			glVertex3dv((GLdouble *)&tl);
+			glEnd();
+			
+
+			glDisable(GL_BLEND);
+			glEnable(GL_DEPTH_TEST);
+		}
+	}
+}
 
 afx_msg void CMFCKit2004View::OnUpdateTorsion(CCmdUI *pCmdUI)
 {

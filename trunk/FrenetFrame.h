@@ -54,7 +54,7 @@ public:
 
 	void ShowEvolute(bool show);
 	void ShowOffset(bool show);
-	int PickFrame(int x, int y, double thresh = 10.0) const;
+	int PickFrame(int x, int y, double thresh = 7.0) const;
 
 private:
 	void DrawEvolute();
