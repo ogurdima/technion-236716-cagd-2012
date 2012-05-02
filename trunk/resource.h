@@ -49,6 +49,7 @@
 #define ID_STUFF_3                      32778
 #define ID_STUFF_4                      32779
 #define ID_STUFF_5                      32780
+#define ID_FRENET_SHOW_OSC_SPHERE       32789
 #define ID_INDICATOR_CURVATURE          61205
 #define ID_INDICATOR_TORSION            61206
 
@@ -58,7 +59,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        162
-#define _APS_NEXT_COMMAND_VALUE         32789
+#define _APS_NEXT_COMMAND_VALUE         32790
 #define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

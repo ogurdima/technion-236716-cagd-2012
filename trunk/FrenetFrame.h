@@ -10,24 +10,27 @@ struct FrenetFrame
 		const CCagdPoint& ptN,
 		const CCagdPoint& ptB,
 		double k,
+		double kPrime,
 		double torsion)
 	{
 		m_origin = ptOrigin;
 		m_T = ptT;
 		m_B = ptB;
 		m_k = k;
+		m_kPrime = kPrime;
 		m_torsion = torsion;
 	}
 	FrenetFrame()
 	{
 		m_origin = m_T = m_B = m_N = CCagdPoint(0,0,0);
-		m_k = m_torsion = 0;
+		m_k = m_kPrime = m_torsion = 0;
 	}
 	CCagdPoint m_origin;
 	CCagdPoint m_T;
 	CCagdPoint m_N;
 	CCagdPoint m_B;
 	double m_k;
+	double m_kPrime;
 	double m_torsion;
 };
 
@@ -44,13 +47,16 @@ public:
 	bool Calculate(double start, double finish, double stepIncr);
 	void ClearLastFrame();
 	void ClearLastOscCircle();
+	void ClearLastOscSphere();
 	
 	// accessors
 	size_t GetFrameCount() const;
 	const FrenetFrame& GetFrame(int idx) const;
 	void DrawFrenetFrame(int idx);
 	void DrawOscCircle(int idx);
+	void DrawOscSphere(int idx);
 	void DrawCurve();
+	CCagdPoint GetOscSphereCenter(int idx);
 
 	void ShowEvolute(bool show);
 	void ShowOffset(bool show);
@@ -76,7 +82,10 @@ public:
 	std::vector<CCagdPoint> m_offset;
 	UINT m_offsetId;
 
+	bool m_oscCircleVisible;
 	UINT m_oscCircleId;
+	bool m_oscSphereVisible;
+	UINT m_oscSphereId;
 
 	UINT m_Tid;
 	UINT m_Nid;

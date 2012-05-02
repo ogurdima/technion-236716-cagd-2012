@@ -27,6 +27,9 @@ FrenetFrameMgr::FrenetFrameMgr(void)
 , m_evoluteId(0)
 , m_offsetId(0)
 , m_oscCircleId(0)
+, m_oscSphereId(0)
+, m_oscCircleVisible(false)
+, m_oscSphereVisible(false)
 {
 	
 }
@@ -83,8 +86,19 @@ FrenetFrame FrenetFrameMgr::CalculateAtPoint(double t)
 	ff.m_N = cross(cross(curvePtd1, curvePtd2), curvePtd1);
 	ff.m_N = normalize(ff.m_N);
 
+	//assert(dot(cross(ff.m_T, ff.m_N),ff.m_B) > 0);
+
+	double d1Length = length(curvePtd1);
 	
-	ff.m_k = ( length(cross(curvePtd1, curvePtd2)) ) / ( length(curvePtd1)*length(curvePtd1)*length(curvePtd1) );
+	ff.m_k = ( length(cross(curvePtd1, curvePtd2)) ) / ( d1Length*d1Length*d1Length );
+
+	double first = (1/length(cross(curvePtd1, ff.m_origin)));
+	double second = dot(cross(curvePtd1, ff.m_origin), cross(curvePtd2, curvePtd1));
+	double third = d1Length*d1Length*d1Length;
+	double fourth = length(cross(curvePtd1, ff.m_origin));
+	double fifth = ( 3/(d1Length) ) * dot(curvePtd2, curvePtd1);
+	double sixth = third * third;
+	ff.m_kPrime = ((first * second * third) - (fourth * fifth)) / sixth;
 
 	ff.m_torsion = ( length( dot(curvePtd3 , cross(curvePtd1, curvePtd2) ) ) ) / ( length(cross(curvePtd1, curvePtd2))*length(cross(curvePtd1, curvePtd2)) );
 
@@ -161,8 +175,11 @@ bool FrenetFrameMgr::Calculate(double start, double finish, double stepIncr)
 void FrenetFrameMgr::ClearLastFrame()
 {
 	cagdFreeSegment(m_Tid);
+	m_Tid = 0;
 	cagdFreeSegment(m_Nid);
+	m_Nid = 0;
 	cagdFreeSegment(m_Bid);
+	m_Bid = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -278,9 +295,31 @@ void FrenetFrameMgr::DrawOscCircle(int idx)
 	cagdSetSegmentColor(m_oscCircleId, 255, 255, 0);
 }
 
+void FrenetFrameMgr::DrawOscSphere(int idx)
+{
+	ClearLastOscSphere();
+	FrenetFrame ff =  GetFrame(idx);
+	CCagdPoint ctr = ff.m_origin + (1/ff.m_k)*ff.m_N - (ff.m_kPrime/(ff.m_k*ff.m_k*ff.m_torsion))*ff.m_B;
+	m_oscSphereId = DrawCircle(ctr, ff.m_N, ff.m_B, (1.0/ff.m_k));
+	cagdSetSegmentColor(m_oscCircleId, 255, 255, 255);
+}
+
 
 void FrenetFrameMgr::ClearLastOscCircle()
 {
 	cagdFreeSegment(m_oscCircleId);
+	m_oscCircleId = 0;
 }
 
+void FrenetFrameMgr::ClearLastOscSphere()
+{
+	cagdFreeSegment(m_oscSphereId);
+	m_oscSphereId = 0;
+}
+
+
+CCagdPoint FrenetFrameMgr::GetOscSphereCenter(int idx)
+{
+	FrenetFrame ff =  GetFrame(idx);
+	return ff.m_origin + (1/ff.m_k)*ff.m_N - (ff.m_kPrime/(ff.m_k*ff.m_k*ff.m_torsion))*ff.m_B;
+}

@@ -74,6 +74,8 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_UPDATE_COMMAND_UI(ID_FRENET_SHOWTORSION, OnUpdateFrenetShowtorsion)
 	ON_COMMAND(ID_FRENET_SHOW, OnFrenetShow)
 	ON_UPDATE_COMMAND_UI(ID_FRENET_SHOW, OnUpdateFrenetShow)
+	ON_COMMAND(ID_FRENET_SHOW_OSC_SPHERE, OnFrenetShowOscSphere)
+	ON_UPDATE_COMMAND_UI(ID_FRENET_SHOW_OSC_SPHERE, OnUpdateFrenetShowOscSphere)
 	ON_COMMAND(ID_FRENET_DRAWEVOLUTE, OnFrenetDrawevolute)
 	ON_UPDATE_COMMAND_UI(ID_FRENET_DRAWEVOLUTE, OnUpdateFrenetDrawevolute)
 	ON_COMMAND(ID_FRENET_DRAWOFFSET, OnFrenetDrawoffset)
@@ -101,7 +103,8 @@ CMFCKit2004View::CMFCKit2004View() {
 	draggedCircle = 0;			
 	draggedCtlPt = NULL;	
 	step = 0.01; 
-	animSpeed = 50;
+	m_animSpeed = 50;
+	m_animStarted = false;
 	m_offsetD = 0.5;
 
 	m_curveParamEqn.push_back("0");
@@ -118,17 +121,21 @@ CMFCKit2004View::CMFCKit2004View() {
 	m_paramStartVal = 0;
 	m_paramEndVal = 1;
 	m_paramStepIncr = 0.05;
+	m_quadSphere = gluNewQuadric();
 
+	m_showAxes = false;
 	m_showEvolute = false;
 	m_showOffset = false;
 	m_showCurvature = false;
 	m_showFrenetFrame = false;
 	m_showTorsion = false;
+	m_showOscSphere = false;
 
 	::QueryPerformanceFrequency(&liFreq);
 }
 
 CMFCKit2004View::~CMFCKit2004View() {
+	gluDeleteQuadric(m_quadSphere);
 }
 
 BOOL CMFCKit2004View::PreCreateWindow(CREATESTRUCT& cs) {
@@ -527,7 +534,31 @@ BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
 
 void CMFCKit2004View::OnTimer(UINT nIDEvent) {
 	// TODO: Add your message handler code here and/or call default
-	RotateXY(5,5);	
+	{
+		if(NULL == m_curveNodes[0])
+		{
+			Invalidate();
+		}
+		int newVal;
+		if(m_animSpeed > 0) 
+		{
+			newVal = m_curveIdx + 1;
+		}
+		else
+		{
+			newVal = m_curveIdx - 1;
+		}
+		if(newVal < 0) 
+		{
+			newVal = m_ffmgr.GetFrameCount()-1;
+		} 
+		else if(newVal > m_ffmgr.GetFrameCount() -1)
+		{
+			newVal = 0;
+		}
+		m_curveIdx = newVal;
+		DrawFrenetComponents(m_curveIdx);
+	}	
 	Invalidate();
 }
 
@@ -806,17 +837,18 @@ void CMFCKit2004View::OnFrenetProperties() {
 	CPropDlg dlg;
 	dlg.m_minT = m_paramStartVal;
 	dlg.m_maxT = m_paramEndVal;
-	dlg.m_animSpeed = animSpeed;
+	dlg.m_animSpeed = m_animSpeed;
 	dlg.m_offsetD = m_offsetD;
 	dlg.m_step = m_paramStepIncr;
 	dlg.m_xt = CString(m_curveParamEqn[0].c_str());
 	dlg.m_yt = CString(m_curveParamEqn[1].c_str());
 	dlg.m_zt = CString(m_curveParamEqn[2].c_str());
-	if (dlg.DoModal() == IDOK) {
+	if (dlg.DoModal() == IDOK) 
+	{
 		m_paramStartVal = dlg.m_minT;
 		m_paramEndVal = dlg.m_maxT;
 		m_paramStepIncr = dlg.m_step;
-		animSpeed = dlg.m_animSpeed;
+		m_animSpeed = dlg.m_animSpeed;
 		m_offsetD = dlg.m_offsetD;
 		m_curveParamEqn[0] = std::string((LPCSTR)dlg.m_xt);
 		//m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
@@ -827,7 +859,13 @@ void CMFCKit2004View::OnFrenetProperties() {
 		// do the rest of your stuff here:
 		RecalculateCurve();
 
-		//::QueryPerformanceCounter(&liStart);
+		if(m_animStarted) {
+			this->KillTimer(1);
+			UINT timeMs = abs((int)(1000.0 * (1.0 / double(m_animSpeed))));
+			this->SetTimer(1, timeMs, NULL);      
+		}
+    
+    //::QueryPerformanceCounter(&liStart);
 
 		//::QueryPerformanceCounter(&liEnd);
 		//double timeElapsedS = double(liEnd.QuadPart-liStart.QuadPart) / double(liFreq.QuadPart);
@@ -841,10 +879,14 @@ void CMFCKit2004View::OnFrenetProperties() {
 
 void CMFCKit2004View::OnFrenetShowaxes() {
 	// TODO: Add your command handler code here
+	m_showAxes = !m_showAxes;
+	RecalculateCurve();
+	Invalidate();
 }
 
 void CMFCKit2004View::OnUpdateFrenetShowaxes(CCmdUI *pCmdUI) {
-	// TODO: Add your command update UI handler code here
+	// TODO: Add your command update UI handler code here'
+	pCmdUI->SetCheck(m_showAxes);
 }
 
 void CMFCKit2004View::OnFrenetShowfrenetframe() {
@@ -867,6 +909,15 @@ void CMFCKit2004View::OnFrenetShowcurvature() {
 void CMFCKit2004View::OnUpdateFrenetShowcurvature(CCmdUI *pCmdUI) {
 	// TODO: Add your command update UI handler code here
 	pCmdUI->SetCheck(m_showCurvature);
+}
+
+void CMFCKit2004View::OnFrenetShowOscSphere() {
+	m_showOscSphere = !m_showOscSphere;
+}
+
+void CMFCKit2004View::OnUpdateFrenetShowOscSphere(CCmdUI *pCmdUI) {
+	// TODO: Add your command update UI handler code here
+	pCmdUI->SetCheck(m_showOscSphere);
 }
 
 void CMFCKit2004View::OnFrenetShowtorsion() {
@@ -910,10 +961,15 @@ void CMFCKit2004View::OnUpdateFrenetDrawoffset(CCmdUI *pCmdUI) {
 
 void CMFCKit2004View::OnAnimationStart() {
 	// TODO: Add your command handler code here
+  UINT timeMs = (int)(1000.0 * (1.0 / double(m_animSpeed)));
+  this->SetTimer(1, timeMs, NULL);
+  m_animStarted = true;
 }
 
 void CMFCKit2004View::OnAnimationStop() {
 	// TODO: Add your command handler code here
+  this->KillTimer(1);
+  m_animStarted = false;
 }
 
 void CMFCKit2004View::RecalculateCurve()
@@ -929,21 +985,54 @@ void CMFCKit2004View::RecalculateCurve()
 		m_curveNodes[i] = e2t_expr2tree(m_curveParamEqn[i].c_str());
 	}
 
-	m_curveIdx = 0;
 	cagdFreeAllSegments();
+
+	// draw axes at origin if requested
+	if(m_showAxes)
+	{
+		DrawAxes();
+	}
+
+	// set up curve
 	m_ffmgr.SetEquations(m_curveNodes[0], m_curveNodes[1], m_curveNodes[2]);
 	m_ffmgr.SetD(m_offsetD);
 	m_ffmgr.Calculate(m_paramStartVal, m_paramEndVal, m_paramStepIncr);
 	m_ffmgr.DrawCurve();
 	m_ffmgr.ShowEvolute(m_showEvolute);
 	m_ffmgr.ShowOffset(m_showOffset);
+
+	if(m_ffmgr.GetFrameCount() <= m_curveIdx)
+	{
+		m_curveIdx = 0;
+	}
 	DrawFrenetComponents(m_curveIdx);
+
+
+}
+
+void CMFCKit2004View::DrawAxes()
+{
+	CCagdPoint xAxis[2];
+	CCagdPoint yAxis[2];
+	CCagdPoint zAxis[2];
+
+	double axisLength = 1000.0;
+	xAxis[0] = yAxis[0] = zAxis[0] = CCagdPoint(0,0,0);
+	xAxis[1] = CCagdPoint(1,0,0) * axisLength;
+	yAxis[1] = CCagdPoint(0,1,0) * axisLength;
+	zAxis[1] = CCagdPoint(0,0,1) * axisLength;
+	cagdSetSegmentColor(cagdAddPolyline(xAxis, 2,  CAGD_SEGMENT_POLYLINE), 128,0,0);
+	cagdSetSegmentColor(cagdAddPolyline(yAxis, 2,  CAGD_SEGMENT_POLYLINE), 0,128,0);
+	cagdSetSegmentColor(cagdAddPolyline(zAxis, 2,  CAGD_SEGMENT_POLYLINE), 30,100,128);
 
 
 }
 
 void CMFCKit2004View::DrawFrenetComponents(int idx)
 {
+	if((m_ffmgr.GetFrameCount() <= idx) || (0 > idx))
+	{ return;	}
+
 	if (m_showFrenetFrame)
 	{
 		m_ffmgr.DrawFrenetFrame(idx);
@@ -964,6 +1053,14 @@ void CMFCKit2004View::DrawFrenetComponents(int idx)
 	{
 		//TODO
 	}
+	/*if (m_showOscSphere)
+	{
+		m_ffmgr.DrawOscSphere(idx);
+	}
+	else
+	{
+		m_ffmgr.ClearLastOscSphere();
+	}*/
 }
 
 void CMFCKit2004View::FrenetOnPaintExtend()
@@ -997,8 +1094,51 @@ void CMFCKit2004View::FrenetOnPaintExtend()
 			glVertex3dv((GLdouble *)&bl);
 			glVertex3dv((GLdouble *)&tl);
 			glEnd();
+
 			
 
+			glDisable(GL_BLEND);
+			glEnable(GL_DEPTH_TEST);
+		}
+
+
+
+		if (m_showOscSphere)
+		{
+			CCagdPoint origin = m_ffmgr.GetFrame(m_curveIdx).m_origin;
+			CCagdPoint center = m_ffmgr.GetOscSphereCenter(m_curveIdx);
+			CCagdPoint up = normalize(origin-center);
+			CCagdPoint zAxis(0,0,1);
+			double radius = length(center - origin);
+			CCagdPoint rotAxis = cross(zAxis, up);
+			double angle = asin(length(rotAxis)) * (180.0 / PI);
+			double dotProd = dot(zAxis, up);
+			if(dotProd < 0) {
+				angle = 180.0 - angle;
+			}
+
+			glColor4ub(100, 20, 0, 50);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE); // need for blending
+			glEnable(GL_BLEND); // turn on blending
+			glDisable(GL_DEPTH_TEST); // don't think we need this
+			glPointSize(40);
+
+			glPushMatrix();
+			glTranslated(center.x, center.y, center.z);
+
+
+			glPushMatrix();
+				glRotated(angle, rotAxis.x, rotAxis.y, rotAxis.z);
+
+				// finally, draw the spheres
+				gluSphere(m_quadSphere, radius, 100, 100);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glColor4ub(0,175,0,175);
+				gluSphere(m_quadSphere, radius, 25, 8);			
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			glPopMatrix();
+
+			glPopMatrix();
 			glDisable(GL_BLEND);
 			glEnable(GL_DEPTH_TEST);
 		}

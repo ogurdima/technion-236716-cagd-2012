@@ -151,7 +151,7 @@ BEGIN
         MENUITEM "Show &Frenet Frame",          ID_FRENET_SHOWFRENETFRAME
         MENUITEM "Show &Curvature",             ID_FRENET_SHOWCURVATURE
         MENUITEM "Show &Torsion",               ID_FRENET_SHOWTORSION
-        MENUITEM "Show &Osculating Sphere",     ID_FRENET_SHOW
+        MENUITEM "Show &Osculating Sphere",     ID_FRENET_SHOW_OSC_SPHERE
         MENUITEM SEPARATOR
         MENUITEM "Draw &Evolute",               ID_FRENET_DRAWEVOLUTE
         MENUITEM "Draw Off&set",                ID_FRENET_DRAWOFFSET

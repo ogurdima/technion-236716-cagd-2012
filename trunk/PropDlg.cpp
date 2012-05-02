@@ -41,7 +41,7 @@ void CPropDlg::DoDataExchange(CDataExchange* pDX)
 	DDV_MinMaxDouble(pDX, m_step, 0.001, 100);
 	DDX_Text(pDX, IDC_OFFSET_D, m_offsetD);
 	DDX_Text(pDX, IDC_ANIM_SPEED, m_animSpeed);
-	DDV_MinMaxInt(pDX, m_animSpeed, 1, 100);
+	DDV_MinMaxInt(pDX, m_animSpeed, -100, 100);
 }
 
 

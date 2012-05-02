@@ -20,6 +20,10 @@
 #include "FrenetFrame.h"
 struct e2t_expr_node;
 
+#ifndef PI
+#define PI (3.1415926535897932384626433832795)
+#endif
+
 class CMFCKit2004View : public CView
 {
 protected: // create from serialization only
@@ -61,8 +65,10 @@ public:
 	double selectedT;
 	double step; // stepping delta for the curve parameter
 	CString xt,yt,zt; // the expressions for the parametric functions
-	int animSpeed;
+	int m_animSpeed;
+	bool m_animStarted;
 	double m_offsetD;
+	bool m_showAxes;
 
 	UINT draggedPolyline;		
 	int draggedPoint;			
@@ -82,6 +88,7 @@ public:
 	std::vector<std::string> m_curveParamEqn; //x(t),y(t),z(t)
 	e2t_expr_node* m_curveNodes[3];
 	FrenetFrameMgr m_ffmgr;
+	GLUquadric* m_quadSphere;
 	double m_paramStartVal;
 	double m_paramEndVal;
 	double m_paramStepIncr;
@@ -94,10 +101,12 @@ public:
 	bool m_showCurvature;
 	bool m_showFrenetFrame;
 	bool m_showTorsion;
+	bool m_showOscSphere;
 
 	//CPoint m_selectedCurvePt;
 
 	/// Added methods
+	void DrawAxes();
 	void DrawCurve();
 	void TestCagdMath();
 	void RecalculateCurve();
@@ -186,6 +195,8 @@ public:
 	afx_msg void OnAnimationStop();
 	afx_msg void OnFileNew();
 	afx_msg void OnFileOpen();
+	afx_msg void OnUpdateFrenetShowOscSphere(CCmdUI *pCmdUI);
+	afx_msg void OnFrenetShowOscSphere();
 
 
 	afx_msg void OnUpdateTorsion(CCmdUI *pCmdUI);
