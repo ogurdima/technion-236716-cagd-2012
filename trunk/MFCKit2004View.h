@@ -199,8 +199,8 @@ public:
 	afx_msg void OnFrenetShowOscSphere();
 
 
-	afx_msg void OnUpdateTorsion(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateCurvature(CCmdUI *pCmdUI);
+	//afx_msg void OnUpdateTorsion(CCmdUI *pCmdUI);
+	//afx_msg void OnUpdateCurvature(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp

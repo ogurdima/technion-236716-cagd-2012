@@ -5,12 +5,12 @@
 #include "stdafx.h"
 #include "cagd.h"
 #include "internal.h"
+#include <algorithm>
 
 #define Z_NEAR  (0.001)
 #define Z_SHIFT (2)
 #define MAX_HITS (100)
 #define POINT_SIZE (3)
-#define PI (3.1415926535897932384626433832795)
 
 static bool cue = FALSE;
 extern GLdouble modelView[16];
@@ -439,20 +439,61 @@ UINT DrawLineSegment(const CCagdPoint& p1, const CCagdPoint& p2, double length, 
 
 UINT DrawCircle(const CCagdPoint& center, const CCagdPoint& planar, const CCagdPoint& normal, double radius, int ptCount)
 {
+	return DrawCircleSegment(center, planar, normal, radius, 0.0, 2*PI, ptCount);
+}
+
+UINT DrawCircleSegment(const CCagdPoint& center, const CCagdPoint& planar, const CCagdPoint& normal, double radius, double startAngle, double stopAngle, int ptCount)
+{
+	//CCagdPoint* pts = new CCagdPoint[ptCount + 1];
+	//double angleDiff = abs(stopAngle-startAngle);
+	//double incr = angleDiff / double(ptCount);
+	////++ptCount;
+	//CCagdPoint nPlanar = normalize(planar);
+	//CCagdPoint lastAxis = normalize(cross(normal, nPlanar));
+	//CCagdPoint ptOnCircle(0,0,0);
+
+	//int i = 0;
+	//for(double t = startAngle; t<=stopAngle; t+=incr, ++i) 
+	//{
+	//	ptOnCircle = center + (radius*cos(t)*nPlanar) + ((radius * sin(t))*lastAxis);
+	//	pts[i] = ptOnCircle;
+	//}
+	//UINT res = cagdAddPolyline(pts, i, CAGD_SEGMENT_POLYLINE);
+	//delete pts;
+	//return res;
+	return DrawSpiral(center, planar, normal, radius, radius, startAngle, stopAngle, ptCount);
+}
+
+UINT DrawSpiral(const CCagdPoint& center, const CCagdPoint& planar, const CCagdPoint& normal, double startRadius, double stopRadius, double startAngle, double stopAngle, int ptCount)
+{
 	CCagdPoint* pts = new CCagdPoint[ptCount + 1];
-	double incr = 2*PI / double(ptCount);
+	double angleDiff = (stopAngle-startAngle);
+	if(angleDiff < 0.0)
+	{
+		std::swap(stopAngle, startAngle);
+		std::swap(stopRadius, startRadius);
+		angleDiff *= -1.0;
+	}
+	double incr = angleDiff / double(ptCount);
+	double radIncr = (stopRadius-startRadius) / double(ptCount);
 	//++ptCount;
 	CCagdPoint nPlanar = normalize(planar);
 	CCagdPoint lastAxis = normalize(cross(normal, nPlanar));
 	CCagdPoint ptOnCircle(0,0,0);
 
+	if(abs(incr) < 0.0001) {
+		delete pts;
+		return 0;
+	}
+
 	int i = 0;
-	for(double t = 0; t<2*PI; t+=incr, ++i) 
+	double radius = startRadius;
+	for(double t = startAngle; t<=stopAngle; t+=incr, radius+=radIncr, ++i) 
 	{
 		ptOnCircle = center + (radius*cos(t)*nPlanar) + ((radius * sin(t))*lastAxis);
 		pts[i] = ptOnCircle;
 	}
-	UINT res = cagdAddPolyline(pts, ptCount, CAGD_SEGMENT_POLYLINE);
+	UINT res = cagdAddPolyline(pts, i, CAGD_SEGMENT_POLYLINE);
 	delete pts;
 	return res;
 }

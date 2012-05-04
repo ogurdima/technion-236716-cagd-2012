@@ -47,20 +47,23 @@ public:
 	bool Calculate(double start, double finish, double stepIncr);
 	void ClearLastFrame();
 	void ClearLastOscCircle();
-	void ClearLastOscSphere();
+	void ClearLastTorsion();
 	
 	// accessors
 	size_t GetFrameCount() const;
 	const FrenetFrame& GetFrame(int idx) const;
 	void DrawFrenetFrame(int idx);
 	void DrawOscCircle(int idx);
-	void DrawOscSphere(int idx);
+	void DrawTorsion(int idx);
 	void DrawCurve();
 	CCagdPoint GetOscSphereCenter(int idx);
 
 	void ShowEvolute(bool show);
 	void ShowOffset(bool show);
 	int PickFrame(int x, int y, double thresh = 7.0) const;
+
+	const CCagdPoint* GetOffsetAtIndex(int idx) const;
+	const CCagdPoint* GetEvoluteAtIndex(int idx) const;
 
 private:
 	void DrawEvolute();
@@ -81,6 +84,7 @@ public:
 	UINT m_evoluteId;
 	std::vector<CCagdPoint> m_offset;
 	UINT m_offsetId;
+	UINT m_torsionId;
 
 	bool m_oscCircleVisible;
 	UINT m_oscCircleId;

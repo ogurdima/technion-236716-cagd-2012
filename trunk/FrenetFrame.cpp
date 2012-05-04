@@ -26,6 +26,7 @@ FrenetFrameMgr::FrenetFrameMgr(void)
 , m_dzdt3(NULL)
 , m_evoluteId(0)
 , m_offsetId(0)
+, m_torsionId(0)
 , m_oscCircleId(0)
 , m_oscSphereId(0)
 , m_oscCircleVisible(false)
@@ -100,7 +101,7 @@ FrenetFrame FrenetFrameMgr::CalculateAtPoint(double t)
 	double sixth = third * third;
 	ff.m_kPrime = ((first * second * third) - (fourth * fifth)) / sixth;
 
-	ff.m_torsion = ( length( dot(curvePtd3 , cross(curvePtd1, curvePtd2) ) ) ) / ( length(cross(curvePtd1, curvePtd2))*length(cross(curvePtd1, curvePtd2)) );
+	ff.m_torsion = ( dot(curvePtd3 , cross(curvePtd1, curvePtd2) ) ) / ( length(cross(curvePtd1, curvePtd2))*length(cross(curvePtd1, curvePtd2)) );
 
 
 	return ff;
@@ -245,18 +246,62 @@ int FrenetFrameMgr::PickFrame(int x, int y, double thresh) const
 	int ptY = 0;
 	CCagdPoint pickpt(x, y, 0);
 	CCagdPoint curvept(0,0,0);
+	CCagdPoint curveptPrev(0,0,0);
 	CCagdPoint diff(0,0,0);
+
 	for(size_t i=0; i<m_data.size(); ++i)
 	{
 		cagdToWindow(const_cast<CCagdPoint*>(&m_data[i].m_origin), &ptX, &ptY);
 		curvept.x = ptX;
 		curvept.y = ptY;
+		//CString msg;
+		//msg.Format("length: %f\n", length(pickpt-curvept));
+		//::OutputDebugString((LPCSTR)msg);
 		if(length(pickpt-curvept) < thresh)
 		{
 			return i;
 		}
+		
+		//if(i > 0) 
+		//{
+		//	CCagdPoint segVec(ptX-curveptPrev.x, ptY-curveptPrev.y, 0.0);
+		//	CCagdPoint segPtToPickPtVec(x-ptX, y-ptY, 0.0);
+		//	double sinTheta = length(cross(normalize(segPtToPickPtVec), normalize(segVec)));
+		//	double r = length(segPtToPickPtVec);
+		//	double dist = r*sinTheta;
+		//	if(dist < thresh) 
+		//	{
+		//		return i;
+		//	}
+		//}
+
+		// update prev
+		//curveptPrev.x = ptX;
+		//curveptPrev.y = ptY;
 	}
 	return -1;
+}
+
+//-----------------------------------------------------------------------------
+const CCagdPoint* FrenetFrameMgr::GetOffsetAtIndex(int idx) const
+{
+	if((idx < 0) || (idx >= GetFrameCount()))
+	{
+		return NULL;
+	}
+
+	return &m_offset[idx];
+
+}
+//-----------------------------------------------------------------------------
+const CCagdPoint* FrenetFrameMgr::GetEvoluteAtIndex(int idx) const
+{
+	if((idx < 0) || (idx >= GetFrameCount()))
+	{
+		return NULL;
+	}
+
+	return &m_evolute[idx];
 }
 
 //-----------------------------------------------------------------------------
@@ -279,45 +324,44 @@ void FrenetFrameMgr::DrawFrenetFrame(int idx)
 	BYTE R[3] = {255, 0, 0};
 	BYTE G[3] = {0, 255, 0};
 	BYTE B[3] = {30, 30, 255};
-	m_Tid = DrawVector(ff.m_origin, ff.m_T, 2, R);
-	m_Nid = DrawVector(ff.m_origin, ff.m_N, 2, G);
-	m_Bid = DrawVector(ff.m_origin, ff.m_B, 2, B);
-
-	
+	m_Tid = DrawVector(ff.m_origin, ff.m_T, 1, R);
+	m_Nid = DrawVector(ff.m_origin, ff.m_N, 1, G);
+	m_Bid = DrawVector(ff.m_origin, ff.m_B, 1, B);	
 }
-
 
 void FrenetFrameMgr::DrawOscCircle(int idx)
 {
 	ClearLastOscCircle();
 	FrenetFrame ff =  GetFrame(idx);
+	//glLineWidth(5);
 	m_oscCircleId = DrawCircle(m_evolute[idx], ff.m_N, ff.m_B, (1.0/ff.m_k));
-	cagdSetSegmentColor(m_oscCircleId, 255, 255, 0);
+	//m_oscCircleId = DrawCircleSegment(m_evolute[idx], ff.m_N, ff.m_B, (1.0/ff.m_k), PI/4, 3*PI/4);
+	//m_oscCircleId = DrawSpiral(m_evolute[idx], ff.m_N, ff.m_B, (1.0/ff.m_k), (1.0/ff.m_k)*2.0, 0, 4*PI);
+	cagdSetSegmentColor(m_oscCircleId, 255, 0, 255);
 }
 
-void FrenetFrameMgr::DrawOscSphere(int idx)
+void FrenetFrameMgr::DrawTorsion(int idx)
 {
-	ClearLastOscSphere();
+	ClearLastTorsion();
 	FrenetFrame ff =  GetFrame(idx);
-	CCagdPoint ctr = ff.m_origin + (1/ff.m_k)*ff.m_N - (ff.m_kPrime/(ff.m_k*ff.m_k*ff.m_torsion))*ff.m_B;
-	m_oscSphereId = DrawCircle(ctr, ff.m_N, ff.m_B, (1.0/ff.m_k));
-	cagdSetSegmentColor(m_oscCircleId, 255, 255, 255);
+	//m_oscCircleId = DrawCircle(m_evolute[idx], ff.m_N, ff.m_B, (1.0/ff.m_k));
+	m_torsionId = DrawSpiral(ff.m_origin, ff.m_B, ff.m_T, 1, 1.0 + abs(ff.m_torsion/5.0), 0.0, ff.m_torsion);
+	//CString msg;
+	//msg.Format("Torsion: %f\n", ff.m_torsion);
+	//::OutputDebugString((LPCSTR)msg);
+	cagdSetSegmentColor(m_torsionId, 255, 255, 0);
 }
-
 
 void FrenetFrameMgr::ClearLastOscCircle()
 {
 	cagdFreeSegment(m_oscCircleId);
 	m_oscCircleId = 0;
 }
-
-void FrenetFrameMgr::ClearLastOscSphere()
+void FrenetFrameMgr::ClearLastTorsion()
 {
-	cagdFreeSegment(m_oscSphereId);
-	m_oscSphereId = 0;
+	cagdFreeSegment(m_torsionId);
+	m_torsionId = 0;
 }
-
-
 CCagdPoint FrenetFrameMgr::GetOscSphereCenter(int idx)
 {
 	FrenetFrame ff =  GetFrame(idx);

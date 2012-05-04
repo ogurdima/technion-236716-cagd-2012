@@ -10,6 +10,9 @@
 #include <gl/gl.h>
 #include <gl/glu.h>
 
+#ifndef PI
+#define PI (3.1415926535897932384626433832795)
+#endif
 
 class CCagdPoint { /* 3D point */
 public:
@@ -146,5 +149,6 @@ bool operator==(const CCagdPoint& p1, const CCagdPoint& p2);
 UINT DrawVector(const CCagdPoint& pt, const CCagdPoint& dir, double length, BYTE color[3]);
 UINT DrawLineSegment(const CCagdPoint& p1, const CCagdPoint& p2, double length, BYTE color[3]);
 UINT DrawCircle(const CCagdPoint& center, const CCagdPoint& planar, const CCagdPoint& normal, double radius, int ptCount = 360);
-
+UINT DrawCircleSegment(const CCagdPoint& center, const CCagdPoint& planar, const CCagdPoint& normal, double radius, double startAngle, double stopAngle, int ptCount = 360);
+UINT DrawSpiral(const CCagdPoint& center, const CCagdPoint& planar, const CCagdPoint& normal, double startRadius, double stopRadius, double startAngle, double stopAngle, int ptCount = 360);
 #endif

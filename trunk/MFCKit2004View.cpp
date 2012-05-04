@@ -84,8 +84,6 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_ANIMATION_STOP, OnAnimationStop)
 	ON_COMMAND(ID_FILE_NEW, OnFileNew)
 	ON_COMMAND(ID_FILE_OPEN, OnFileOpen)
-	ON_UPDATE_COMMAND_UI(ID_INDICATOR_TORSION, OnUpdateTorsion)
-	ON_UPDATE_COMMAND_UI(ID_INDICATOR_CURVATURE, OnUpdateCurvature)
 
 END_MESSAGE_MAP()
 
@@ -120,7 +118,7 @@ CMFCKit2004View::CMFCKit2004View() {
 	m_lastTorsion = -1;
 	m_paramStartVal = 0;
 	m_paramEndVal = 1;
-	m_paramStepIncr = 0.05;
+	m_paramStepIncr = 0.005;
 	m_quadSphere = gluNewQuadric();
 
 	m_showAxes = false;
@@ -922,10 +920,13 @@ void CMFCKit2004View::OnUpdateFrenetShowOscSphere(CCmdUI *pCmdUI) {
 
 void CMFCKit2004View::OnFrenetShowtorsion() {
 	// TODO: Add your command handler code here
+	m_showTorsion = !m_showTorsion;
+	DrawFrenetComponents(m_curveIdx);
 }
 
 void CMFCKit2004View::OnUpdateFrenetShowtorsion(CCmdUI *pCmdUI) {
 	// TODO: Add your command update UI handler code here
+	pCmdUI->SetCheck(m_showTorsion);
 }
 
 void CMFCKit2004View::OnFrenetShow() {
@@ -1051,16 +1052,13 @@ void CMFCKit2004View::DrawFrenetComponents(int idx)
 	}
 	if (m_showTorsion)
 	{
-		//TODO
-	}
-	/*if (m_showOscSphere)
-	{
-		m_ffmgr.DrawOscSphere(idx);
+		m_ffmgr.DrawTorsion(idx);
 	}
 	else
 	{
-		m_ffmgr.ClearLastOscSphere();
-	}*/
+		m_ffmgr.ClearLastTorsion();
+	}
+	
 }
 
 void CMFCKit2004View::FrenetOnPaintExtend()
@@ -1070,35 +1068,59 @@ void CMFCKit2004View::FrenetOnPaintExtend()
 		if (m_showCurvature)
 		{
 			const FrenetFrame& ff = m_ffmgr.GetFrame(m_curveIdx);
-			CCagdPoint ctr = ff.m_origin;
-			CCagdPoint tpt = ff.m_T*3*(1/ff.m_k) + ctr;
-			CCagdPoint mtpt = ctr - ff.m_T*3*(1/ff.m_k);
-			CCagdPoint tr = (tpt - ff.m_N*3*(1/ff.m_k)); // top right
-			CCagdPoint tl = (tpt + ff.m_N*3*(1/ff.m_k)); // top left
-			CCagdPoint br = (mtpt - ff.m_N*3*(1/ff.m_k)); // bottom right
-			CCagdPoint bl = (mtpt + ff.m_N*3*(1/ff.m_k)); // bottom left
 
-			//glColor4ub(0, 50, 0, 240); // dark green, with alpha less than 1
-			glColor4ub(20, 100, 0, 50);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE); // need for blending
-			glEnable(GL_BLEND); // turn on blending
-			glDisable(GL_DEPTH_TEST); // don't think we need this
-			glPointSize(40);
+			const CCagdPoint* circleCtr = m_ffmgr.GetEvoluteAtIndex(m_curveIdx);
+			if(NULL != circleCtr)
+			{
+				//CCagdPoint ctr = ff.m_origin;
+				//CCagdPoint tpt = ff.m_T*3*(1/ff.m_k) + ctr;
+				//CCagdPoint mtpt = ctr - ff.m_T*3*(1/ff.m_k);
+				//CCagdPoint tr = (tpt - ff.m_N*3*(1/ff.m_k)); // top right
+				//CCagdPoint tl = (tpt + ff.m_N*3*(1/ff.m_k)); // top left
+				//CCagdPoint br = (mtpt - ff.m_N*3*(1/ff.m_k)); // bottom right
+				//CCagdPoint bl = (mtpt + ff.m_N*3*(1/ff.m_k)); // bottom left
 
-			// make a counter-clockwise set of 2 triangles
-			glBegin(GL_TRIANGLES);
-			glVertex3dv((GLdouble *)&tr);
-			glVertex3dv((GLdouble *)&br);
-			glVertex3dv((GLdouble *)&bl);
-			glVertex3dv((GLdouble *)&tr);
-			glVertex3dv((GLdouble *)&bl);
-			glVertex3dv((GLdouble *)&tl);
-			glEnd();
+				CCagdPoint up = normalize(ff.m_B);
+				CCagdPoint zAxis(0,0,1);
+				//double radius = length(center - origin);
+				CCagdPoint rotAxis = cross(zAxis, up);
+				double angle = asin(length(rotAxis)) * (180.0 / PI);
+				double dotProd = dot(zAxis, up);
+				if(dotProd < 0) {
+					angle = 180.0 - angle;
+				}
+				
 
+				//glColor4ub(0, 50, 0, 240); // dark green, with alpha less than 1
+				glColor4ub(128, 0, 128, 35);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE); // need for blending
+				glEnable(GL_BLEND); // turn on blending
+				glDisable(GL_DEPTH_TEST); // don't think we need this
+				glPointSize(40);
+
+				// make a counter-clockwise set of 2 triangles
+				//glBegin(GL_TRIANGLES);
+				//glVertex3dv((GLdouble *)&tr);
+				//glVertex3dv((GLdouble *)&br);
+				//glVertex3dv((GLdouble *)&bl);
+				//glVertex3dv((GLdouble *)&tr);
+				//glVertex3dv((GLdouble *)&bl);
+				//glVertex3dv((GLdouble *)&tl);
+				//glEnd();
+				
+				glPushMatrix();
+					
+					glTranslated(circleCtr->x, circleCtr->y, circleCtr->z);
+					glRotated(angle, rotAxis.x, rotAxis.y, rotAxis.z);
+					glScaled(1.0, 1.0, 0.001);
+
+					gluSphere(m_quadSphere, (1.0/ff.m_k)*1.5, 100, 5);
+				glPopMatrix();
 			
 
-			glDisable(GL_BLEND);
-			glEnable(GL_DEPTH_TEST);
+				glDisable(GL_BLEND);
+				glEnable(GL_DEPTH_TEST);
+			}
 		}
 
 
@@ -1124,53 +1146,67 @@ void CMFCKit2004View::FrenetOnPaintExtend()
 			glPointSize(40);
 
 			glPushMatrix();
-			glTranslated(center.x, center.y, center.z);
+				glTranslated(center.x, center.y, center.z);
 
 
-			glPushMatrix();
-				glRotated(angle, rotAxis.x, rotAxis.y, rotAxis.z);
+				glPushMatrix();
+					glRotated(angle, rotAxis.x, rotAxis.y, rotAxis.z);
 
-				// finally, draw the spheres
-				gluSphere(m_quadSphere, radius, 100, 100);
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				glColor4ub(0,175,0,175);
-				gluSphere(m_quadSphere, radius, 25, 8);			
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			glPopMatrix();
+					// finally, draw the spheres
+					gluSphere(m_quadSphere, radius, 100, 100);
+					glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+					glColor4ub(0,175,0,175);
+					gluSphere(m_quadSphere, radius, 25, 8);			
+					glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				glPopMatrix();
 
 			glPopMatrix();
 			glDisable(GL_BLEND);
 			glEnable(GL_DEPTH_TEST);
 		}
+
+		if(m_showEvolute)
+		{
+			const CCagdPoint* evolutePt = m_ffmgr.GetEvoluteAtIndex(m_curveIdx);
+			if(NULL != evolutePt)
+			{
+				CCagdPoint ePt = *evolutePt;
+				glColor4ub(255, 128, 0, 150);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE); // need for blending
+				glEnable(GL_BLEND); // turn on blending
+				glDisable(GL_DEPTH_TEST); // don't think we need this
+				glPushMatrix();
+					glTranslated(ePt.x, ePt.y, ePt.z);
+					gluSphere(m_quadSphere, 0.01, 15, 15);
+				glPopMatrix();
+
+				glDisable(GL_BLEND);
+				glEnable(GL_DEPTH_TEST);
+			}
+		}
+
+		if(m_showOffset)
+		{
+			const CCagdPoint* offsetPt = m_ffmgr.GetOffsetAtIndex(m_curveIdx);
+			if(NULL != offsetPt)
+			{
+				CCagdPoint oPt = *offsetPt;
+				glColor4ub(0, 128, 255, 150);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE); // need for blending
+				glEnable(GL_BLEND); // turn on blending
+				glDisable(GL_DEPTH_TEST); // don't think we need this
+
+				glPushMatrix();
+					glTranslated(oPt.x, oPt.y, oPt.z);
+					gluSphere(m_quadSphere, 0.01, 15, 15);
+				glPopMatrix();
+
+				glDisable(GL_BLEND);
+				glEnable(GL_DEPTH_TEST);
+
+			}
+
+		}
 	}
 }
 
-afx_msg void CMFCKit2004View::OnUpdateTorsion(CCmdUI *pCmdUI)
-{
-	pCmdUI->Enable();
-	CString strPage;
-	strPage.Format( "Torsion: %f     ",  m_lastTorsion);
-	CMainFrame * pmw = (CMainFrame *)AfxGetMainWnd();
-	pmw->m_wndStatusBar.SetPaneText(
-		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_TORSION),
-		strPage);
-
-	pmw->m_wndStatusBar.SetPaneInfo(
-		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_TORSION),
-		ID_INDICATOR_TORSION, 0, 120);
-	
-}
-afx_msg void CMFCKit2004View::OnUpdateCurvature(CCmdUI *pCmdUI)
-{
-	pCmdUI->Enable();
-	CString strPage;
-	strPage.Format( "Curvature: %f     ",  m_lastCurvature);
-	CMainFrame * pmw = (CMainFrame *)AfxGetMainWnd();
-	pmw->m_wndStatusBar.SetPaneText(
-		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_CURVATURE),
-		strPage);
-
-	pmw->m_wndStatusBar.SetPaneInfo(
-		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_CURVATURE),
-		ID_INDICATOR_CURVATURE, 0, 120);
-}
