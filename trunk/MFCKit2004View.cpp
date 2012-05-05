@@ -34,7 +34,7 @@ IMPLEMENT_DYNCREATE(CMFCKit2004View, CView)
 
 BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	//{{AFX_MSG_MAP(CMFCKit2004View)
-	ON_WM_CHAR()
+	ON_WM_CHAR(OnChar)
 	ON_WM_LBUTTONUP()
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDOWN()
@@ -420,6 +420,14 @@ BOOL CMFCKit2004View::OnEraseBkgnd(CDC* pDC)
 
 void CMFCKit2004View::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) {
 	// TODO: Add your message handler code here and/or call default
+	if (nChar == 61) //+
+	{
+		Scale(2.0);
+	}
+	if (nChar == 45) //-
+	{
+		Scale(0.5);
+	}
 	Invalidate();
 //	CView::OnChar(nChar, nRepCnt, nFlags);
 }
