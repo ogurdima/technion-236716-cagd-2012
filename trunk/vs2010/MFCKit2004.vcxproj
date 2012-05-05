@@ -14,6 +14,7 @@
     <ProjectGuid>{2A5B8D14-F874-4D63-A577-B1CE5263A345}</ProjectGuid>
     <RootNamespace>MFCKit2004</RootNamespace>
     <Keyword>MFCProj</Keyword>
+    <ProjectName>Frenet</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -83,7 +84,6 @@
     <Link>
       <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>openGL32.lib;GLU32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Release/MFCKit2004.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\Release/MFCKit2004.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -121,7 +121,6 @@
     <Link>
       <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalDependencies>openGL32.lib;GLU32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Debug/MFCKit2004.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug/MFCKit2004.pdb</ProgramDatabaseFile>
