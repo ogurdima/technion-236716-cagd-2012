@@ -46,13 +46,6 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_WM_ERASEBKGND()
 	ON_WM_PAINT()
 	ON_WM_MOUSEWHEEL()
-	ON_COMMAND(ID_STUFF_2, OnStuff2)
-	ON_UPDATE_COMMAND_UI(ID_STUFF_2, OnUpdateStuff2)
-	ON_COMMAND(ID_STUFF_3, OnStuff3)
-	ON_COMMAND(ID_STUFF_4, OnStuff4)
-	ON_UPDATE_COMMAND_UI(ID_STUFF_4, OnUpdateStuff4)
-	ON_COMMAND(ID_STUFF_5, OnStuff5)
-	ON_UPDATE_COMMAND_UI(ID_STUFF_5, OnUpdateStuff5)
 	//}}AFX_MSG_MAP
 	ON_COMMAND(ID_FUZZINESS_MORE, OnFuzzinessMore)
 	ON_COMMAND(ID_FUZZINESS_LESS, OnFuzzinessLess)
@@ -91,7 +84,6 @@ END_MESSAGE_MAP()
 // CMFCKit2004View construction/destruction
 
 CMFCKit2004View::CMFCKit2004View() {
-	// TODO: add construction code here
 	SSense = RSense = TSense = 0.5;
 	RButtonDown = LButtonDown = false;
 	CtrlKeyDown = false;
@@ -151,7 +143,6 @@ void CMFCKit2004View::OnFileNew() {
 
 //  load a new curve from a file
 void CMFCKit2004View::OnFileOpen() {
-	// TODO: Add your command handler code here
 	CFileDialog fileDialog(TRUE, ".dat", NULL, 0, NULL, NULL, 0);
 	INT_PTR nResult = fileDialog.DoModal();
 	if(IDCANCEL == nResult) 
@@ -413,13 +404,11 @@ int CMFCKit2004View::OnCreate(LPCREATESTRUCT lpCreateStruct)
 BOOL CMFCKit2004View::OnEraseBkgnd(CDC* pDC) 
 {
 	// TODO: Add your message handler code here and/or call default
-	
 	//return CView::OnEraseBkgnd(pDC);
 	return true;
 }
 
 void CMFCKit2004View::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) {
-	// TODO: Add your message handler code here and/or call default
 	if (nChar == 61) //+
 	{
 		Scale(2.0);
@@ -433,7 +422,6 @@ void CMFCKit2004View::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) {
 }
 
 void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
-	// TODO: Add your message handler code here and/or call default
 	SetCapture();	// capture the mouse 'right button up' command
 	prevMouseLocation = point;
 	LButtonDown = true;
@@ -451,20 +439,17 @@ void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 }
 
 void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
-	// TODO: Add your message handler code here and/or call default
 	if (GetCapture() == this) ::ReleaseCapture();
 	LButtonDown = false;
 }
 
 void CMFCKit2004View::OnRButtonDown(UINT nFlags, CPoint point) {
-	// TODO: Add your message handler code here and/or call default
 	SetCapture();	// capture the mouse 'right button up' command
 	prevMouseLocation = point;
 	RButtonDown = true;
 }
 
 void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
-	// TODO: Add your message handler code here and/or call default
 	if (GetCapture() == this) ::ReleaseCapture();
 	RButtonDown = false;
 /*
@@ -479,7 +464,6 @@ void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 }
 
 void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
-	// TODO: Add your message handler code here and/or call default
 	if (GetCapture() == this) {		// 'this' has the mouse capture
 		if (LButtonDown) {
 			// This is the movement ammount 
@@ -501,7 +485,6 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 
 
 BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
-	// TODO: Add your message handler code here and/or call default
 	UINT state = ::GetAsyncKeyState(VK_CONTROL);
 	if(state)
 	{
@@ -539,32 +522,29 @@ BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
 }
 
 void CMFCKit2004View::OnTimer(UINT nIDEvent) {
-	// TODO: Add your message handler code here and/or call default
+	if(NULL == m_curveNodes[0])
 	{
-		if(NULL == m_curveNodes[0])
-		{
-			Invalidate();
-		}
-		int newVal;
-		if(m_animSpeed > 0) 
-		{
-			newVal = m_curveIdx + 1;
-		}
-		else
-		{
-			newVal = m_curveIdx - 1;
-		}
-		if(newVal < 0) 
-		{
-			newVal = m_ffmgr.GetFrameCount()-1;
-		} 
-		else if(newVal > m_ffmgr.GetFrameCount() -1)
-		{
-			newVal = 0;
-		}
-		m_curveIdx = newVal;
-		DrawFrenetComponents(m_curveIdx);
-	}	
+		Invalidate();
+	}
+	int newVal;
+	if(m_animSpeed > 0) 
+	{
+		newVal = m_curveIdx + 1;
+	}
+	else
+	{
+		newVal = m_curveIdx - 1;
+	}
+	if(newVal < 0) 
+	{
+		newVal = m_ffmgr.GetFrameCount()-1;
+	} 
+	else if(newVal > m_ffmgr.GetFrameCount() -1)
+	{
+		newVal = 0;
+	}
+	m_curveIdx = newVal;
+	DrawFrenetComponents(m_curveIdx);
 	Invalidate();
 }
 
@@ -712,108 +692,6 @@ void CMFCKit2004View::OnScalingLess() {
 	SSense*= 0.95;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////
-//    these are demo methods!  can be removed!!!
-/////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////
-
-
-void CMFCKit2004View::OnStuff2() {
-	MessageBox("something something","user error");
-}
-
-void CMFCKit2004View::OnUpdateStuff2(CCmdUI* pCmdUI)  {
-}
-
-void CMFCKit2004View::OnStuff3() { // generate random polyline
-	CCagdPoint points[6];
-	srand((unsigned)time(NULL));
-	for (int i=0;i<6;i++) {
-		points[i].x = 10*i + rand()%10;
-		points[i].y = 10*i + rand()%10;
-		points[i].z = 0;//10*i + rand()%10;
-	}
-	cagdSetSegmentColor(cagdAddPolyline(points,6, CAGD_SEGMENT_CTLPLYGN),255,0,0);
-	Invalidate();
-}
-
-void CMFCKit2004View::OnStuff4() { // add control circle
-	CCagdPoint points[2];
-	CCagdPoint *p = findCtlPoint(prevMouseLocation.x, prevMouseLocation.y);
-	if (p == NULL)
-		return;
-	points[0].x = p->x;
-	points[0].y = p->y;
-	points[0].z = p->z;
-	points[1].x = 0;
-	points[1].y = 0;
-	points[1].z = 5;
-	p->circle = addCircle(points[0], points[1], p);
-	Invalidate();
-}
-
-void CMFCKit2004View::OnUpdateStuff4(CCmdUI* pCmdUI) { // add control point
-}
-
-void CMFCKit2004View::OnStuff5() { // add control point - still a bug here
-	UINT id;
-	for (cagdPick(prevMouseLocation.x,prevMouseLocation.y);id = cagdPickNext();) {
-		if (cagdGetSegmentType(id) == CAGD_SEGMENT_CTLPLYGN) {
-			int place;
-			int index = cagdGetNearestVertex(id,prevMouseLocation.x,prevMouseLocation.y);
-			CCagdPoint loc[2];
-			cagdToObject(prevMouseLocation.x,prevMouseLocation.y,loc);
-			loc[0].z = 0;
-			CPoint clicked(prevMouseLocation.x,prevMouseLocation.y);
-			if (index == 0) { 
-				place = 0;
-			}
-			else if (index == int(cagdGetSegmentLength(id))) {
-				place = index-1;
-			}
-			else {
-				CCagdPoint *back;
-				CCagdPoint *nearest;
-				CCagdPoint *forward;
-				nearest = cagdGetVertex(id,index);
-				back = cagdGetVertex(id,index-1);
-				forward = cagdGetVertex(id,index+1);
-				int bx,by,fx,fy,nx,ny;
-				cagdToWindow(back,&bx,&by);
-				cagdToWindow(forward,&fx,&fy);
-				cagdToWindow(nearest,&nx,&ny);
-    				double bsize=sqrt((double)(bx*bx+by*by));
-				double fsize=sqrt((double)(fx*fx+fy*fy));
-				double vecBackx(bx-nx),vecBacky(by-ny);
-				double vecForwardx(fx-nx),vecForwardy(fy-ny);
-				double vecClickedx(clicked.x-nx),vecClickedy(clicked.y-ny);
-				double clickedSize = sqrt((double)(clicked.x*clicked.x+clicked.y*clicked.y));
-				vecBackx /= bsize;
-				vecBacky /= bsize;
-				vecForwardx /= fsize;
-				vecForwardy /= fsize;
-				vecClickedx /= clickedSize;
-				vecClickedy /= clickedSize; // ahhhhhhhhhhh!!!
-				// now all are normalized
-				// now for dot products:
-				double backVal = vecBackx*vecClickedx + vecBacky*vecClickedy;
-				double forwardVal = vecForwardx*vecClickedx + vecForwardy*vecClickedy;
-				if (backVal > forwardVal)
-					place = index-1;
-				else
-					place=index;
-			}
-			cagdCtrlPlygnAddPoint(id,place,loc[0]);
-			Invalidate();
-		}
-	}
-}
-
-void CMFCKit2004View::OnUpdateStuff5(CCmdUI* pCmdUI) {
-	// TODO: Add your command update UI handler code here
-}
-
 void CMFCKit2004View::TestCagdMath()
 {
 	// test code
@@ -884,36 +762,30 @@ void CMFCKit2004View::OnFrenetProperties() {
 }
 
 void CMFCKit2004View::OnFrenetShowaxes() {
-	// TODO: Add your command handler code here
 	m_showAxes = !m_showAxes;
 	RecalculateCurve();
 	Invalidate();
 }
 
 void CMFCKit2004View::OnUpdateFrenetShowaxes(CCmdUI *pCmdUI) {
-	// TODO: Add your command update UI handler code here'
 	pCmdUI->SetCheck(m_showAxes);
 }
 
 void CMFCKit2004View::OnFrenetShowfrenetframe() {
-	// TODO: Add your command handler code here
 	m_showFrenetFrame = !m_showFrenetFrame;
 	DrawFrenetComponents(m_curveIdx);
 }
 
 void CMFCKit2004View::OnUpdateFrenetShowfrenetframe(CCmdUI *pCmdUI) {
-	// TODO: Add your command update UI handler code here
 	pCmdUI->SetCheck(m_showFrenetFrame);
 }
 
 void CMFCKit2004View::OnFrenetShowcurvature() {
-	// TODO: Add your command handler code here
 	m_showCurvature = !m_showCurvature;
 	DrawFrenetComponents(m_curveIdx);
 }
 
 void CMFCKit2004View::OnUpdateFrenetShowcurvature(CCmdUI *pCmdUI) {
-	// TODO: Add your command update UI handler code here
 	pCmdUI->SetCheck(m_showCurvature);
 }
 
@@ -922,61 +794,50 @@ void CMFCKit2004View::OnFrenetShowOscSphere() {
 }
 
 void CMFCKit2004View::OnUpdateFrenetShowOscSphere(CCmdUI *pCmdUI) {
-	// TODO: Add your command update UI handler code here
 	pCmdUI->SetCheck(m_showOscSphere);
 }
 
 void CMFCKit2004View::OnFrenetShowtorsion() {
-	// TODO: Add your command handler code here
 	m_showTorsion = !m_showTorsion;
 	DrawFrenetComponents(m_curveIdx);
 }
 
 void CMFCKit2004View::OnUpdateFrenetShowtorsion(CCmdUI *pCmdUI) {
-	// TODO: Add your command update UI handler code here
 	pCmdUI->SetCheck(m_showTorsion);
 }
 
 void CMFCKit2004View::OnFrenetShow() {
-	// TODO: Add your command handler code here
 }
 
 void CMFCKit2004View::OnUpdateFrenetShow(CCmdUI *pCmdUI) {
-	// TODO: Add your command update UI handler code here
 	
 }
 
 void CMFCKit2004View::OnFrenetDrawevolute() {
-	// TODO: Add your command handler code here
 	m_showEvolute = ! m_showEvolute;
 	m_ffmgr.ShowEvolute(m_showEvolute);
 }
 
 void CMFCKit2004View::OnUpdateFrenetDrawevolute(CCmdUI *pCmdUI) {
-	// TODO: Add your command update UI handler code here
 	pCmdUI->SetCheck(m_showEvolute);
 }
 
 void CMFCKit2004View::OnFrenetDrawoffset() {
-	// TODO: Add your command handler code here
 	m_showOffset = ! m_showOffset;
 	m_ffmgr.ShowOffset(m_showOffset);
 }
 
 void CMFCKit2004View::OnUpdateFrenetDrawoffset(CCmdUI *pCmdUI) {
-	// TODO: Add your command update UI handler code here
 	pCmdUI->SetCheck(m_showOffset);
 }
 
 void CMFCKit2004View::OnAnimationStart() {
-	// TODO: Add your command handler code here
   UINT timeMs = (int)(1000.0 * (1.0 / double(m_animSpeed)));
   this->SetTimer(1, timeMs, NULL);
   m_animStarted = true;
 }
 
 void CMFCKit2004View::OnAnimationStop() {
-	// TODO: Add your command handler code here
   this->KillTimer(1);
   m_animStarted = false;
 }

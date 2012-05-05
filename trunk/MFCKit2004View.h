@@ -147,23 +147,6 @@ protected:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnPaint();
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
-	afx_msg void OnStuff2();
-	afx_msg void OnUpdateStuff2(CCmdUI* pCmdUI);
-	afx_msg void OnDemoPolyline();
-	afx_msg void OnUpdateDemoPolyline(CCmdUI* pCmdUI);
-	afx_msg void OnDemoAnimation();
-	afx_msg void OnUpdateDemoAnimation(CCmdUI* pCmdUI);
-	afx_msg void OnDemoNone();
-	afx_msg void OnUpdateDemoNone(CCmdUI* pCmdUI);
-	afx_msg void OnStuff3();
-	afx_msg void OnStuff4();
-	afx_msg void OnUpdateStuff4(CCmdUI* pCmdUI);
-	afx_msg void OnStuff5();
-	afx_msg void OnUpdateStuff5(CCmdUI* pCmdUI);
-	afx_msg void OnNewsomethingVvv();
-	afx_msg void OnUpdateNewsomethingVvv(CCmdUI* pCmdUI);
-	afx_msg void OnNewstuffJ();
-	afx_msg void OnUpdateNewstuffJ(CCmdUI* pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 public:
