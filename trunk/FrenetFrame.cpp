@@ -93,13 +93,27 @@ FrenetFrame FrenetFrameMgr::CalculateAtPoint(double t)
 	
 	ff.m_k = ( length(cross(curvePtd1, curvePtd2)) ) / ( d1Length*d1Length*d1Length );
 
-	double first = (1/length(cross(curvePtd1, ff.m_origin)));
-	double second = dot(cross(curvePtd1, ff.m_origin), cross(curvePtd2, curvePtd1));
-	double third = d1Length*d1Length*d1Length;
-	double fourth = length(cross(curvePtd1, ff.m_origin));
-	double fifth = ( 3/(d1Length) ) * dot(curvePtd2, curvePtd1);
-	double sixth = third * third;
-	ff.m_kPrime = ((first * second * third) - (fourth * fifth)) / sixth;
+	//double first = (1/length(cross(curvePtd1, ff.m_origin)));
+	//double second = dot(cross(curvePtd1, ff.m_origin), cross(curvePtd2, curvePtd1));
+	//double third = d1Length*d1Length*d1Length;
+	//double fourth = length(cross(curvePtd1, ff.m_origin));
+	//double fifth = ( 3/(d1Length) ) * dot(curvePtd2, curvePtd1);
+	//double sixth = third * third;
+	//ff.m_kPrime = ((first * second * third) - (fourth * fifth)) / sixth;
+
+	e2t_setparamvalue(t + 0.0001, E2T_PARAM_T);
+	CCagdPoint t_origin = CCagdPoint(e2t_evaltree(m_eqnX), e2t_evaltree(m_eqnY), e2t_evaltree(m_eqnZ));
+	CCagdPoint t_curvePtd1 = CCagdPoint(e2t_evaltree(m_dxdt1), e2t_evaltree(m_dydt1), e2t_evaltree(m_dzdt1));
+	CCagdPoint t_curvePtd2 = CCagdPoint(e2t_evaltree(m_dxdt2), e2t_evaltree(m_dydt2), e2t_evaltree(m_dzdt2));
+	CCagdPoint t_curvePtd3 = CCagdPoint(e2t_evaltree(m_dxdt3), e2t_evaltree(m_dydt3), e2t_evaltree(m_dzdt3));
+
+	double t_d1Length = length(t_curvePtd1);
+
+	double t_k = ( length(cross(t_curvePtd1, t_curvePtd2)) ) / ( t_d1Length*t_d1Length*t_d1Length );
+
+	ff.m_kPrime = (t_k - (ff.m_k)) / 0.0001;
+	ff.m_kPrime /= d1Length;
+
 
 	ff.m_torsion = ( dot(curvePtd3 , cross(curvePtd1, curvePtd2) ) ) / ( length(cross(curvePtd1, curvePtd2))*length(cross(curvePtd1, curvePtd2)) );
 
@@ -116,6 +130,9 @@ bool FrenetFrameMgr::Calculate(double start, double finish, double stepIncr)
 	m_data.clear();
 	m_evolute.clear();
 	m_offset.clear();
+	ClearLastFrame();
+	ClearLastTorsion();
+	ClearLastOscCircle();
 
 	if((!m_eqnX) || (!m_eqnY) || (!m_eqnZ))
 	{
