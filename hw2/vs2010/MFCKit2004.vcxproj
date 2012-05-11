@@ -172,7 +172,6 @@
     <None Include="..\res\MFCKit2004.rc2" />
     <None Include="..\res\MFCKit2004Doc.ico" />
     <None Include="..\res\Toolbar.bmp" />
-    <None Include="..\ReadMe.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
