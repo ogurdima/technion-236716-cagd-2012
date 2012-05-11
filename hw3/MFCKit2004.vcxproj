@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BezierMath.cpp" />
     <ClCompile Include="cagd.cpp" />
     <ClCompile Include="expr2tree.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -157,6 +158,7 @@
     <ResourceCompile Include="MFCKit2004.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BezierMath.h" />
     <ClInclude Include="cagd.h" />
     <ClInclude Include="expr2tree.h" />
     <ClInclude Include="FrenetFrame.h" />
