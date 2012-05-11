@@ -19,6 +19,7 @@
 #include <vector>
 #include "FrenetFrame.h"
 #include "Bezier.h"
+#include "CurveMgr.h"
 struct e2t_expr_node;
 
 #ifndef PI
@@ -113,6 +114,10 @@ public:
 	void RecalculateCurve();
 	void DrawFrenetComponents(int idx);
 	void FrenetOnPaintExtend();
+
+
+	/// Added Bezier members
+	CurveMgr cmgr;
 
 // Overrides
 	// ClassWizard generated virtual function overrides

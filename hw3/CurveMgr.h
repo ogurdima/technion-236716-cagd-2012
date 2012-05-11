@@ -1,5 +1,4 @@
 
-
 #include "cagd.h"
 #include "Bezier.h"
 #include "Bspline.h"
@@ -9,6 +8,9 @@ struct BezierWrp
 {
 	Bezier m_curve;
 	UINT m_curveId;
+	UINT m_ctrPolyId;
+	bool m_showCurve;
+	bool m_ShowCtrPoly;
 };
 
 

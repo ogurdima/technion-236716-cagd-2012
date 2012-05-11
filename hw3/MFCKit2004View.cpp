@@ -92,7 +92,12 @@ CMFCKit2004View::CMFCKit2004View() {
 	draggedPoint = -1;			
 	draggedCircle = 0;			
 	draggedCtlPt = NULL;	
-	step = 0.01; 
+	step = 0.01;
+
+
+
+
+
 	m_animSpeed = 50;
 	m_animStarted = false;
 	m_offsetD = 0.5;
@@ -121,7 +126,6 @@ CMFCKit2004View::CMFCKit2004View() {
 	m_showTorsion = false;
 	m_showOscSphere = false;
 
-	::QueryPerformanceFrequency(&liFreq);
 }
 
 CMFCKit2004View::~CMFCKit2004View() {
