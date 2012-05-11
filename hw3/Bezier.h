@@ -1,3 +1,5 @@
+#pragma once
+
 
 #include "cagd.h"
 #include <vector>
@@ -28,12 +30,12 @@ private:
 
 public:
 	// curve manipulation
+	bool InsertPt(const CCagdPoint& pt, double weight, int ptIdxAfter = -1);
+	//bool MovePt(int ptIdx);
 	void SetPoly(const vector<CCagdPoint>& pts);
 	void SetPoly(const vector<BezierPt>& pts);
 	bool SetWeight(int idx, double weight);
 	double GetWeight(int idx);
-	//bool InsertPt(int ptIdxAfter);
-	//bool MovePt(int ptIdx);
 
 private:
 	// the control polygon

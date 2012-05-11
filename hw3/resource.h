@@ -50,6 +50,11 @@
 #define ID_STUFF_4                      32779
 #define ID_STUFF_5                      32780
 #define ID_FRENET_SHOW_OSC_SPHERE       32789
+#define ID_STUFF_NEWBEZIERCURVE         32790
+#define ID_STUFF_CLEARALL               32791
+#define ID_CONTEXTBG_NEWBEZIERCURVE     32792
+#define ID_CONTEXTBG_CLEARALL           32793
+#define ID_Menu                         32794
 #define ID_INDICATOR_CURVATURE          61205
 #define ID_INDICATOR_TORSION            61206
 
@@ -59,7 +64,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        162
-#define _APS_NEXT_COMMAND_VALUE         32790
+#define _APS_NEXT_COMMAND_VALUE         32795
 #define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

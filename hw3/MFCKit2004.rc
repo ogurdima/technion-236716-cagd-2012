@@ -172,13 +172,10 @@ END
 
 IDR_POPUPMENU MENU
 BEGIN
-    POPUP "stuff"
+    POPUP "ContextBG"
     BEGIN
-        MENUITEM "&Close",                      ID_POPUP_CLOSE
-        MENUITEM "message box",                 ID_STUFF_2
-        MENUITEM "generate random polyline",    ID_STUFF_3
-        MENUITEM "add control circle",          ID_STUFF_4
-        MENUITEM "add control point here",      ID_STUFF_5
+        MENUITEM "New Bezier Curve",            ID_CONTEXTBG_NEWBEZIERCURVE
+        MENUITEM "Clear All",                   ID_CONTEXTBG_CLEARALL
     END
 END
 

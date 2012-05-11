@@ -117,7 +117,17 @@ public:
 
 
 	/// Added Bezier members
-	CurveMgr cmgr;
+	CurveMgr m_mgr;
+	int m_currCurveIdx;
+
+	enum ProgramState
+	{
+		StateIdle,
+		StateAddBezierPts,
+		StateAddBSplinePts
+	};
+
+	ProgramState m_state;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -190,6 +200,8 @@ public:
 
 	//afx_msg void OnUpdateTorsion(CCmdUI *pCmdUI);
 	//afx_msg void OnUpdateCurvature(CCmdUI *pCmdUI);
+	afx_msg void OnContextbgNewbeziercurve();
+	afx_msg void OnContextbgClearall();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp

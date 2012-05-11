@@ -52,6 +52,23 @@ void Bezier::Calculate()
 	}
 }
 
+bool Bezier::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAfter)
+{
+	int idxToUse;
+	idxToUse = ptIdxAfter;
+	if(-1 == ptIdxAfter)
+	{
+		idxToUse = m_ctrlPts.size();
+	}
+	if((idxToUse < 0) || (idxToUse >= (m_ctrlPts.size()+1)))
+	{ return false; }
+
+	vector<BezierPt>::iterator pos = (m_ctrlPts.begin() + idxToUse);
+	m_ctrlPts.insert(pos, BezierPt(pt, weight));
+	return true;
+}
+
+
 void Bezier::SetPoly(const vector<CCagdPoint>& pts)
 {
 	m_ctrlPts.clear();

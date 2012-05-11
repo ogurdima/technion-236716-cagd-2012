@@ -78,6 +78,8 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_FILE_NEW, OnFileNew)
 	ON_COMMAND(ID_FILE_OPEN, OnFileOpen)
 
+	ON_COMMAND(ID_CONTEXTBG_NEWBEZIERCURVE, &CMFCKit2004View::OnContextbgNewbeziercurve)
+	ON_COMMAND(ID_CONTEXTBG_CLEARALL, &CMFCKit2004View::OnContextbgClearall)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -126,6 +128,11 @@ CMFCKit2004View::CMFCKit2004View() {
 	m_showTorsion = false;
 	m_showOscSphere = false;
 
+
+
+	// bezier stuff below here
+	m_state = StateIdle;
+	m_currCurveIdx = -1;
 }
 
 CMFCKit2004View::~CMFCKit2004View() {
@@ -439,41 +446,41 @@ void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 		DrawFrenetComponents(m_curveIdx);
 	}*/
 
-	cagdFreeAllSegments();
-
-	vector<CCagdPoint> arr;
-	arr.push_back(CCagdPoint(0,0,0));
-	arr.push_back(CCagdPoint(0,1,0));
-	arr.push_back(CCagdPoint(1,1,0));
-	arr.push_back(CCagdPoint(3,1,0));
-	arr.push_back(CCagdPoint(3,3,0));
-	
-	Bezier b = Bezier();
-
-	b.SetPoly(arr);
-
-	b.SetWeight(3, 10);
-
-	UINT pgId = b.DrawCtrlPolygon();
-	UINT cId = b.DrawCurve();
-
 }
 
 void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 	if (GetCapture() == this) ::ReleaseCapture();
 	LButtonDown = false;
+
+	if(StateAddBezierPts == m_state)
+	{
+		CCagdPoint coord[2];
+		cagdToObject(point.x, point.y, coord);
+		m_mgr.AddBezierCtrlPt(m_curveIdx, coord[0]);
+	}
+
+	Invalidate();					// redraw scene
 }
 
 void CMFCKit2004View::OnRButtonDown(UINT nFlags, CPoint point) {
 	SetCapture();	// capture the mouse 'right button up' command
 	prevMouseLocation = point;
 	RButtonDown = true;
+
+	switch(m_state) 
+	{
+	case StateAddBezierPts:
+		m_state = StateIdle;
+		break;
+	default:
+		break;
+	}
 }
 
 void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 	if (GetCapture() == this) ::ReleaseCapture();
 	RButtonDown = false;
-/*
+
 	// this code pops up the menu called "IDR_POPUPMENU" on the screen at coordinate "point"
 	CMenu popupMenu;
 	popupMenu.LoadMenu(IDR_POPUPMENU); // here you can choose which menu will be shown...
@@ -481,10 +488,13 @@ void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 	ClientToScreen(&point);
 	subMenu->TrackPopupMenu(0, point.x, point.y,
 	   AfxGetMainWnd(), NULL);
-*/
+
 }
 
 void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
+	if(!::GetAsyncKeyState(VK_CONTROL))
+	{ return; }
+
 	if (GetCapture() == this) {		// 'this' has the mouse capture
 		if (LButtonDown) {
 			// This is the movement ammount 
@@ -1100,3 +1110,19 @@ void CMFCKit2004View::FrenetOnPaintExtend()
 	}
 }
 
+
+
+void CMFCKit2004View::OnContextbgNewbeziercurve()
+{
+	m_state = StateAddBezierPts;
+	m_currCurveIdx = m_mgr.NewBezierCurve();
+	// change cursor
+}
+
+
+void CMFCKit2004View::OnContextbgClearall()
+{
+	m_mgr.ClearAll();
+
+	Invalidate();
+}
