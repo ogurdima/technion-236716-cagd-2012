@@ -427,15 +427,32 @@ void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 	LButtonDown = true;
 	findCtlPoint(point.x, point.y);
 
-	int frameIdx = m_ffmgr.PickFrame(point.x, point.y);
+	/*int frameIdx = m_ffmgr.PickFrame(point.x, point.y);
 	if(frameIdx >= 0) 
 	{
 		ASSERT(m_ffmgr.GetFrameCount() > frameIdx);
 		m_curveIdx = frameIdx;
 		DrawFrenetComponents(m_curveIdx);
-	}
+	}*/
 
+	cagdFreeAllSegments();
+
+	vector<CCagdPoint> arr;
+	arr.push_back(CCagdPoint(0,0,0));
+	arr.push_back(CCagdPoint(0,1,0));
+	arr.push_back(CCagdPoint(1,1,0));
+	arr.push_back(CCagdPoint(3,1,0));
+	arr.push_back(CCagdPoint(3,3,0));
 	
+	Bezier b = Bezier();
+
+	b.SetPoly(arr);
+
+	b.SetWeight(3, 10);
+
+	UINT pgId = b.DrawCtrlPolygon();
+	UINT cId = b.DrawCurve();
+
 }
 
 void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {

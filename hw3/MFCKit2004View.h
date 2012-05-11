@@ -18,6 +18,7 @@
 #include "MainFrm.h"
 #include <vector>
 #include "FrenetFrame.h"
+#include "Bezier.h"
 struct e2t_expr_node;
 
 #ifndef PI

@@ -1,5 +1,6 @@
 
 #include "Bezier.h"
+#include "BezierMath.h"
 
 Bezier::Bezier()
 {
@@ -12,8 +13,12 @@ Bezier::~Bezier()
 UINT Bezier::DrawCtrlPolygon()
 {
 	Calculate();
-	//return cagdAddPolyline(&m_ctrlPts[0], m_ctrlPts.size(), CAGD_SEGMENT_CTLPLYGN);
-	return 0;
+	vector<CCagdPoint> polyPoints;
+	for (int i = 0; i < m_ctrlPts.size(); i++)
+	{
+		polyPoints.push_back(m_ctrlPts[i].m_pt);
+	}
+	return cagdAddPolyline(&polyPoints[0], polyPoints.size(), CAGD_SEGMENT_CTLPLYGN);
 }
 
 UINT Bezier::DrawCurve()
@@ -25,13 +30,25 @@ UINT Bezier::DrawCurve()
 void Bezier::Calculate()
 {
 	m_dataPts.clear();
+	int order = m_ctrlPts.size() - 1;
+	//Calculating coefficients for
+	vector<double> BCoeff;
+	for (int i = 0; i <= order; i++)
+	{
+		BCoeff.push_back(U::choose(order, i));
+	}
+
 	for (double t = 0; t <= 1; t += 0.001)
 	{
 		CCagdPoint curvePt = CCagdPoint(0,0,0);
-		for (int i; i < m_ctrlPts.size(); i++)
+		double divFactor = 0;
+		for (int i = 0; i <= order; i++)
 		{
-			//curvePt += m_ctrlPts[i].m_pt
+			double theta = (BCoeff[i] * pow((1-t),order-i) * pow(t,i));
+			curvePt = curvePt + m_ctrlPts[i].m_pt * m_ctrlPts[i].m_weight * theta;
+			divFactor += (m_ctrlPts[i].m_weight * theta);
 		}
+		m_dataPts.push_back(curvePt/divFactor);
 	}
 }
 
