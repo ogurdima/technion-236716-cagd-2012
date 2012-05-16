@@ -42,11 +42,30 @@ int U::ptOnLineSegmentAfter(CCagdPoint p, vector<BezierPt> poly, double epsilon)
 	{
 		curr = poly[i].m_pt;
 		next = poly[i+1].m_pt;
-		equation = (p.y - next.y) - ( ((next.y - curr.y)/(next.x - curr.x)) * (p.x - next.x) );
-		if (NearlyEq(equation, 0, epsilon) && (p.y-curr.y)*(p.y-next.y) < 0 && (p.x-curr.x)*(p.x-next.x) < 0)
+
+		if(U::NearlyEq(next.x, curr.x, epsilon/2.0))
 		{
-			return i+1;
+			// check if x's match up within the threshold
+			if(!U::NearlyEq(p.x, curr.x, epsilon))
+			{
+				continue;
+			}
+
+			// check if pt.y is between the two points (if it is, the directions will be opposite)
+			if((p.y-curr.y)*(p.y-next.y) < 0)
+			{
+				return i+1;
+			}
 		}
+		else 
+		{
+			equation = (p.y - next.y) - ( ((next.y - curr.y)/(next.x - curr.x)) * (p.x - next.x) );
+			if (NearlyEq(equation, 0, epsilon) && (p.y-curr.y)*(p.y-next.y) < 0 && (p.x-curr.x)*(p.x-next.x) < 0)
+			{
+				return i+1;
+			}
+		}
+	
 	}
 	return -1;
 }

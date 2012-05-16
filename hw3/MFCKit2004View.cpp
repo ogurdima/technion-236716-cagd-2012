@@ -181,6 +181,23 @@ void CMFCKit2004View::OnFileOpen()
 		return;
 	}
 
+	m_mgr.ClearAll();
+	if(SplineTypeBezier == m_parser.Type())
+	{
+		m_currCurveIdx = m_mgr.NewBezierCurve();
+		for(int i=0; i<m_parser.m_pts.size(); ++i)
+		{
+			m_mgr.AddLastBezierCtrlPt(m_parser.m_pts[i], 1.0, m_currCurveIdx);
+		}
+	}
+	else if(SplineTypeBspline == m_parser.Type())
+	{
+
+	}
+	else
+	{
+		// fail
+	}
 	//m_paramStartVal = m_parser.m_paramA;
 	//m_paramEndVal = m_parser.m_paramB;
 	//for(int i=0; i<3; ++i)
@@ -188,7 +205,7 @@ void CMFCKit2004View::OnFileOpen()
 	//	m_curveParamEqn[i] = m_parser.m_equations[i];
 	//	m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
 	//}
-	RecalculateCurve();
+	//RecalculateCurve();
 	//DrawCurve();
 	Invalidate();
 }
@@ -464,6 +481,7 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 	{
 		CCagdPoint coord[2];
 		cagdToObject(point.x, point.y, coord);
+		coord[0].z = 0.0;
 		m_mgr.AddLastBezierCtrlPt(coord[0], 1, m_currCurveIdx);
 	}
 
@@ -493,9 +511,9 @@ void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 	cagdToObject(point.x, point.y, cp);
 
 	m_lastRbuttonUp = cp[0];
-
+	m_lastRbuttonUp.z = 0.0;
 	CMenu popupMenu;
-	PtContext cxt = m_mgr.getPtContext(cp[0]);
+	PtContext cxt = m_mgr.getPtContext(m_lastRbuttonUp);
 
 	switch (cxt)
 	{
