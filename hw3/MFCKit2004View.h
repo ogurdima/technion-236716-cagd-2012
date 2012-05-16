@@ -14,7 +14,7 @@
 
 #include "cagd.h"
 #include <string>
-#include "FrenetParser.h"
+#include "BezierParser.h"
 #include "MainFrm.h"
 #include <vector>
 #include "FrenetFrame.h"
@@ -86,7 +86,7 @@ public:
 	int m_curveIdx;
 
 	std::string m_filename;	
-	FrenetParser m_parser;
+	BezierParser m_parser;
 	std::vector<std::string> m_curveParamEqn; //x(t),y(t),z(t)
 	e2t_expr_node* m_curveNodes[3];
 	FrenetFrameMgr m_ffmgr;

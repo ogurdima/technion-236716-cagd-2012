@@ -4,6 +4,7 @@
 
 #include "cagd.h"
 #include "Bezier.h"
+#include <string>
 
 namespace U
 {
@@ -17,7 +18,9 @@ bool NearlyEq(double a, double b, double epsilon = 0.0001);
 
 int ptOnLineSegmentAfter(CCagdPoint p, vector<BezierPt> poly, double epsilon = 5.0);
 
-
+bool IsIntegerUnsigned(const std::string& str);
+bool IsInteger(const std::string& str);
+bool IsFloat(const std::string& str);
 }
 
 

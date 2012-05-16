@@ -29,6 +29,7 @@ bool U::NearlyEq(double a, double b, double epsilon)
 	return abs(a-b) < epsilon;
 }
 
+//-----------------------------------------------------------------------------
 int U::ptOnLineSegmentAfter(CCagdPoint p, vector<BezierPt> poly, double epsilon)
 {
 	if (poly.size() < 2)
@@ -49,3 +50,60 @@ int U::ptOnLineSegmentAfter(CCagdPoint p, vector<BezierPt> poly, double epsilon)
 	}
 	return -1;
 }
+
+//-----------------------------------------------------------------------------
+bool U::IsIntegerUnsigned(const std::string& str)
+{
+	bool isNumber = true;
+	for(std::string::const_iterator k = str.begin(); k != str.end(); ++k)
+	{
+		isNumber &= isdigit(*k);
+	}
+	return isNumber;
+}
+
+//-----------------------------------------------------------------------------
+bool U::IsInteger(const std::string& str)
+{
+	std::string word;
+	bool isNumber = true;
+	for(std::string::const_iterator k = str.begin(); k != str.end(); ++k)
+	{
+		isNumber &= (isdigit(*k) || ('-'==*k));
+	}
+	return isNumber;
+}
+
+//-----------------------------------------------------------------------------
+bool U::IsFloat(const std::string& str)
+{
+	std::string::const_iterator k = str.begin();
+	if('-' == *k)
+	{
+		++k;
+	}
+
+	bool found_decimal = false;
+	while(k != str.end())
+	{
+		if('.' == *k)
+		{
+			if(found_decimal)
+			{
+				return false;
+			}
+			found_decimal = true;
+		}
+		else
+		{
+			if(!isdigit(*k))
+			{
+				return false;
+			}
+		}
+		++k;
+	}
+	return true;
+}
+
+

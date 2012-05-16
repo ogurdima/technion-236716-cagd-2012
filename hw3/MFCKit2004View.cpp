@@ -155,8 +155,12 @@ void CMFCKit2004View::OnFileNew() {
 	// TODO: Add your command handler code here
 }
 
+
+#include <sstream>
 //  load a new curve from a file
-void CMFCKit2004View::OnFileOpen() {
+void CMFCKit2004View::OnFileOpen() 
+{
+
 	CFileDialog fileDialog(TRUE, ".dat", NULL, 0, NULL, NULL, 0);
 	INT_PTR nResult = fileDialog.DoModal();
 	if(IDCANCEL == nResult) 
@@ -169,6 +173,7 @@ void CMFCKit2004View::OnFileOpen() {
 	CString fileName = fileDialog.GetFileTitle();
 	m_filename = std::string(pathName);
 	bool parseRes = false;
+	
 	parseRes = m_parser.ParseFile(m_filename);
 	if (! parseRes)
 	{
@@ -176,13 +181,13 @@ void CMFCKit2004View::OnFileOpen() {
 		return;
 	}
 
-	m_paramStartVal = m_parser.m_paramA;
-	m_paramEndVal = m_parser.m_paramB;
-	for(int i=0; i<3; ++i)
-	{
-		m_curveParamEqn[i] = m_parser.m_equations[i];
-		m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
-	}
+	//m_paramStartVal = m_parser.m_paramA;
+	//m_paramEndVal = m_parser.m_paramB;
+	//for(int i=0; i<3; ++i)
+	//{
+	//	m_curveParamEqn[i] = m_parser.m_equations[i];
+	//	m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
+	//}
 	RecalculateCurve();
 	//DrawCurve();
 	Invalidate();
