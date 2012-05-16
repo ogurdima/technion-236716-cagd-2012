@@ -80,6 +80,9 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 
 	ON_COMMAND(ID_CONTEXTBG_NEWBEZIERCURVE, &CMFCKit2004View::OnContextbgNewbeziercurve)
 	ON_COMMAND(ID_CONTEXTBG_CLEARALL, &CMFCKit2004View::OnContextbgClearall)
+	ON_COMMAND(ID_CONTEXTPOLYGON_INSERTPOINT, &CMFCKit2004View::OnContextpolygonInsertpoint)
+	ON_COMMAND(ID_CONTEXTPOLYGON_APPENDPOINT, &CMFCKit2004View::OnContextpolygonAppendpoint)
+	ON_COMMAND(ID_CONTEXTPOLYGON_SHOW, &CMFCKit2004View::OnContextpolygonShowHideControlPolygon)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -467,28 +470,47 @@ void CMFCKit2004View::OnRButtonDown(UINT nFlags, CPoint point) {
 	prevMouseLocation = point;
 	RButtonDown = true;
 
-	switch(m_state) 
-	{
-	case StateAddBezierPts:
-		m_state = StateIdle;
-		break;
-	default:
-		break;
-	}
 }
 
 void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 	if (GetCapture() == this) ::ReleaseCapture();
 	RButtonDown = false;
 
+	
+
+	if (StateIdle != m_state)
+	{
+		m_state = StateIdle;
+		return;
+	}
 	// this code pops up the menu called "IDR_POPUPMENU" on the screen at coordinate "point"
+	CCagdPoint cp[2];
+	cagdToObject(point.x, point.y, cp);
+
+	m_lastRbuttonUp = cp[0];
+
 	CMenu popupMenu;
-	popupMenu.LoadMenu(IDR_POPUPMENU); // here you can choose which menu will be shown...
+	PtContext cxt = m_mgr.getPtContext(cp[0]);
+
+	switch (cxt)
+	{
+	case ContextEmpty:
+		popupMenu.LoadMenu(IDR_POPUPMENU);
+		break;
+
+	case ContextBezierPoly:
+		popupMenu.LoadMenu(IDR_MENU1);
+		break;
+
+	default:
+		bool OK = true;
+	}
+
 	CMenu* subMenu = popupMenu.GetSubMenu(0);
 	ClientToScreen(&point);
 	subMenu->TrackPopupMenu(0, point.x, point.y,
 	   AfxGetMainWnd(), NULL);
-
+	Invalidate();
 }
 
 void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
@@ -1125,4 +1147,27 @@ void CMFCKit2004View::OnContextbgClearall()
 	m_mgr.ClearAll();
 
 	Invalidate();
+}
+
+
+void CMFCKit2004View::OnContextpolygonInsertpoint()
+{
+	m_mgr.InsertBezierCtrlPt(m_lastRbuttonUp);
+}
+
+
+void CMFCKit2004View::OnContextpolygonAppendpoint()
+{
+	
+	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
+	if (-1 != m_currCurveIdx)
+	{
+		m_state = StateAddBezierPts;
+	}
+}
+
+
+void CMFCKit2004View::OnContextpolygonShowHideControlPolygon()
+{
+	// TODO: Add your command handler code here
 }

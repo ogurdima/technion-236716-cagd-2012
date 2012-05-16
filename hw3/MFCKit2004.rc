@@ -179,6 +179,16 @@ BEGIN
     END
 END
 
+IDR_MENU1 MENU
+BEGIN
+    POPUP "ContextPolygon"
+    BEGIN
+        MENUITEM "Insert Point",                ID_CONTEXTPOLYGON_INSERTPOINT
+        MENUITEM "Append Point(s)",             ID_CONTEXTPOLYGON_APPENDPOINT
+        MENUITEM "Show/hide control polygon",   ID_CONTEXTPOLYGON_SHOW
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

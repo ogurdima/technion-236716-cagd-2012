@@ -5,6 +5,17 @@
 #include "Bspline.h"
 #include <vector>
 
+enum PtContext
+{
+	ContextBezierPoly,
+	ContextBezierCurve,
+	ContextBezierPt,
+	ContextBsplinePoly,
+	ContextBsplineCurve,
+	ContextBsplinePt,
+	ContextEmpty
+};
+
 struct BezierWrp
 {
 	BezierWrp() 
@@ -26,6 +37,11 @@ public:
 	int NewBezierCurve();
 	bool AddBezierCtrlPt(int idx, const CCagdPoint& pt, double weight = 1);
 	void ClearAll();
+
+	PtContext getPtContext(const CCagdPoint& p);
+
+	void InsertBezierCtrlPt(const CCagdPoint& p);
+	int getCurveIndexByPointOnPolygon(const CCagdPoint& p);
 	
 private:
 	std::vector<BezierWrp> m_beziers;

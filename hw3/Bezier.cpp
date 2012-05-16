@@ -18,6 +18,10 @@ UINT Bezier::DrawCtrlPolygon()
 	{
 		polyPoints.push_back(m_ctrlPts[i].m_pt);
 	}
+	if (1 == polyPoints.size())
+	{
+		return cagdAddPoint(&polyPoints[0]);
+	}
 	return cagdAddPolyline(&polyPoints[0], polyPoints.size(), CAGD_SEGMENT_CTLPLYGN);
 }
 
@@ -52,19 +56,21 @@ void Bezier::Calculate()
 	}
 }
 
-bool Bezier::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAfter)
+bool Bezier::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt)
 {
-	int idxToUse;
-	idxToUse = ptIdxAfter;
-	if(-1 == ptIdxAfter)
+	int idxToUse = ptIdxAt;
+	if(-1 == idxToUse)
 	{
 		idxToUse = m_ctrlPts.size();
 	}
 	if((idxToUse < 0) || (idxToUse >= (m_ctrlPts.size()+1)))
 	{ return false; }
+	
 
 	vector<BezierPt>::iterator pos = (m_ctrlPts.begin() + idxToUse);
 	m_ctrlPts.insert(pos, BezierPt(pt, weight));
+
+
 	return true;
 }
 
@@ -97,5 +103,10 @@ double Bezier::GetWeight(int idx)
 	{ return -1.0; }
 
 	return m_ctrlPts[idx].m_weight;
+}
+
+int Bezier::GetInsertionIndex(const CCagdPoint& p)
+{
+	return U::ptOnLineSegmentAfter(p, m_ctrlPts);
 }
 

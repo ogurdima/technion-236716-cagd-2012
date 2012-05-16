@@ -119,6 +119,7 @@ public:
 	/// Added Bezier members
 	CurveMgr m_mgr;
 	int m_currCurveIdx;
+	CCagdPoint m_lastRbuttonUp;
 
 	enum ProgramState
 	{
@@ -202,6 +203,9 @@ public:
 	//afx_msg void OnUpdateCurvature(CCmdUI *pCmdUI);
 	afx_msg void OnContextbgNewbeziercurve();
 	afx_msg void OnContextbgClearall();
+	afx_msg void OnContextpolygonInsertpoint();
+	afx_msg void OnContextpolygonAppendpoint();
+	afx_msg void OnContextpolygonShowHideControlPolygon();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp
