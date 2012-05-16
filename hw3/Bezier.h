@@ -38,6 +38,7 @@ public:
 	double GetWeight(int idx);
 
 	int GetInsertionIndex(const CCagdPoint& p);
+	int polygonSize();
 
 private:
 	// the control polygon

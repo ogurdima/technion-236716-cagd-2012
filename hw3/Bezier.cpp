@@ -74,6 +74,10 @@ bool Bezier::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt)
 	return true;
 }
 
+int Bezier::polygonSize()
+{
+	return m_ctrlPts.size();
+}
 
 void Bezier::SetPoly(const vector<CCagdPoint>& pts)
 {

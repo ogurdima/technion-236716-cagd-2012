@@ -16,21 +16,23 @@ int CurveMgr::NewBezierCurve()
 	return m_beziers.size()-1;
 }
 
-
-bool CurveMgr::AddBezierCtrlPt(int idx, const CCagdPoint& pt, double weight)
+bool CurveMgr::ToggleShowBezierPolygon(int curveIdx)
 {
-	if((idx < 0) || (idx >= m_beziers.size()))
+	if((curveIdx < 0) || (curveIdx >= m_beziers.size()))
 	{ return false; }
+	m_beziers[curveIdx].m_showCtrPoly = !m_beziers[curveIdx].m_showCtrPoly;
+	RedrawCurve(curveIdx);
+}
 
-	BezierWrp& bw = m_beziers[idx];
+bool CurveMgr::RedrawCurve(int curveIdx)
+{
+	if((curveIdx < 0) || (curveIdx >= m_beziers.size()))
+	{ return false; }
+	BezierWrp& bw = m_beziers[curveIdx];
 
 	// clear existing curve & control polygon
 	cagdFreeSegment(bw.m_curveId);
 	cagdFreeSegment(bw.m_ctrPolyId);
-
-	// add the point
-	bw.m_curve.InsertPt(pt, weight);
-
 	// recalculate
 	bw.m_curveId = bw.m_curve.DrawCurve();
 	bw.m_ctrPolyId = bw.m_curve.DrawCtrlPolygon();
@@ -43,7 +45,36 @@ bool CurveMgr::AddBezierCtrlPt(int idx, const CCagdPoint& pt, double weight)
 	{
 		cagdHideSegment(bw.m_curveId);
 	}
+	return true;
+}
 
+bool CurveMgr::AddLastBezierCtrlPt(const CCagdPoint& pt, double weight, int curveIdx)
+{
+	if((curveIdx < 0) || (curveIdx >= m_beziers.size()))
+	{ return false; }
+	return AddBezierCtrlPt(pt, weight, curveIdx, m_beziers[curveIdx].m_curve.polygonSize());
+}
+
+bool CurveMgr::AddBezierCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, int polyPointIdx)
+{
+	if (-1 == curveIdx)
+	{
+		curveIdx = NewBezierCurve();
+	}
+	if((curveIdx < 0) || (curveIdx >= m_beziers.size()))
+	{ return false; }
+
+	BezierWrp& bw = m_beziers[curveIdx];
+
+	if (-1 == polyPointIdx)
+	{
+		polyPointIdx = bw.m_curve.GetInsertionIndex(pt);
+	}
+
+	// add the point
+	bw.m_curve.InsertPt(pt, weight, polyPointIdx);
+
+	RedrawCurve(curveIdx);
 }
 
 
@@ -86,36 +117,4 @@ int CurveMgr::getCurveIndexByPointOnPolygon(const CCagdPoint& p)
 		}
 	}	
 	return -1;
-}
-
-void CurveMgr::InsertBezierCtrlPt(const CCagdPoint& p)
-{
-	for (int i = 0; i < m_beziers.size(); i++)
-	{
-		int idx = m_beziers[i].m_curve.GetInsertionIndex(p);
-		if (-1 != idx)
-		{
-			BezierWrp bw = m_beziers[i];
-			
-
-			// clear existing curve & control polygon
-			cagdFreeSegment(bw.m_curveId);
-			cagdFreeSegment(bw.m_ctrPolyId);
-
-			bw.m_curve.InsertPt(p, 1, idx);
-
-			// recalculate
-			bw.m_curveId = bw.m_curve.DrawCurve();
-			bw.m_ctrPolyId = bw.m_curve.DrawCtrlPolygon();
-
-			if(!bw.m_showCtrPoly)
-			{
-				cagdHideSegment(bw.m_ctrPolyId);
-			}
-			if(!bw.m_showCurve)
-			{
-				cagdHideSegment(bw.m_curveId);
-			}
-		}
-	}
 }

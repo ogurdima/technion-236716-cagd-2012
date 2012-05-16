@@ -31,6 +31,10 @@ bool U::NearlyEq(double a, double b, double epsilon)
 
 int U::ptOnLineSegmentAfter(CCagdPoint p, vector<BezierPt> poly, double epsilon)
 {
+	if (poly.size() < 2)
+	{
+		return -1;
+	}
 	CCagdPoint curr, next;
 	double equation = 0;
 	for (int i = 0; i < poly.size() - 1; i++)
@@ -38,7 +42,7 @@ int U::ptOnLineSegmentAfter(CCagdPoint p, vector<BezierPt> poly, double epsilon)
 		curr = poly[i].m_pt;
 		next = poly[i+1].m_pt;
 		equation = (p.y - next.y) - ( ((next.y - curr.y)/(next.x - curr.x)) * (p.x - next.x) );
-		if (equation < epsilon && (p.y-curr.y)*(p.y-next.y) < 0 && (p.x-curr.x)*(p.x-next.x) < 0)
+		if (NearlyEq(equation, 0, epsilon) && (p.y-curr.y)*(p.y-next.y) < 0 && (p.x-curr.x)*(p.x-next.x) < 0)
 		{
 			return i+1;
 		}

@@ -35,13 +35,19 @@ public:
 	~CurveMgr();
 
 	int NewBezierCurve();
-	bool AddBezierCtrlPt(int idx, const CCagdPoint& pt, double weight = 1);
+	bool AddLastBezierCtrlPt(const CCagdPoint& pt, double weight, int curveIdx);
+	bool AddBezierCtrlPt(const CCagdPoint& pt, double weight = 1, int curveIdx = -1, int polyPointIdx = -1);
 	void ClearAll();
+	bool RedrawCurve(int curveIdx);
 
 	PtContext getPtContext(const CCagdPoint& p);
 
 	void InsertBezierCtrlPt(const CCagdPoint& p);
 	int getCurveIndexByPointOnPolygon(const CCagdPoint& p);
+
+	bool ToggleShowBezierPolygon(int curveIdx);
+
+
 	
 private:
 	std::vector<BezierWrp> m_beziers;

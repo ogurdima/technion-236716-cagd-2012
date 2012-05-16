@@ -459,7 +459,7 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 	{
 		CCagdPoint coord[2];
 		cagdToObject(point.x, point.y, coord);
-		m_mgr.AddBezierCtrlPt(m_curveIdx, coord[0]);
+		m_mgr.AddLastBezierCtrlPt(coord[0], 1, m_currCurveIdx);
 	}
 
 	Invalidate();					// redraw scene
@@ -1145,29 +1145,32 @@ void CMFCKit2004View::OnContextbgNewbeziercurve()
 void CMFCKit2004View::OnContextbgClearall()
 {
 	m_mgr.ClearAll();
-
 	Invalidate();
 }
 
 
 void CMFCKit2004View::OnContextpolygonInsertpoint()
 {
-	m_mgr.InsertBezierCtrlPt(m_lastRbuttonUp);
+	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
+	m_mgr.AddBezierCtrlPt(m_lastRbuttonUp, 1, m_currCurveIdx);
+	Invalidate();
 }
 
 
 void CMFCKit2004View::OnContextpolygonAppendpoint()
 {
-	
 	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
 	if (-1 != m_currCurveIdx)
 	{
 		m_state = StateAddBezierPts;
 	}
+	Invalidate();
 }
 
 
 void CMFCKit2004View::OnContextpolygonShowHideControlPolygon()
 {
-	// TODO: Add your command handler code here
+	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
+	m_mgr.ToggleShowBezierPolygon(m_currCurveIdx);
+	Invalidate();
 }
