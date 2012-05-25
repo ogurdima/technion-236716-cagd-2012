@@ -23,7 +23,7 @@
 struct e2t_expr_node;
 
 #ifndef PI
-#define PI (3.1415926535897932384626433832795)
+#define PI (3.1415926535897932384626433832795) 
 #endif
 
 class CMFCKit2004View : public CView

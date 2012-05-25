@@ -134,6 +134,7 @@
     <ClCompile Include="BezierMath.cpp" />
     <ClCompile Include="BezierParser.cpp" />
     <ClCompile Include="cagd.cpp" />
+    <ClCompile Include="Curve.cpp" />
     <ClCompile Include="expr2tree.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
@@ -162,6 +163,7 @@
     <ClInclude Include="BezierMath.h" />
     <ClInclude Include="BezierParser.h" />
     <ClInclude Include="cagd.h" />
+    <ClInclude Include="Curve.h" />
     <ClInclude Include="expr2tree.h" />
     <ClInclude Include="FrenetFrame.h" />
     <ClInclude Include="FrenetParser.h" />

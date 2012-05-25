@@ -14,6 +14,8 @@
 #include "FrenetFrame.h"
 #include <string>
 
+#pragma warning (disable : 4800)
+#pragma warning (disable : 4018)
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -34,7 +36,7 @@ IMPLEMENT_DYNCREATE(CMFCKit2004View, CView)
 
 BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	//{{AFX_MSG_MAP(CMFCKit2004View)
-	ON_WM_CHAR(OnChar)
+	ON_WM_CHAR()
 	ON_WM_LBUTTONUP()
 	ON_WM_MOUSEMOVE()
 	ON_WM_LBUTTONDOWN()
@@ -187,7 +189,7 @@ void CMFCKit2004View::OnFileOpen()
 		m_currCurveIdx = m_mgr.NewBezierCurve();
 		for(int i=0; i<m_parser.m_pts.size(); ++i)
 		{
-			m_mgr.AddLastBezierCtrlPt(m_parser.m_pts[i], 1.0, m_currCurveIdx);
+			m_mgr.AddLastCtrlPt(m_parser.m_pts[i], 1.0, m_currCurveIdx);
 		}
 	}
 	else if(SplineTypeBspline == m_parser.Type())
@@ -482,7 +484,7 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 		CCagdPoint coord[2];
 		cagdToObject(point.x, point.y, coord);
 		coord[0].z = 0.0;
-		m_mgr.AddLastBezierCtrlPt(coord[0], 1, m_currCurveIdx);
+		m_mgr.AddLastCtrlPt(coord[0], 1, m_currCurveIdx);
 	}
 
 	Invalidate();					// redraw scene
@@ -1175,7 +1177,7 @@ void CMFCKit2004View::OnContextbgClearall()
 void CMFCKit2004View::OnContextpolygonInsertpoint()
 {
 	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	m_mgr.AddBezierCtrlPt(m_lastRbuttonUp, 1, m_currCurveIdx);
+	m_mgr.AddCtrlPt(m_lastRbuttonUp, 1, m_currCurveIdx);
 	Invalidate();
 }
 
@@ -1194,6 +1196,6 @@ void CMFCKit2004View::OnContextpolygonAppendpoint()
 void CMFCKit2004View::OnContextpolygonShowHideControlPolygon()
 {
 	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	m_mgr.ToggleShowBezierPolygon(m_currCurveIdx);
+	m_mgr.ToggleShowPolygon(m_currCurveIdx);
 	Invalidate();
 }

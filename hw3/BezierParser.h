@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include "cagd.h"
+#include "CurveMgr.h"
 using std::vector;
 
 enum ParseState
@@ -14,12 +15,7 @@ enum ParseState
 };
 
 
-enum SplineType
-{
-	SplineTypeUnknown,
-	SplineTypeBezier,
-	SplineTypeBspline
-};
+
 class BezierParser
 {
 public:

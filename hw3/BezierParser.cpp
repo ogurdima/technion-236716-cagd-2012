@@ -6,6 +6,9 @@
 #include <sstream>
 #include "BezierMath.h"
 
+#pragma warning (disable : 4800)
+#pragma warning (disable : 4018)
+
 BezierParser::BezierParser(void)
 	: m_state(ParseStateNone)
 	, m_expectedPtCount(0)
@@ -115,7 +118,7 @@ bool BezierParser::ParseLine(const std::string& line)
 		// should either be 'knots[' or a float value
 		std::string knots_str("knots[");
 		std::string line_begin = line_trim.substr(0, knots_str.size());
-		int cmp_res = stricmp(knots_str.c_str(), line_begin.c_str());
+		int cmp_res = _stricmp(knots_str.c_str(), line_begin.c_str());
 		if(0 == cmp_res)
 		{
 			// find the second bracket

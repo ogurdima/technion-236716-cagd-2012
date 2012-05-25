@@ -1,6 +1,9 @@
 
 #include "CurveMgr.h"
 
+#pragma warning (disable : 4800)
+#pragma warning (disable : 4018)
+
 CurveMgr::CurveMgr()
 {
 }
@@ -12,67 +15,74 @@ CurveMgr::~CurveMgr()
 
 int CurveMgr::NewBezierCurve()
 {
-	m_beziers.push_back(BezierWrp());
-	return m_beziers.size()-1;
+	m_curves.push_back(CurveWrp(SplineTypeBezier));
+	return m_curves.size()-1;
 }
 
-bool CurveMgr::ToggleShowBezierPolygon(int curveIdx)
+int CurveMgr::NewBsplineCurve()
 {
-	if((curveIdx < 0) || (curveIdx >= m_beziers.size()))
+	//m_curves.push_back(CurveWrp(SplineTypeBspline));
+	//return m_curves.size()-1;
+	return -1;
+}
+
+bool CurveMgr::ToggleShowPolygon(int curveIdx)
+{
+	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
 	{ return false; }
-	m_beziers[curveIdx].m_showCtrPoly = !m_beziers[curveIdx].m_showCtrPoly;
-	RedrawCurve(curveIdx);
+	m_curves[curveIdx].m_showCtrPoly = !m_curves[curveIdx].m_showCtrPoly;
+	return RedrawCurve(curveIdx);
 }
 
 bool CurveMgr::RedrawCurve(int curveIdx)
 {
-	if((curveIdx < 0) || (curveIdx >= m_beziers.size()))
+	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
 	{ return false; }
-	BezierWrp& bw = m_beziers[curveIdx];
+	CurveWrp& cw = m_curves[curveIdx];
 
 	// clear existing curve & control polygon
-	cagdFreeSegment(bw.m_curveId);
-	cagdFreeSegment(bw.m_ctrPolyId);
+	cagdFreeSegment(cw.m_curveId);
+	cagdFreeSegment(cw.m_ctrPolyId);
 	// recalculate
-	bw.m_curveId = bw.m_curve.DrawCurve();
-	bw.m_ctrPolyId = bw.m_curve.DrawCtrlPolygon();
+	cw.m_curveId = cw.m_curve->DrawCurve();
+	cw.m_ctrPolyId = cw.m_curve->DrawCtrlPolygon();
 
-	if(!bw.m_showCtrPoly)
+	if(!cw.m_showCtrPoly)
 	{
-		cagdHideSegment(bw.m_ctrPolyId);
+		cagdHideSegment(cw.m_ctrPolyId);
 	}
-	if(!bw.m_showCurve)
+	if(!cw.m_showCurve)
 	{
-		cagdHideSegment(bw.m_curveId);
+		cagdHideSegment(cw.m_curveId);
 	}
 	return true;
 }
 
-bool CurveMgr::AddLastBezierCtrlPt(const CCagdPoint& pt, double weight, int curveIdx)
+bool CurveMgr::AddLastCtrlPt(const CCagdPoint& pt, double weight, int curveIdx)
 {
-	if((curveIdx < 0) || (curveIdx >= m_beziers.size()))
+	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
 	{ return false; }
-	return AddBezierCtrlPt(pt, weight, curveIdx, m_beziers[curveIdx].m_curve.polygonSize());
+	return AddCtrlPt(pt, weight, curveIdx, m_curves[curveIdx].m_curve->polygonSize());
 }
 
-bool CurveMgr::AddBezierCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, int polyPointIdx)
+bool CurveMgr::AddCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, int polyPointIdx)
 {
 	if (-1 == curveIdx)
 	{
 		curveIdx = NewBezierCurve();
 	}
-	if((curveIdx < 0) || (curveIdx >= m_beziers.size()))
+	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
 	{ return false; }
 
-	BezierWrp& bw = m_beziers[curveIdx];
+	CurveWrp& cw = m_curves[curveIdx];
 
 	if (-1 == polyPointIdx)
 	{
-		polyPointIdx = bw.m_curve.GetInsertionIndex(pt);
+		polyPointIdx = cw.m_curve->GetInsertionIndex(pt);
 	}
 
 	// add the point
-	bw.m_curve.InsertPt(pt, weight, polyPointIdx);
+	cw.m_curve->InsertPt(pt, weight, polyPointIdx);
 
 	RedrawCurve(curveIdx);
 }
@@ -80,37 +90,35 @@ bool CurveMgr::AddBezierCtrlPt(const CCagdPoint& pt, double weight, int curveIdx
 
 void CurveMgr::ClearAll()
 {
-	for(int i=0; i<m_beziers.size(); ++i)
+	for(int i=0; i<m_curves.size(); ++i)
 	{
-		BezierWrp& bw = m_beziers[i];
-		cagdFreeSegment(bw.m_ctrPolyId);
-		bw.m_ctrPolyId = 0;
-		cagdFreeSegment(bw.m_curveId);
-		bw.m_curveId = 0;
+		CurveWrp& cw = m_curves[i];
+		cagdFreeSegment(cw.m_ctrPolyId);
+		cw.m_ctrPolyId = 0;
+		cagdFreeSegment(cw.m_curveId);
+		cw.m_curveId = 0;
 	}
-	m_beziers.clear();
+	m_curves.clear();
 }
 
 PtContext CurveMgr::getPtContext(const CCagdPoint& p)
 {
-	for (int i = 0; i < m_beziers.size(); i++)
+	for (int i = 0; i < m_curves.size(); i++)
 	{
-		int idx = m_beziers[i].m_curve.GetInsertionIndex(p);
+		int idx = m_curves[i].m_curve->GetInsertionIndex(p);
 		if (-1 != idx)
 		{
-			return ContextBezierPoly;
+			return (m_curves[i].m_type == SplineTypeBezier) ? ContextBezierPoly : ContextBsplinePoly;
 		}
 	}
-
-
 	return ContextEmpty;
 }
 
 int CurveMgr::getCurveIndexByPointOnPolygon(const CCagdPoint& p)
 {
-	for (int i = 0; i < m_beziers.size(); i++)
+	for (int i = 0; i < m_curves.size(); i++)
 	{
-		int idx = m_beziers[i].m_curve.GetInsertionIndex(p);
+		int idx = m_curves[i].m_curve->GetInsertionIndex(p);
 		if (-1 != idx)
 		{
 			return i;

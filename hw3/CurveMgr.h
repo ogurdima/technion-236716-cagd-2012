@@ -4,6 +4,7 @@
 #include "Bezier.h"
 #include "Bspline.h"
 #include <vector>
+#include "Curve.h"
 
 enum PtContext
 {
@@ -16,16 +17,37 @@ enum PtContext
 	ContextEmpty
 };
 
-struct BezierWrp
+enum SplineType
 {
-	BezierWrp() 
-		: m_curveId(0), m_ctrPolyId(0), m_showCurve(true), m_showCtrPoly(true)
-	{}
-	Bezier m_curve;
+	SplineTypeUnknown,
+	SplineTypeBezier,
+	SplineTypeBspline
+};
+
+struct CurveWrp
+{
+	CurveWrp(SplineType t) 
+		: m_curve(NULL), m_curveId(0), m_ctrPolyId(0), m_showCurve(true), m_showCtrPoly(true), m_type(t)
+	{
+		if (SplineTypeBezier == t)
+		{
+			m_curve = new Bezier();
+		}
+		else
+		{
+			m_curve = new BSpline();
+		}
+	}
+	~CurveWrp()
+	{
+		delete m_curve;
+	}
+	Curve* m_curve;
 	UINT m_curveId;
 	UINT m_ctrPolyId;
 	bool m_showCurve;
 	bool m_showCtrPoly;
+	SplineType m_type;
 };
 
 class CurveMgr
@@ -35,21 +57,22 @@ public:
 	~CurveMgr();
 
 	int NewBezierCurve();
-	bool AddLastBezierCtrlPt(const CCagdPoint& pt, double weight, int curveIdx);
-	bool AddBezierCtrlPt(const CCagdPoint& pt, double weight = 1, int curveIdx = -1, int polyPointIdx = -1);
+	int NewBsplineCurve();
+	bool AddLastCtrlPt(const CCagdPoint& pt, double weight, int curveIdx);
+	bool AddCtrlPt(const CCagdPoint& pt, double weight = 1, int curveIdx = -1, int polyPointIdx = -1);
 	void ClearAll();
 	bool RedrawCurve(int curveIdx);
 
 	PtContext getPtContext(const CCagdPoint& p);
 
-	void InsertBezierCtrlPt(const CCagdPoint& p);
+	void InsertCtrlPt(const CCagdPoint& p);
 	int getCurveIndexByPointOnPolygon(const CCagdPoint& p);
 
-	bool ToggleShowBezierPolygon(int curveIdx);
+	bool ToggleShowPolygon(int curveIdx);
 
 
 	
 private:
-	std::vector<BezierWrp> m_beziers;
+	std::vector<CurveWrp> m_curves;
 	
 };

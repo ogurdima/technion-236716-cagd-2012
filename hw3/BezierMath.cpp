@@ -2,6 +2,8 @@
 #include "BezierMath.h"
 #include <math.h>
 
+#pragma warning (disable : 4800)
+#pragma warning (disable : 4018)
 
 //-----------------------------------------------------------------------------
 unsigned long long U::choose(unsigned long long n, unsigned long long k) 
@@ -30,7 +32,7 @@ bool U::NearlyEq(double a, double b, double epsilon)
 }
 
 //-----------------------------------------------------------------------------
-int U::ptOnLineSegmentAfter(CCagdPoint p, vector<BezierPt> poly, double epsilon)
+int U::ptOnLineSegmentAfter(CCagdPoint p, vector<WeightedPt> poly, double epsilon)
 {
 	if (poly.size() < 2)
 	{
