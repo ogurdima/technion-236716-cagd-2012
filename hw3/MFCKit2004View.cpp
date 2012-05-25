@@ -465,6 +465,19 @@ void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 	LButtonDown = true;
 	findCtlPoint(point.x, point.y);
 
+
+	if(m_state == StateIdle)
+	{
+		// look for the point within the curves
+		m_draggedPt.m_pt = m_mgr.PickControlPoint(point.x, point.y);
+		if(m_draggedPt.m_pt.IsValid())
+		{
+			// dragging stuff
+			m_draggedPt.m_startPosScreen = CCagdPoint(point.x, point.y);
+		}
+	}
+
+
 	/*int frameIdx = m_ffmgr.PickFrame(point.x, point.y);
 	if(frameIdx >= 0) 
 	{
@@ -478,6 +491,10 @@ void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 	if (GetCapture() == this) ::ReleaseCapture();
 	LButtonDown = false;
+	
+	// release the dragged point
+	m_draggedPt.m_pt.Invalidate();
+	
 
 	if(StateAddBezierPts == m_state)
 	{
@@ -539,24 +556,37 @@ void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 }
 
 void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
-	if(!::GetAsyncKeyState(VK_CONTROL))
+
+	if ((GetCapture() != this) || (!LButtonDown)) 		// 'this' has the mouse capture
 	{ return; }
 
-	if (GetCapture() == this) {		// 'this' has the mouse capture
-		if (LButtonDown) {
-			// This is the movement ammount 
-			int valuex(point.x - prevMouseLocation.x);
-			int valuey(point.y - prevMouseLocation.y);
-			if (!CtrlKeyDown) {		
-				if (RButtonDown && LButtonDown)  // translateXY
-					translateXY(valuex*TSense,-valuey*TSense);
-				else if (LButtonDown) // rotateXY
-					RotateXY(valuey*RSense,valuex*RSense);
-				else if (RButtonDown) // rotateZ
-					RotateZ(valuex);
-			}
+	if(::GetAsyncKeyState(VK_CONTROL))
+	{ 
+		// This is the movement ammount 
+		int valuex(point.x - prevMouseLocation.x);
+		int valuey(point.y - prevMouseLocation.y);
+		if (!CtrlKeyDown) {		
+			if (RButtonDown && LButtonDown)  // translateXY
+				translateXY(valuex*TSense,-valuey*TSense);
+			else if (LButtonDown) // rotateXY
+				RotateXY(valuey*RSense,valuex*RSense);
+			else if (RButtonDown) // rotateZ
+				RotateZ(valuex);
 		}
 	}
+	else
+	{
+		if(m_draggedPt.m_pt.IsValid())
+		{
+			//int movex = point.x - m_draggedPt.m_startPosScreen.x;
+			//int movey = point.y - m_draggedPt.m_startPosScreen.y;
+			CCagdPoint pts[2];
+			cagdToObject(point.x, point.y, pts);
+			pts[0].z = 0.0;
+			m_mgr.UpdateCtrlPtPos(m_draggedPt.m_pt, pts[0]);
+		}
+	}
+
 	Invalidate();					// redraw scene
 	prevMouseLocation = point;
 }
@@ -704,6 +734,7 @@ UINT CMFCKit2004View::findCircle(int x, int y) {
 	}
 	return -1;
 }
+
 
 void CMFCKit2004View::RotateXY(double valX, double valY) {
 	glLoadIdentity();

@@ -85,8 +85,26 @@ bool CurveMgr::AddCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, int 
 	cw.m_curve->InsertPt(pt, weight, polyPointIdx);
 
 	RedrawCurve(curveIdx);
+	return true;
 }
 
+bool CurveMgr::UpdateCtrlPtPos(const ControlPointInfo& ptInfo, const CCagdPoint& pt)
+{
+	if((0 > ptInfo.m_curveIdx) || (m_curves.size() <= ptInfo.m_curveIdx))
+	{ return false; }
+	bool success = m_curves[ptInfo.m_curveIdx].m_curve->UpdatePtPos(pt, ptInfo.m_pointIdx);
+	RedrawCurve(ptInfo.m_curveIdx);
+	return success;
+}
+bool CurveMgr::UpdateCtrlPtWeight(const ControlPointInfo& ptInfo, double weight)
+{
+	if((0 > ptInfo.m_curveIdx) || (m_curves.size() <= ptInfo.m_curveIdx))
+	{ return false; }
+
+	bool success = m_curves[ptInfo.m_curveIdx].m_curve->UpdatePtWeight(weight, ptInfo.m_pointIdx);
+	RedrawCurve(ptInfo.m_curveIdx);
+	return success;
+}
 
 void CurveMgr::ClearAll()
 {
@@ -112,6 +130,23 @@ PtContext CurveMgr::getPtContext(const CCagdPoint& p)
 		}
 	}
 	return ContextEmpty;
+}
+
+ControlPointInfo CurveMgr::PickControlPoint(int x, int y) const
+{
+	for(int i=0; i<m_curves.size(); ++i)
+	{
+		const CurveWrp& cw = m_curves[i];
+		int idx = cw.m_curve->PickPoint(x, y);
+		if((idx < 0) || (idx >= cw.m_curve->polygonSize()))
+		{ continue; }
+
+		// if we got here, we have a valid idx
+		ControlPointInfo cpInfo(i, idx);
+		return cpInfo;
+	}
+
+	return ControlPointInfo();
 }
 
 int CurveMgr::getCurveIndexByPointOnPolygon(const CCagdPoint& p)

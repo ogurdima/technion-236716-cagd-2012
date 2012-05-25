@@ -32,3 +32,4 @@ void Bezier::Calculate()
 		m_dataPts.push_back(curvePt/divFactor);
 	}
 }
+

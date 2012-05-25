@@ -115,11 +115,12 @@ public:
 	void DrawFrenetComponents(int idx);
 	void FrenetOnPaintExtend();
 
-
 	/// Added Bezier members
-	CurveMgr m_mgr;
-	int m_currCurveIdx;
-	CCagdPoint m_lastRbuttonUp;
+	struct DragInfo
+	{
+		ControlPointInfo m_pt;
+		CCagdPoint m_startPosScreen;
+	};
 
 	enum ProgramState
 	{
@@ -127,6 +128,11 @@ public:
 		StateAddBezierPts,
 		StateAddBSplinePts
 	};
+
+	CurveMgr m_mgr;
+	int m_currCurveIdx;
+	CCagdPoint m_lastRbuttonUp;
+	DragInfo m_draggedPt;
 
 	ProgramState m_state;
 

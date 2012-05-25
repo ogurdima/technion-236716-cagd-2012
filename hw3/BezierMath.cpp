@@ -59,6 +59,20 @@ int U::ptOnLineSegmentAfter(CCagdPoint p, vector<WeightedPt> poly, double epsilo
 				return i+1;
 			}
 		}
+		else if(U::NearlyEq(next.y, curr.y, epsilon/2.0))
+		{
+			// check if x's match up within the threshold
+			if(!U::NearlyEq(p.y, curr.y, epsilon))
+			{
+				continue;
+			}
+
+			// check if pt.y is between the two points (if it is, the directions will be opposite)
+			if((p.x-curr.x)*(p.x-next.x) < 0)
+			{
+				return i+1;
+			}
+		}
 		else 
 		{
 			equation = (p.y - next.y) - ( ((next.y - curr.y)/(next.x - curr.x)) * (p.x - next.x) );
