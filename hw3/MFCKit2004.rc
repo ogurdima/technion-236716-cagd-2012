@@ -189,6 +189,14 @@ BEGIN
     END
 END
 
+IDR_MENU2 MENU
+BEGIN
+    POPUP "ContextPt"
+    BEGIN
+        MENUITEM "Adjust Weight",               ID_CONTEXTPT_ADJUSTWEIGHT
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -1,4 +1,4 @@
-
+#include "StdAfx.h"
 #include "Curve.h"
 #include "BezierMath.h"
 #pragma warning (disable : 4800)

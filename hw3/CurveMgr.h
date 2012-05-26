@@ -34,6 +34,81 @@ struct ControlPointInfo
 	int m_pointIdx;
 };
 
+struct WeightControl
+{
+	WeightControl() : m_id(0), m_radius(0), m_show(false), m_center(0,0,0) {};
+	~WeightControl() 
+	{
+		cagdFreeSegment(m_id);
+	}
+	WeightControl(CCagdPoint center, int radius, bool show = false) 
+		: m_id(0), m_radius(10*radius), m_show(show), m_center(center)
+	{
+		if (m_show)
+			Show();
+	}
+	void SetCenter(CCagdPoint center)
+	{
+		m_center = center;
+		if (m_show)
+			Show();
+	}
+	CCagdPoint Center()
+	{
+		return m_center;
+	}
+	void SetRadius(double radius)
+	{
+		m_radius = 10*radius;
+		if (m_show)
+			Show();
+	}
+	double Radius()
+	{
+		return m_radius;
+	}
+	void SetShow(bool show)
+	{
+		m_show = show;
+		if (m_show)
+			Show();
+	}
+	bool ToggleShow()
+	{
+		m_show = !m_show;
+		if (m_show)
+			Show();
+		else
+			Remove();
+		return m_show;
+	}
+	void Remove()
+	{
+		cagdFreeSegment(m_id);
+		m_id = NULL;
+	}
+	void Show()
+	{
+		cagdFreeSegment(m_id);
+		m_id = DrawCircle(m_center, m_center + CCagdPoint(m_radius,0,0), CCagdPoint(0,0,1), m_radius);
+		cagdSetSegmentColor(m_id, 255,255,0);
+	}
+	bool IsUnderCursor(int x, int y)
+	{
+		cagdPick(x, y);
+		while (UINT someId = cagdPickNext())
+		{
+			if (someId == m_id)
+				return true;
+		}
+		return false;
+	}
+private:
+	UINT m_id;
+	double m_radius;
+	CCagdPoint m_center;
+	bool m_show;
+};
 
 struct CurveWrp
 {
@@ -56,7 +131,7 @@ struct CurveWrp
 		m_showCurve		= rhs.m_showCurve;
 		m_showCtrPoly	= rhs.m_showCtrPoly;
 		m_type			= rhs.m_type;	
-
+		m_wc			= rhs.m_wc;
 		if (SplineTypeBezier == m_type)
 		{
 			m_curve = new Bezier();
@@ -79,7 +154,8 @@ struct CurveWrp
 		m_ctrPolyId		= rhs.m_ctrPolyId;
 		m_showCurve		= rhs.m_showCurve;
 		m_showCtrPoly	= rhs.m_showCtrPoly;
-		m_type			= rhs.m_type;		
+		m_type			= rhs.m_type;	
+		m_wc			= rhs.m_wc;
 		return *this;
 	}
 	Curve* m_curve;
@@ -88,6 +164,7 @@ struct CurveWrp
 	bool m_showCurve;
 	bool m_showCtrPoly;
 	SplineType m_type;
+	vector<WeightControl> m_wc;
 };
 
 class CurveMgr
@@ -113,6 +190,9 @@ public:
 	int getCurveIndexByPointOnPolygon(const CCagdPoint& p);
 
 	bool ToggleShowPolygon(int curveIdx);
+	bool ToggleWeightConrol(const CCagdPoint& p);
+	void ChangeWeight(int curveIdx, int ptIdx, int x, int y);
+	ControlPointInfo AttemptWeightAnchor(int x, int y);
 
 
 	

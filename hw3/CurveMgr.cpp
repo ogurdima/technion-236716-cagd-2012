@@ -1,4 +1,4 @@
-
+#include "StdAfx.h"
 #include "CurveMgr.h"
 
 #pragma warning (disable : 4800)
@@ -83,6 +83,8 @@ bool CurveMgr::AddCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, int 
 
 	// add the point
 	cw.m_curve->InsertPt(pt, weight, polyPointIdx);
+	vector<WeightControl>::iterator pos = (cw.m_wc.begin() + polyPointIdx);
+	cw.m_wc.insert(pos, WeightControl(pt, weight));
 
 	RedrawCurve(curveIdx);
 	return true;
@@ -93,6 +95,10 @@ bool CurveMgr::UpdateCtrlPtPos(const ControlPointInfo& ptInfo, const CCagdPoint&
 	if((0 > ptInfo.m_curveIdx) || (m_curves.size() <= ptInfo.m_curveIdx))
 	{ return false; }
 	bool success = m_curves[ptInfo.m_curveIdx].m_curve->UpdatePtPos(pt, ptInfo.m_pointIdx);
+	if (success)
+	{
+		m_curves[ptInfo.m_curveIdx].m_wc[ptInfo.m_pointIdx].SetCenter(pt);
+	}
 	RedrawCurve(ptInfo.m_curveIdx);
 	return success;
 }
@@ -101,7 +107,11 @@ bool CurveMgr::UpdateCtrlPtWeight(const ControlPointInfo& ptInfo, double weight)
 	if((0 > ptInfo.m_curveIdx) || (m_curves.size() <= ptInfo.m_curveIdx))
 	{ return false; }
 
-	bool success = m_curves[ptInfo.m_curveIdx].m_curve->UpdatePtWeight(weight, ptInfo.m_pointIdx);
+	bool success = m_curves[ptInfo.m_curveIdx].m_curve->SetWeight(weight, ptInfo.m_pointIdx);
+	if (success)
+	{
+		m_curves[ptInfo.m_curveIdx].m_wc[ptInfo.m_pointIdx].SetRadius(weight);
+	}
 	RedrawCurve(ptInfo.m_curveIdx);
 	return success;
 }
@@ -117,6 +127,7 @@ void CurveMgr::ClearAll()
 		cw.m_curveId = 0;
 	}
 	m_curves.clear();
+
 }
 
 PtContext CurveMgr::getPtContext(const CCagdPoint& p)
@@ -128,6 +139,16 @@ PtContext CurveMgr::getPtContext(const CCagdPoint& p)
 		{
 			return (m_curves[i].m_type == SplineTypeBezier) ? ContextBezierPoly : ContextBsplinePoly;
 		}
+	}
+	int windX, windY;
+	cagdToWindow(const_cast<CCagdPoint*>(&p), &windX, &windY);
+	ControlPointInfo pi = PickControlPoint(windX, windY);
+	if (pi.IsValid())
+	{
+		if (SplineTypeBezier == m_curves[pi.m_curveIdx].m_type)
+			return ContextBezierPt;
+		if (SplineTypeBspline == m_curves[pi.m_curveIdx].m_type)
+			return ContextBsplinePt;
 	}
 	return ContextEmpty;
 }
@@ -146,7 +167,7 @@ ControlPointInfo CurveMgr::PickControlPoint(int x, int y) const
 		return cpInfo;
 	}
 
-	return ControlPointInfo();
+	return ControlPointInfo(); //Invalid control point
 }
 
 int CurveMgr::getCurveIndexByPointOnPolygon(const CCagdPoint& p)
@@ -160,4 +181,44 @@ int CurveMgr::getCurveIndexByPointOnPolygon(const CCagdPoint& p)
 		}
 	}	
 	return -1;
+}
+
+
+bool CurveMgr::ToggleWeightConrol(const CCagdPoint& p)
+{
+	int windX, windY;
+	cagdToWindow(const_cast<CCagdPoint*>(&p), &windX, &windY);
+	ControlPointInfo pi = PickControlPoint(windX, windY);
+	if (! pi.IsValid())
+		return false;
+	return m_curves[pi.m_curveIdx].m_wc[pi.m_pointIdx].ToggleShow();
+}
+
+void CurveMgr::ChangeWeight(int curveIdx, int ptIdx, int x, int y)
+{
+	CCagdPoint ctr = m_curves[curveIdx].m_wc[ptIdx].Center();
+	CCagdPoint pt[2];
+	cagdToObject(x, y, pt);
+	pt[0].z = 0;
+	double w = length(ctr - pt[0])/10;
+	m_curves[curveIdx].m_curve->SetWeight(ptIdx, w);
+	m_curves[curveIdx].m_wc[ptIdx].SetRadius(w);
+	RedrawCurve(curveIdx);
+}
+
+ControlPointInfo CurveMgr::AttemptWeightAnchor(int x, int y)
+{
+	for (int i = 0; i < m_curves.size(); i++)
+	{
+		CurveWrp& cw = m_curves[i];
+		for (int j = 0; j < cw.m_wc.size(); j++)
+		{
+			WeightControl& wc = cw.m_wc[j];
+			if (wc.IsUnderCursor(x,y))
+			{
+				return ControlPointInfo(i,j);
+			}
+		}
+	}
+	return ControlPointInfo();
 }

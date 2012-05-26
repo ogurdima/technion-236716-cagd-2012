@@ -85,6 +85,8 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_CONTEXTPOLYGON_INSERTPOINT, &CMFCKit2004View::OnContextpolygonInsertpoint)
 	ON_COMMAND(ID_CONTEXTPOLYGON_APPENDPOINT, &CMFCKit2004View::OnContextpolygonAppendpoint)
 	ON_COMMAND(ID_CONTEXTPOLYGON_SHOW, &CMFCKit2004View::OnContextpolygonShowHideControlPolygon)
+	ON_COMMAND(ID_CONTEXTPT_ADJUSTWEIGHT, &CMFCKit2004View::OnContextptAdjustweight)
+	ON_UPDATE_COMMAND_UI(ID_CONTEXTPT_ADJUSTWEIGHT, &CMFCKit2004View::OnUpdateContextptAdjustweight)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -138,6 +140,7 @@ CMFCKit2004View::CMFCKit2004View() {
 	// bezier stuff below here
 	m_state = StateIdle;
 	m_currCurveIdx = -1;
+	m_lastWeightControlStatus = false;
 }
 
 CMFCKit2004View::~CMFCKit2004View() {
@@ -468,6 +471,8 @@ void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 
 	if(m_state == StateIdle)
 	{
+		m_weightCtrlAnchor = m_mgr.AttemptWeightAnchor(point.x, point.y);
+
 		// look for the point within the curves
 		m_draggedPt.m_pt = m_mgr.PickControlPoint(point.x, point.y);
 		if(m_draggedPt.m_pt.IsValid())
@@ -494,7 +499,7 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 	
 	// release the dragged point
 	m_draggedPt.m_pt.Invalidate();
-	
+	m_weightCtrlAnchor.Invalidate();
 
 	if(StateAddBezierPts == m_state)
 	{
@@ -544,9 +549,20 @@ void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 		popupMenu.LoadMenu(IDR_MENU1);
 		break;
 
+	case ContextBezierPt:
+	case ContextBsplinePt:
+		popupMenu.LoadMenu(IDR_MENU2);
+		break;
 	default:
 		bool OK = true;
 	}
+
+	m_draggedPt.m_pt = m_mgr.PickControlPoint(point.x, point.y);
+	if(m_draggedPt.m_pt.IsValid())
+	{
+		CCagdPoint(point.x, point.y);
+	}
+	
 
 	CMenu* subMenu = popupMenu.GetSubMenu(0);
 	ClientToScreen(&point);
@@ -576,10 +592,12 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 	}
 	else
 	{
-		if(m_draggedPt.m_pt.IsValid())
+		if (m_weightCtrlAnchor.IsValid())
 		{
-			//int movex = point.x - m_draggedPt.m_startPosScreen.x;
-			//int movey = point.y - m_draggedPt.m_startPosScreen.y;
+			m_mgr.ChangeWeight(m_weightCtrlAnchor.m_curveIdx, m_weightCtrlAnchor.m_pointIdx, point.x, point.y);
+		}
+		else if(m_draggedPt.m_pt.IsValid())
+		{
 			CCagdPoint pts[2];
 			cagdToObject(point.x, point.y, pts);
 			pts[0].z = 0.0;
@@ -1188,8 +1206,6 @@ void CMFCKit2004View::FrenetOnPaintExtend()
 	}
 }
 
-
-
 void CMFCKit2004View::OnContextbgNewbeziercurve()
 {
 	m_state = StateAddBezierPts;
@@ -1197,13 +1213,11 @@ void CMFCKit2004View::OnContextbgNewbeziercurve()
 	// change cursor
 }
 
-
 void CMFCKit2004View::OnContextbgClearall()
 {
 	m_mgr.ClearAll();
 	Invalidate();
 }
-
 
 void CMFCKit2004View::OnContextpolygonInsertpoint()
 {
@@ -1211,7 +1225,6 @@ void CMFCKit2004View::OnContextpolygonInsertpoint()
 	m_mgr.AddCtrlPt(m_lastRbuttonUp, 1, m_currCurveIdx);
 	Invalidate();
 }
-
 
 void CMFCKit2004View::OnContextpolygonAppendpoint()
 {
@@ -1223,10 +1236,20 @@ void CMFCKit2004View::OnContextpolygonAppendpoint()
 	Invalidate();
 }
 
-
 void CMFCKit2004View::OnContextpolygonShowHideControlPolygon()
 {
 	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
 	m_mgr.ToggleShowPolygon(m_currCurveIdx);
 	Invalidate();
+}
+
+void CMFCKit2004View::OnContextptAdjustweight()
+{
+	m_lastWeightControlStatus = m_mgr.ToggleWeightConrol(m_lastRbuttonUp);
+	Invalidate();
+}
+
+void CMFCKit2004View::OnUpdateContextptAdjustweight(CCmdUI *pCmdUI)
+{
+	pCmdUI->SetCheck(m_lastWeightControlStatus);
 }

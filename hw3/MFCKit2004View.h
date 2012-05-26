@@ -132,9 +132,12 @@ public:
 	CurveMgr m_mgr;
 	int m_currCurveIdx;
 	CCagdPoint m_lastRbuttonUp;
+	bool m_lastWeightControlStatus;
 	DragInfo m_draggedPt;
+	ControlPointInfo m_weightCtrlAnchor;
 
 	ProgramState m_state;
+
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -212,6 +215,8 @@ public:
 	afx_msg void OnContextpolygonInsertpoint();
 	afx_msg void OnContextpolygonAppendpoint();
 	afx_msg void OnContextpolygonShowHideControlPolygon();
+	afx_msg void OnContextptAdjustweight();
+	afx_msg void OnUpdateContextptAdjustweight(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp
