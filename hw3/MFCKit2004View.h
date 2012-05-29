@@ -135,6 +135,7 @@ public:
 	bool m_lastWeightControlStatus;
 	DragInfo m_draggedPt;
 	ControlPointInfo m_weightCtrlAnchor;
+	unsigned int m_bsplineOrder;
 
 	ProgramState m_state;
 
@@ -215,6 +216,7 @@ public:
 	afx_msg void OnContextpolygonInsertpoint();
 	afx_msg void OnContextpolygonAppendpoint();
 	afx_msg void OnContextpolygonShowHideControlPolygon();
+	afx_msg void OnContextbgNewbsplinecurve();
 	afx_msg void OnContextptAdjustweight();
 	afx_msg void OnUpdateContextptAdjustweight(CCmdUI *pCmdUI);
 };

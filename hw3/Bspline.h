@@ -7,10 +7,17 @@ public:
 	BSpline();
 	~BSpline();
 	
-	void SetKnotVector(const vector<int> & kv);
-	vector<int> GetNodeVector();
+	bool InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt = -1);
+	void SetOrder(unsigned long order);
+	unsigned long GetOrder(unsigned long order) const;
+	bool SetKnotVector(const vector<double> & kv);
+	vector<double> GetKnotVector();
 	virtual void Calculate();
-
+private:
+	// evaluates at time t, ctrl pt index i, degree k
+	double BSplineBasis(double t, int i, int k);
+	void TestBasisFunctions(int k);
 protected:
-	vector<int> m_kv;
+	vector<double> m_kv;
+	unsigned long m_order;
 };

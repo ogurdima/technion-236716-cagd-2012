@@ -5,6 +5,7 @@
 #include "Bspline.h"
 #include <vector>
 #include "Curve.h"
+#include "assert.h"
 
 enum PtContext
 {
@@ -21,7 +22,8 @@ enum SplineType
 {
 	SplineTypeUnknown,
 	SplineTypeBezier,
-	SplineTypeBspline
+	SplineTypeBspline,
+	SplineTypeCount
 };
 
 struct ControlPointInfo
@@ -119,9 +121,13 @@ struct CurveWrp
 		{
 			m_curve = new Bezier();
 		}
-		else
+		else if(SplineTypeBspline == t)
 		{
 			m_curve = new BSpline();
+		}
+		else
+		{
+			assert((SplineTypeUnknown < t) && (SplineTypeCount > t));
 		}
 	}
 	CurveWrp(const CurveWrp& rhs)
@@ -174,7 +180,7 @@ public:
 	~CurveMgr();
 
 	int NewBezierCurve();
-	int NewBsplineCurve();
+	int NewBsplineCurve(unsigned int order);
 	bool AddLastCtrlPt(const CCagdPoint& pt, double weight, int curveIdx);
 	bool AddCtrlPt(const CCagdPoint& pt, double weight = 1, int curveIdx = -1, int polyPointIdx = -1);
 	bool UpdateCtrlPtPos(const ControlPointInfo& ptInfo, const CCagdPoint& pt);
@@ -194,6 +200,11 @@ public:
 	void ChangeWeight(int curveIdx, int ptIdx, int x, int y);
 	ControlPointInfo AttemptWeightAnchor(int x, int y);
 
+	// for bsplines. returns false if curve is not a bspline or if kv is not monotonic
+	bool SetKnotVector(int curveIdx, const vector<double> & kv);
+
+	// for bsplines. returns empty vector if curve is not a bspline
+	std::vector<double> GetKnotVector(int curveIdx);
 
 	
 private:

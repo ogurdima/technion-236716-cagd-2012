@@ -85,6 +85,7 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_CONTEXTPOLYGON_INSERTPOINT, &CMFCKit2004View::OnContextpolygonInsertpoint)
 	ON_COMMAND(ID_CONTEXTPOLYGON_APPENDPOINT, &CMFCKit2004View::OnContextpolygonAppendpoint)
 	ON_COMMAND(ID_CONTEXTPOLYGON_SHOW, &CMFCKit2004View::OnContextpolygonShowHideControlPolygon)
+	ON_COMMAND(ID_CONTEXTBG_NEWBSPLINECURVE, &CMFCKit2004View::OnContextbgNewbsplinecurve)
 	ON_COMMAND(ID_CONTEXTPT_ADJUSTWEIGHT, &CMFCKit2004View::OnContextptAdjustweight)
 	ON_UPDATE_COMMAND_UI(ID_CONTEXTPT_ADJUSTWEIGHT, &CMFCKit2004View::OnUpdateContextptAdjustweight)
 END_MESSAGE_MAP()
@@ -141,6 +142,8 @@ CMFCKit2004View::CMFCKit2004View() {
 	m_state = StateIdle;
 	m_currCurveIdx = -1;
 	m_lastWeightControlStatus = false;
+	m_bsplineOrder = 3;
+
 }
 
 CMFCKit2004View::~CMFCKit2004View() {
@@ -197,7 +200,16 @@ void CMFCKit2004View::OnFileOpen()
 	}
 	else if(SplineTypeBspline == m_parser.Type())
 	{
-
+		m_currCurveIdx = m_mgr.NewBsplineCurve(m_parser.m_order);
+		for(int i=0; i<m_parser.m_pts.size(); ++i)
+		{
+			CCagdPoint pt = m_parser.m_pts[i];
+			m_mgr.AddLastCtrlPt(CCagdPoint(pt.x, pt.y, 1.0), pt.z, m_currCurveIdx);
+		}
+		if(!m_mgr.SetKnotVector(m_currCurveIdx, m_parser.m_knots))
+		{
+			assert(false);
+		}
 	}
 	else
 	{
@@ -508,6 +520,13 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 		coord[0].z = 0.0;
 		m_mgr.AddLastCtrlPt(coord[0], 1, m_currCurveIdx);
 	}
+	else if(StateAddBSplinePts == m_state)
+	{
+		CCagdPoint coord[2];
+		cagdToObject(point.x, point.y, coord);
+		coord[0].z = 0.0;
+		m_mgr.AddLastCtrlPt(coord[0], 1, m_currCurveIdx);
+	}
 
 	Invalidate();					// redraw scene
 }
@@ -554,7 +573,7 @@ void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 		popupMenu.LoadMenu(IDR_MENU2);
 		break;
 	default:
-		bool OK = true;
+		popupMenu.LoadMenu(IDR_POPUPMENU);
 	}
 
 	m_draggedPt.m_pt = m_mgr.PickControlPoint(point.x, point.y);
@@ -1213,6 +1232,12 @@ void CMFCKit2004View::OnContextbgNewbeziercurve()
 	// change cursor
 }
 
+void CMFCKit2004View::OnContextbgNewbsplinecurve()
+{
+	m_state = StateAddBSplinePts;
+	m_currCurveIdx = m_mgr.NewBsplineCurve(m_bsplineOrder);
+}
+
 void CMFCKit2004View::OnContextbgClearall()
 {
 	m_mgr.ClearAll();
@@ -1242,6 +1267,7 @@ void CMFCKit2004View::OnContextpolygonShowHideControlPolygon()
 	m_mgr.ToggleShowPolygon(m_currCurveIdx);
 	Invalidate();
 }
+
 
 void CMFCKit2004View::OnContextptAdjustweight()
 {

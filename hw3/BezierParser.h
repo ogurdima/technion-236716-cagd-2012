@@ -32,6 +32,7 @@ public:
 
 	int m_expectedPtCount;
 	int m_expectedKnotCount;
+	int m_order;
 
 	ParseState m_state;
 	SplineType m_type;

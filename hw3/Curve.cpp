@@ -25,12 +25,18 @@ UINT Curve::DrawCtrlPolygon()
 	{
 		return cagdAddPoint(&polyPoints[0]);
 	}
-	return cagdAddPolyline(&polyPoints[0], polyPoints.size(), CAGD_SEGMENT_CTLPLYGN);
+	UINT uid = cagdAddPolyline(&polyPoints[0], polyPoints.size(), CAGD_SEGMENT_CTLPLYGN);
+	cagdSetSegmentColor(uid, 255, 0, 0);
+	return uid;
 }
 
 UINT Curve::DrawCurve()
 {
 	Calculate();
+	if(0 >= m_dataPts.size())
+	{
+		return 0;
+	}
 	return cagdAddPolyline(&m_dataPts[0], m_dataPts.size(), CAGD_SEGMENT_POLYLINE);
 }
 

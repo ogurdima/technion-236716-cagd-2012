@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "CurveMgr.h"
-
+#include <vector>
+using std::vector;
 #pragma warning (disable : 4800)
 #pragma warning (disable : 4018)
 
@@ -19,11 +20,13 @@ int CurveMgr::NewBezierCurve()
 	return m_curves.size()-1;
 }
 
-int CurveMgr::NewBsplineCurve()
+int CurveMgr::NewBsplineCurve(unsigned int order)
 {
-	//m_curves.push_back(CurveWrp(SplineTypeBspline));
-	//return m_curves.size()-1;
-	return -1;
+	m_curves.push_back(CurveWrp(SplineTypeBspline));
+	int last_idx = m_curves.size()-1;
+	BSpline* bsp = static_cast<BSpline*>(m_curves[last_idx].m_curve);
+	bsp->SetOrder(order);
+	return m_curves.size()-1;
 }
 
 bool CurveMgr::ToggleShowPolygon(int curveIdx)
@@ -221,4 +224,31 @@ ControlPointInfo CurveMgr::AttemptWeightAnchor(int x, int y)
 		}
 	}
 	return ControlPointInfo();
+}
+
+bool CurveMgr::SetKnotVector(int curveIdx, const vector<double> & kv)
+{
+	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
+	{ return false; }
+
+	CurveWrp& cw = m_curves[curveIdx];
+	if(SplineTypeBspline != cw.m_type)
+	{ return false; }
+
+	bool success = static_cast<BSpline*>(cw.m_curve)->SetKnotVector(kv);
+	RedrawCurve(curveIdx);
+	return success;
+}
+
+vector<double> CurveMgr::GetKnotVector(int curveIdx)
+{
+	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
+	{ return vector<double>(); }
+
+	CurveWrp& cw = m_curves[curveIdx];
+	if(SplineTypeBspline != cw.m_type)
+	{ return vector<double>(); }
+
+	return static_cast<BSpline*>(cw.m_curve)->GetKnotVector();
+
 }

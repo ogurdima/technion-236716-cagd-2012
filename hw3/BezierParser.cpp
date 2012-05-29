@@ -14,6 +14,7 @@ BezierParser::BezierParser(void)
 	, m_expectedPtCount(0)
 	, m_expectedKnotCount(0)
 	, m_type(SplineTypeUnknown)
+	, m_order(0)
 {
 }
 
@@ -53,15 +54,27 @@ bool BezierParser::ParseFile(const std::string& filename)
 	{
 		fs.getline(file_line, 1000, '\n');
 		fileLine = std::string(file_line);
+		
 		if(!ParseLine(fileLine))
-		{
-			return false;
+		{ 
+			fs.close();
+			return false; 
 		}
+
 		if(ParseStateDone == m_state)
 		{ break; }
 	}
 
+	// eof
+	if(SplineTypeBspline == m_type)
+	{
+		if(ParseStatePoints == m_state)
+		{
+			m_state = ParseStateDone;
+		}
+	}
 
+	fs.close();
 	return (ParseStateDone == m_state);
 }
 
@@ -104,6 +117,7 @@ bool BezierParser::ParseLine(const std::string& line)
 		
 		// record the count
 		m_expectedPtCount = point_count;
+		m_order = point_count;
 		
 		// advance the state
 		m_state = ParseStateFoundNumber;
@@ -159,7 +173,11 @@ bool BezierParser::ParseLine(const std::string& line)
 			// upgrade the line for below
 			int last_non_whitespace = line_trim.find_last_not_of(' \t\n\r');
 			line_trim = line_trim.substr(equals_pos+1, last_non_whitespace);
+			if(0 >= line_trim.size())
+			{ return true; }
 			int first_non_whitespace = line_trim.find_first_not_of(' \t\n\r');
+			if(-1 == first_non_whitespace)
+			{ return true; }
 			line_trim = line_trim.substr(first_non_whitespace);
 		}
 		else 
@@ -234,11 +252,10 @@ bool BezierParser::ParseLine(const std::string& line)
 		CCagdPoint newPt(x, y, z);
 		m_pts.push_back(newPt);
 
-		if(m_pts.size() == m_expectedPtCount)
+		if((SplineTypeBezier == m_type) && (m_pts.size() == m_expectedPtCount))
 		{
 			m_state = ParseStateDone;
 		}
-
 	}
 
 	return true;

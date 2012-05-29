@@ -175,6 +175,7 @@ BEGIN
     POPUP "ContextBG"
     BEGIN
         MENUITEM "New Bezier Curve",            ID_CONTEXTBG_NEWBEZIERCURVE
+        MENUITEM "New BSpline Curve",           ID_CONTEXTBG_NEWBSPLINECURVE
         MENUITEM "Clear All",                   ID_CONTEXTBG_CLEARALL
     END
 END

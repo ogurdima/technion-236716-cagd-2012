@@ -365,6 +365,14 @@ CCagdPoint operator+(const CCagdPoint& p1, const CCagdPoint& p2)
 	return CCagdPoint(p1.x+p2.x, p1.y+p2.y, p1.z+p2.z);
 }
 //-----------------------------------------------------------------------------
+CCagdPoint& operator+=(CCagdPoint& p1, const CCagdPoint& p2)
+{
+	p1.x += p2.x;
+	p1.y += p2.y;
+	p1.z += p2.z;
+	return p1;
+}
+//-----------------------------------------------------------------------------
 CCagdPoint operator-(const CCagdPoint& p1, const CCagdPoint& p2)
 {
 	return CCagdPoint(p1.x-p2.x, p1.y-p2.y, p1.z-p2.z);

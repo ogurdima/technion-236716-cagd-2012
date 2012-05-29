@@ -36,7 +36,7 @@ public:
 	*******************************************************************/
 	Curve(void);
 	virtual ~Curve(void);
-	bool InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt = -1);
+	virtual bool InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt = -1);
 	bool UpdatePtPos(const CCagdPoint& pt, int ptIdxAt);
 	bool UpdatePtWeight(double weight, int ptIdxAt);
 	void SetPoly(const vector<CCagdPoint>& pts);

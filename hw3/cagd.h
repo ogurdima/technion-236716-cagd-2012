@@ -123,6 +123,8 @@ double cagdRadiusToWeight(double radius);
 ***********************************************************************/
 // add +(vector, vector)
 CCagdPoint operator+(const CCagdPoint& p1, const CCagdPoint& p2);
+// add +=(vector, vector)
+CCagdPoint& operator+=(CCagdPoint& p1, const CCagdPoint& p2);
 // sub -(vector, vector)
 CCagdPoint operator-(const CCagdPoint& p1, const CCagdPoint& p2);
 // mult *(vector, scalar)
