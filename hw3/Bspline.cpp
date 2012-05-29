@@ -106,7 +106,7 @@ void BSpline::Calculate()
 
 	// at each t, store a vector of basis function values
 	vector<double> basis_values;
-	for(double t=ta; t<=tb; t+=0.01)
+	for(double t=ta; t<=tb; t+=0.1)
 	{
 		while(t >= m_kv[curr_j+1])
 		{
