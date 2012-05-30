@@ -2,7 +2,10 @@
 
 #include "cagd.h"
 #include <vector>
+#include <string>
+#include <sstream>
 using std::vector;
+using std::string;
 
 
 
@@ -47,6 +50,8 @@ public:
 	int polygonSize() const;
 	int PickPoint(int x, int y) const;
 	Curve& operator=(const Curve& rhs);
+	virtual string toIrit(int id) = 0;
+	virtual string toDat(int id = 0) = 0;
 
 protected:
 	virtual void Calculate() = 0;

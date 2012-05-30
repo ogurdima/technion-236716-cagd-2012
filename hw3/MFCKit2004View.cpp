@@ -261,6 +261,7 @@ bool CMFCKit2004View::InitializeOpenGL()
 	// Set default black as background color.
 	::glClearColor(0.0, 0.0, 0.0, 1.0f);
 
+
     return TRUE;
 }
 
@@ -452,6 +453,8 @@ int CMFCKit2004View::OnCreate(LPCREATESTRUCT lpCreateStruct)
 //	SetupViewingOrthoConstAspect();
 	OnOptionsReset();
 	
+	//Scale(100.0);
+
 	return 0;
 }
 
@@ -520,6 +523,7 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 		cagdToObject(point.x, point.y, coord);
 		coord[0].z = 0.0;
 		m_mgr.AddLastCtrlPt(coord[0], 1, m_currCurveIdx);
+		
 	}
 	else if(StateAddBSplinePts == m_state)
 	{
@@ -569,7 +573,13 @@ void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 		popupMenu.LoadMenu(IDR_MENU1);
 		break;
 
+	case ContextBsplinePoly:
+		popupMenu.LoadMenu(IDR_MENU1);
+		break;
+
 	case ContextBezierPt:
+		popupMenu.LoadMenu(IDR_MENU2);
+		break;
 	case ContextBsplinePt:
 		popupMenu.LoadMenu(IDR_MENU2);
 		break;
@@ -596,19 +606,26 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 	if ((GetCapture() != this) || (!LButtonDown)) 		// 'this' has the mouse capture
 	{ return; }
 
+	if (m_state != StateIdle)
+		return;
+
 	if(::GetAsyncKeyState(VK_CONTROL))
 	{ 
 		// This is the movement ammount 
 		int valuex(point.x - prevMouseLocation.x);
-		int valuey(point.y - prevMouseLocation.y);
-		if (!CtrlKeyDown) {		
-			if (RButtonDown && LButtonDown)  // translateXY
-				translateXY(valuex*TSense,-valuey*TSense);
-			else if (LButtonDown) // rotateXY
-				RotateXY(valuey*RSense,valuex*RSense);
-			else if (RButtonDown) // rotateZ
-				RotateZ(valuex);
-		}
+		int valuey(point.y - prevMouseLocation.y);	
+		if (LButtonDown) // rotateXY
+			RotateXY(valuey*RSense,valuex*RSense);
+		else if (RButtonDown) // rotateZ
+			RotateZ(valuex);
+	}
+	else if (::GetAsyncKeyState(VK_SHIFT))
+	{
+		int valuex(point.x - prevMouseLocation.x);
+		int valuey(point.y - prevMouseLocation.y);	
+		if (LButtonDown)  // translateXY
+			translateXY(valuex*TSense,-valuey*TSense);
+
 	}
 	else
 	{
@@ -805,10 +822,12 @@ void CMFCKit2004View::Scale (double val) {
 
 void CMFCKit2004View::OnFuzzinessMore() {
 	fuzziness *= 2;
+	moreFuzziness();
 }
 
 void CMFCKit2004View::OnFuzzinessLess() {
 	fuzziness /= 2;
+	lessFuzziness();
 }
 void CMFCKit2004View::OnOptionsReset() {
 	cagdReset();
@@ -1279,5 +1298,5 @@ void CMFCKit2004View::OnContextptAdjustweight()
 
 void CMFCKit2004View::OnUpdateContextptAdjustweight(CCmdUI *pCmdUI)
 {
-	pCmdUI->SetCheck(m_lastWeightControlStatus);
+	//pCmdUI->SetCheck(m_lastWeightControlStatus);
 }

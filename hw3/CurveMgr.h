@@ -44,7 +44,7 @@ struct WeightControl
 		cagdFreeSegment(m_id);
 	}
 	WeightControl(CCagdPoint center, int radius, bool show = false) 
-		: m_id(0), m_radius(10*radius), m_show(show), m_center(center)
+		: m_id(0), m_radius(radius), m_show(show), m_center(center)
 	{
 		if (m_show)
 			Show();
@@ -61,7 +61,7 @@ struct WeightControl
 	}
 	void SetRadius(double radius)
 	{
-		m_radius = 10*radius;
+		m_radius = radius;
 		if (m_show)
 			Show();
 	}

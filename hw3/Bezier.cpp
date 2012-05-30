@@ -34,3 +34,38 @@ void Bezier::Calculate()
 	}
 }
 
+string Bezier::toIrit(int id)
+{
+	int numOfPoints = m_ctrlPts.size();
+	if (0 == numOfPoints)
+		return string("");
+
+	std::ostringstream buf = std::ostringstream();
+	buf << "[OBJECT BEZIER" << id << std::endl;
+	buf << "\t[CURVE BEZIER " << numOfPoints << " P2" << std::endl;
+	for (int i = 0; i < numOfPoints; i++)
+	{
+		buf << "\t\t[" << (m_ctrlPts[i].m_weight) << " " << (m_ctrlPts[i].m_pt.x) << 
+			" " << (m_ctrlPts[i].m_pt.y) << "]" << std::endl;
+	}
+	buf << "\t]" << std::endl << "]" << std::endl; 
+	return buf.str();
+}
+
+string Bezier::toDat(int id)
+{
+	int numOfPoints = m_ctrlPts.size();
+	if (0 == numOfPoints)
+		return string("");
+
+	std::ostringstream buf = std::ostringstream();
+	buf << numOfPoints << std::endl;
+	for (int i = 0; i < numOfPoints; i++)
+	{
+		buf << (m_ctrlPts[i].m_weight) << " " << (m_ctrlPts[i].m_pt.x) << 
+			" " << (m_ctrlPts[i].m_pt.y) << std::endl;
+	}
+	buf << std::endl; 
+	return buf.str();
+}
+

@@ -90,6 +90,9 @@ bool CurveMgr::AddCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, int 
 	cw.m_wc.insert(pos, WeightControl(pt, weight));
 
 	RedrawCurve(curveIdx);
+
+	::OutputDebugString((LPCSTR)(m_curves[curveIdx].m_curve->toIrit(curveIdx).c_str()));
+
 	return true;
 }
 
@@ -135,14 +138,6 @@ void CurveMgr::ClearAll()
 
 PtContext CurveMgr::getPtContext(const CCagdPoint& p)
 {
-	for (int i = 0; i < m_curves.size(); i++)
-	{
-		int idx = m_curves[i].m_curve->GetInsertionIndex(p);
-		if (-1 != idx)
-		{
-			return (m_curves[i].m_type == SplineTypeBezier) ? ContextBezierPoly : ContextBsplinePoly;
-		}
-	}
 	int windX, windY;
 	cagdToWindow(const_cast<CCagdPoint*>(&p), &windX, &windY);
 	ControlPointInfo pi = PickControlPoint(windX, windY);
@@ -153,6 +148,16 @@ PtContext CurveMgr::getPtContext(const CCagdPoint& p)
 		if (SplineTypeBspline == m_curves[pi.m_curveIdx].m_type)
 			return ContextBsplinePt;
 	}
+
+	for (int i = 0; i < m_curves.size(); i++)
+	{
+		int idx = m_curves[i].m_curve->GetInsertionIndex(p);
+		if (-1 != idx)
+		{
+			return (m_curves[i].m_type == SplineTypeBezier) ? ContextBezierPoly : ContextBsplinePoly;
+		}
+	}
+	
 	return ContextEmpty;
 }
 
@@ -203,7 +208,7 @@ void CurveMgr::ChangeWeight(int curveIdx, int ptIdx, int x, int y)
 	CCagdPoint pt[2];
 	cagdToObject(x, y, pt);
 	pt[0].z = 0;
-	double w = length(ctr - pt[0])/10;
+	double w = length(ctr - pt[0]);
 	m_curves[curveIdx].m_curve->SetWeight(ptIdx, w);
 	m_curves[curveIdx].m_wc[ptIdx].SetRadius(w);
 	RedrawCurve(curveIdx);

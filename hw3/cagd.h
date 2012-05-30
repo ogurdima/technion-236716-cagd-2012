@@ -153,4 +153,10 @@ UINT DrawLineSegment(const CCagdPoint& p1, const CCagdPoint& p2, double length, 
 UINT DrawCircle(const CCagdPoint& center, const CCagdPoint& planar, const CCagdPoint& normal, double radius, int ptCount = 360);
 UINT DrawCircleSegment(const CCagdPoint& center, const CCagdPoint& planar, const CCagdPoint& normal, double radius, double startAngle, double stopAngle, int ptCount = 360);
 UINT DrawSpiral(const CCagdPoint& center, const CCagdPoint& planar, const CCagdPoint& normal, double startRadius, double stopRadius, double startAngle, double stopAngle, int ptCount = 360);
+
+
+void moreFuzziness();
+void lessFuzziness();
+
+
 #endif

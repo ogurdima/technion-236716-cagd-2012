@@ -13,6 +13,10 @@ public:
 	bool SetKnotVector(const vector<double> & kv);
 	vector<double> GetKnotVector();
 	virtual void Calculate();
+
+	virtual string toIrit(int id);
+	virtual string toDat(int id = 0);
+
 private:
 	// evaluates at time t, ctrl pt index i, degree k
 	double BSplineBasis(double t, int i, int k);

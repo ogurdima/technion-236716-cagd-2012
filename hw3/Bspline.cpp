@@ -220,3 +220,32 @@ void BSpline::TestBasisFunctions(int k)
 
 
 }
+
+string BSpline::toIrit(int id)
+{
+	int numOfPoints = m_ctrlPts.size();
+	if (0 == numOfPoints)
+		return string("");
+
+	std::ostringstream buf = std::ostringstream();
+	buf << "[OBJECT BSPLINE" << id << std::endl;
+	buf << "\t[CURVE BSPLINE " << numOfPoints << " " << m_order << " P2" << std::endl;
+	buf << "\t\t[KV";
+	for (int i = 0; i < m_kv.size(); i++)
+	{
+		buf << " " << m_kv[i];
+	}
+	buf << "]" << std::endl;
+	for (int i = 0; i < numOfPoints; i++)
+	{
+		buf << "\t\t[" << (m_ctrlPts[i].m_weight) << " " << (m_ctrlPts[i].m_pt.x) << 
+			" " << (m_ctrlPts[i].m_pt.y) << "]" << std::endl;
+	}
+	buf << "\t]" << std::endl << "]" << std::endl; 
+	return buf.str();
+}
+
+string BSpline::toDat(int id)
+{
+	return string();
+}
