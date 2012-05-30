@@ -103,6 +103,8 @@ void BSpline::Calculate()
 	//	
 	//}
 
+	//std::ofstream datafile("data.csv");
+	//datafile << "time,x,y,z" << std::endl;
 
 	// at each t, store a vector of basis function values
 	vector<double> basis_values;
@@ -137,8 +139,9 @@ void BSpline::Calculate()
 		}
 		//o0 << "Basis: " << basis_values[i] << "
 		m_dataPts.push_back(val_at_t);
+		//datafile << t << "," << val_at_t.x << "," << val_at_t.y << "," << val_at_t.z << std::endl;
 	}
-
+	//datafile.close();
 	//o0.close();
 
 }

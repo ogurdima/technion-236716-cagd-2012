@@ -450,7 +450,8 @@ int CMFCKit2004View::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	glLoadIdentity();
 	glGetDoublev(GL_MODELVIEW_MATRIX,modelView);
 //	SetupViewingOrthoConstAspect();
-
+	OnOptionsReset();
+	
 	return 0;
 }
 
@@ -811,6 +812,7 @@ void CMFCKit2004View::OnFuzzinessLess() {
 }
 void CMFCKit2004View::OnOptionsReset() {
 	cagdReset();
+	Scale(20.0);
 	Invalidate();
 }
 
