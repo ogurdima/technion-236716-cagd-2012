@@ -106,6 +106,8 @@ BEGIN
     BEGIN
         MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
         MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "Save as .itd",                ID_FILE_SAVEAS32803
+        MENUITEM "Save as .dat",                ID_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
         MENUITEM SEPARATOR
@@ -187,6 +189,8 @@ BEGIN
         MENUITEM "Insert Point",                ID_CONTEXTPOLYGON_INSERTPOINT
         MENUITEM "Append Point(s)",             ID_CONTEXTPOLYGON_APPENDPOINT
         MENUITEM "Show/hide control polygon",   ID_CONTEXTPOLYGON_SHOW
+        MENUITEM "Raise Degree",                ID_CONTEXTPOLYGON_RAISEDEGREE
+        MENUITEM "Subdivide at t=0.5",          ID_CONTEXTPOLYGON_SUBDIVIDEATT
     END
 END
 

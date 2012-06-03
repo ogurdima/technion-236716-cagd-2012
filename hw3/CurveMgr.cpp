@@ -257,3 +257,73 @@ vector<double> CurveMgr::GetKnotVector(int curveIdx)
 	return static_cast<BSpline*>(cw.m_curve)->GetKnotVector();
 
 }
+
+bool CurveMgr::RaiseDegree(int curveIdx)
+{
+	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
+	{ return false; }
+	if (m_curves[curveIdx].m_type != SplineTypeBezier)
+		return false;
+	Bezier* pb = dynamic_cast<Bezier*>(m_curves[curveIdx].m_curve);
+	if (NULL == pb)
+	{
+		throw std::exception("Dynamic cast of Bezier failed to cast Bezier");
+	}
+	pb->RaiseDegree();
+	m_curves[curveIdx].m_wc.clear();
+	vector<WeightedPt> newCtrl = pb->ControlPoints();
+	for (int i = 0; i < newCtrl.size(); i++)
+	{
+		WeightedPt p = newCtrl[i];
+		m_curves[curveIdx].m_wc.push_back(WeightControl(p.m_pt, p.m_weight));
+	}
+	RedrawCurve(curveIdx);
+	return true;
+}
+
+bool CurveMgr::Subdivide(int curveIdx)
+{
+	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
+	{ return false; }
+	if (m_curves[curveIdx].m_type != SplineTypeBezier)
+		return false;
+	Bezier* pb = dynamic_cast<Bezier*>(m_curves[curveIdx].m_curve);
+	if (NULL == pb)
+	{
+		throw std::exception("Dynamic cast of Bezier failed to cast Bezier");
+	}
+	pb->Subdivide();
+	m_curves[curveIdx].m_wc.clear();
+	vector<WeightedPt> newCtrl = pb->ControlPoints();
+	for (int i = 0; i < newCtrl.size(); i++)
+	{
+		WeightedPt p = newCtrl[i];
+		m_curves[curveIdx].m_wc.push_back(WeightControl(p.m_pt, p.m_weight));
+	}
+	RedrawCurve(curveIdx);
+	return true;
+}
+
+
+string CurveMgr::toDat() const
+{
+	std::ostringstream buf = std::ostringstream();
+	for (int i = 0; i < m_curves.size(); i++)
+	{
+		buf << m_curves[i].m_curve->toDat() << std::endl;
+	}
+	return buf.str();
+}
+
+
+string CurveMgr::toIrit() const
+{
+	std::ostringstream buf = std::ostringstream();
+	for (int i = 0; i < m_curves.size(); i++)
+	{
+		buf << m_curves[i].m_curve->toIrit(i) << std::endl;
+	}
+	return buf.str();
+}
+
+

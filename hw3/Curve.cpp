@@ -142,3 +142,10 @@ Curve& Curve::operator=(const Curve& rhs)
 	m_dataPts = rhs.m_dataPts;
 	return *this;
 }
+
+vector<WeightedPt> Curve::ControlPoints()
+{
+	return m_ctrlPts; // i think it copies the data
+}
+
+

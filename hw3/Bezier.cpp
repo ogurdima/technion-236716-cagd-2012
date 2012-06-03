@@ -62,10 +62,40 @@ string Bezier::toDat(int id)
 	buf << numOfPoints << std::endl;
 	for (int i = 0; i < numOfPoints; i++)
 	{
-		buf << (m_ctrlPts[i].m_weight) << " " << (m_ctrlPts[i].m_pt.x) << 
-			" " << (m_ctrlPts[i].m_pt.y) << std::endl;
+		buf  << (m_ctrlPts[i].m_pt.x) << " " << (m_ctrlPts[i].m_pt.y)  << " " << (m_ctrlPts[i].m_pt.z) << std::endl;
 	}
 	buf << std::endl; 
 	return buf.str();
+}
+
+void Bezier::RaiseDegree()
+{
+	vector<WeightedPt> newCtrl;
+	int oldOrder = m_ctrlPts.size();
+	for (int i = 0; i < oldOrder + 1; i++)
+	{
+		CCagdPoint prevP = (i == 0) ? CCagdPoint() : m_ctrlPts[i-1].m_pt;
+		CCagdPoint currP = (i == oldOrder) ? CCagdPoint() : m_ctrlPts[i].m_pt;
+		double prevW = (i == 0) ? 0 : m_ctrlPts[i-1].m_weight;
+		double currW = (i == oldOrder) ? 0 : m_ctrlPts[i].m_weight;
+
+		CCagdPoint newP = (i*prevP + (oldOrder - i) * currP) / (oldOrder);
+		double newW = (i * prevW + (oldOrder - i) * currW) / (oldOrder);
+
+		newCtrl.push_back(WeightedPt(newP, newW));
+	}
+	m_ctrlPts = newCtrl;
+}
+
+std::pair<vector<WeightedPt>, vector<WeightedPt>> Bezier::Subdivide()
+{
+	vector<WeightedPt> firstCtrl;
+
+	for (int i = 0; i < m_ctrlPts.size(); i++)
+	{
+		firstCtrl.push_back(U::constructiveAlgorithm(m_ctrlPts, i, i, 0.5));
+	}
+	m_ctrlPts = firstCtrl;
+	return std::pair<vector<WeightedPt>, vector<WeightedPt>>(firstCtrl, firstCtrl);
 }
 

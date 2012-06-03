@@ -247,5 +247,26 @@ string BSpline::toIrit(int id)
 
 string BSpline::toDat(int id)
 {
-	return string();
+	int numOfPoints = m_ctrlPts.size();
+	if (0 == numOfPoints)
+		return string("");
+
+	std::ostringstream buf = std::ostringstream();
+	buf << m_order << std::endl;
+	buf << "knots[" << m_kv.size() << "] = " << std::endl << "\t";
+	for (int i = 0; i < m_kv.size(); i++)
+	{
+		buf <<  m_kv[i] << " ";
+		if (i > 0 && i % 5 == 0)
+		{
+			buf << std::endl << "\t";
+		}
+	}
+	buf << std::endl;
+	for (int i = 0; i < numOfPoints; i++)
+	{
+		buf << (m_ctrlPts[i].m_pt.x) << " " << (m_ctrlPts[i].m_pt.y) << " " << (m_ctrlPts[i].m_pt.z) << std::endl;
+	}
+	buf << std::endl; 
+	return buf.str();
 }

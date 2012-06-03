@@ -43,7 +43,7 @@ struct WeightControl
 	{
 		cagdFreeSegment(m_id);
 	}
-	WeightControl(CCagdPoint center, int radius, bool show = false) 
+	WeightControl(CCagdPoint center, double radius, bool show = false) 
 		: m_id(0), m_radius(radius), m_show(show), m_center(center)
 	{
 		if (m_show)
@@ -205,6 +205,13 @@ public:
 
 	// for bsplines. returns empty vector if curve is not a bspline
 	std::vector<double> GetKnotVector(int curveIdx);
+
+	// for beziers
+	bool RaiseDegree(int curveIdx);
+	bool Subdivide(int curveIdx);
+
+	string toDat() const;
+	string toIrit() const;
 
 	
 private:

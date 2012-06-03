@@ -52,6 +52,7 @@ public:
 	Curve& operator=(const Curve& rhs);
 	virtual string toIrit(int id) = 0;
 	virtual string toDat(int id = 0) = 0;
+	vector<WeightedPt> ControlPoints();
 
 protected:
 	virtual void Calculate() = 0;

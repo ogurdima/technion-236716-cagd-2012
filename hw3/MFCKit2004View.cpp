@@ -13,6 +13,7 @@
 #include "expr2tree.h"
 #include "FrenetFrame.h"
 #include <string>
+#include <fstream>
 
 #pragma warning (disable : 4800)
 #pragma warning (disable : 4018)
@@ -88,6 +89,10 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_CONTEXTBG_NEWBSPLINECURVE, &CMFCKit2004View::OnContextbgNewbsplinecurve)
 	ON_COMMAND(ID_CONTEXTPT_ADJUSTWEIGHT, &CMFCKit2004View::OnContextptAdjustweight)
 	ON_UPDATE_COMMAND_UI(ID_CONTEXTPT_ADJUSTWEIGHT, &CMFCKit2004View::OnUpdateContextptAdjustweight)
+	ON_COMMAND(ID_CONTEXTPOLYGON_RAISEDEGREE, &CMFCKit2004View::OnContextpolygonRaisedegree)
+	ON_COMMAND(ID_CONTEXTPOLYGON_SUBDIVIDEATT, &CMFCKit2004View::OnContextpolygonSubdivide)
+	ON_COMMAND(ID_FILE_SAVEAS32803, &CMFCKit2004View::OnFileSaveasItd)
+	ON_COMMAND(ID_FILE_SAVEAS, &CMFCKit2004View::OnFileSaveasDat)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1299,4 +1304,78 @@ void CMFCKit2004View::OnContextptAdjustweight()
 void CMFCKit2004View::OnUpdateContextptAdjustweight(CCmdUI *pCmdUI)
 {
 	//pCmdUI->SetCheck(m_lastWeightControlStatus);
+}
+
+
+void CMFCKit2004View::OnContextpolygonRaisedegree()
+{
+	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
+	if (-1 != m_currCurveIdx)
+	{
+		m_mgr.RaiseDegree(m_currCurveIdx);
+	}
+	Invalidate();
+}
+
+
+void CMFCKit2004View::OnContextpolygonSubdivide()
+{
+	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
+	if (-1 != m_currCurveIdx)
+	{
+		m_mgr.Subdivide(m_currCurveIdx);
+	}
+	Invalidate();
+}
+
+
+void CMFCKit2004View::OnFileSaveasItd()
+{
+	CFileDialog fileDialog(FALSE, ".itd", NULL, 0, NULL, NULL, 0);
+	INT_PTR nResult = fileDialog.DoModal();
+	if(IDCANCEL == nResult) 
+	{
+		Invalidate();
+		return;
+	}
+
+	CString pathName = fileDialog.GetPathName();
+	CString fileName = fileDialog.GetFileTitle();
+	string filename = std::string(pathName);
+
+	string res = m_mgr.toIrit();
+
+	std::ofstream out(filename);
+
+	out << res;
+
+	out.close();
+	
+	Invalidate();
+}
+
+
+void CMFCKit2004View::OnFileSaveasDat()
+{
+	CFileDialog fileDialog(FALSE, ".dat", NULL, 0, NULL, NULL, 0);
+	INT_PTR nResult = fileDialog.DoModal();
+	if(IDCANCEL == nResult) 
+	{
+		Invalidate();
+		return;
+	}
+
+	CString pathName = fileDialog.GetPathName();
+	CString fileName = fileDialog.GetFileTitle();
+	string filename = std::string(pathName);
+
+	string res = m_mgr.toDat();
+
+	std::ofstream out(filename);
+
+	out << res;
+
+	out.close();
+
+	Invalidate();
 }

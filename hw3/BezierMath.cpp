@@ -34,9 +34,14 @@ bool U::NearlyEq(double a, double b, double epsilon)
 //-----------------------------------------------------------------------------
 int U::ptOnLineSegmentAfter(CCagdPoint p, vector<WeightedPt> poly, double epsilon)
 {
+	bool localEpsilon = false;
 	if (poly.size() < 2)
 	{
 		return -1;
+	}
+	if (0 > epsilon)
+	{
+		localEpsilon = true;
 	}
 	CCagdPoint curr, next;
 	double equation = 0;
@@ -44,44 +49,15 @@ int U::ptOnLineSegmentAfter(CCagdPoint p, vector<WeightedPt> poly, double epsilo
 	{
 		curr = poly[i].m_pt;
 		next = poly[i+1].m_pt;
+		double dist = DistanceFromPointToLine(p, curr, next);
+		if (localEpsilon)
+			epsilon = length(next - curr)/20;
+		CString msg;
+		msg.Format("Index is: %d Distance is: %f, epsilon is: %f\n", i, dist, epsilon);
+		::OutputDebugString(msg);		
 
-		if(U::NearlyEq(next.x, curr.x, epsilon/2.0))
-		{
-			// check if x's match up within the threshold
-			if(!U::NearlyEq(p.x, curr.x, epsilon))
-			{
-				continue;
-			}
-
-			// check if pt.y is between the two points (if it is, the directions will be opposite)
-			if((p.y-curr.y)*(p.y-next.y) < 0)
-			{
-				return i+1;
-			}
-		}
-		else if(U::NearlyEq(next.y, curr.y, epsilon/2.0))
-		{
-			// check if x's match up within the threshold
-			if(!U::NearlyEq(p.y, curr.y, epsilon))
-			{
-				continue;
-			}
-
-			// check if pt.y is between the two points (if it is, the directions will be opposite)
-			if((p.x-curr.x)*(p.x-next.x) < 0)
-			{
-				return i+1;
-			}
-		}
-		else 
-		{
-			equation = (p.y - next.y) - ( ((next.y - curr.y)/(next.x - curr.x)) * (p.x - next.x) );
-			if (NearlyEq(equation, 0, epsilon) && (p.y-curr.y)*(p.y-next.y) < 0 && (p.x-curr.x)*(p.x-next.x) < 0)
-			{
-				return i+1;
-			}
-		}
-	
+		if (dist <= epsilon && (p.y-curr.y)*(p.y-next.y) <= 0 && (p.x-curr.x)*(p.x-next.x) <= 0)
+			return i + 1;
 	}
 	return -1;
 }
@@ -139,6 +115,60 @@ bool U::IsFloat(const std::string& str)
 		++k;
 	}
 	return true;
+}
+
+//-----------------------------------------------------------------------------
+
+double U::DistanceFromPointToLine(CCagdPoint p, CCagdPoint p1, CCagdPoint p2)
+{
+	CCagdPoint v1 = p - p1;
+	CCagdPoint v2 = p - p2;
+	CCagdPoint vLine = p2 - p1;
+	return length(cross(v1, v2))/length(vLine);
+}
+
+WeightedPt U::convexCombination(WeightedPt p1, WeightedPt p2, double t)
+{
+	return WeightedPt( (p1.m_pt * (1-t) * p1.m_weight) + (t * p2.m_pt * p2.m_weight), (p1.m_weight * (1-t)) + (t * p2.m_weight));
+}
+
+CCagdPoint U::convexCombination(CCagdPoint p1, CCagdPoint p2, double t)
+{
+	return (p1 * (1-t)) + (p2 * t);
+}
+
+WeightedPt U::constructiveAlgorithm(vector<WeightedPt> pts, int subIdx, int superIdx, double t)
+{
+	if (superIdx < 0 || subIdx > pts.size() || subIdx < 0 || subIdx < superIdx)
+		throw std::exception();
+	vector<CCagdPoint> cpts;
+	vector<double> weight;
+	for (int i = 0; i < pts.size(); i++)
+	{
+		weight.push_back(pts[i].m_weight);
+		cpts.push_back(pts[i].m_pt);
+		cpts[i].z = pts[i].m_weight;
+	}
+	for (int j = 1; j <= superIdx; j++)
+	{
+		//for (int i = 0; i <= pts.size() - 1 - j; i++)
+		for (int i = cpts.size() - 1; i >= j; i--)
+		{
+			//double cWij = pts[i-1].m_weight;
+			//double cWip1j = pts[i].m_weight;
+			//double nWij = (1-t) * pts[i-1].m_weight + t * pts[i].m_weight;
+			// 
+
+			//pts[i].m_pt = ((1-t) * cWij * pts[i-1].m_pt) + (t * cWip1j * pts[i].m_pt); 
+			////pts[i].m_pt = pts[i].m_pt/nWij;
+			//pts[i].m_weight = nWij;
+
+			cpts[i] = convexCombination(cpts[i-1], cpts[i]);
+		}
+	}
+	WeightedPt res = WeightedPt(cpts[subIdx], weight[subIdx]);
+	res.m_pt.z = 0;
+	return res;
 }
 
 

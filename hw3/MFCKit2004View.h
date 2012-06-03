@@ -219,6 +219,10 @@ public:
 	afx_msg void OnContextbgNewbsplinecurve();
 	afx_msg void OnContextptAdjustweight();
 	afx_msg void OnUpdateContextptAdjustweight(CCmdUI *pCmdUI);
+	afx_msg void OnContextpolygonRaisedegree();
+	afx_msg void OnContextpolygonSubdivide();
+	afx_msg void OnFileSaveasItd();
+	afx_msg void OnFileSaveasDat();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp
