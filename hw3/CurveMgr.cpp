@@ -5,7 +5,8 @@ using std::vector;
 #pragma warning (disable : 4800)
 #pragma warning (disable : 4018)
 
-CurveMgr::CurveMgr()
+CurveMgr::CurveMgr() :
+m_showGrid(false)
 {
 }
 
@@ -39,14 +40,32 @@ bool CurveMgr::ToggleShowPolygon(int curveIdx)
 
 bool CurveMgr::RedrawCurve(int curveIdx)
 {
+
 	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
 	{ return false; }
 	CurveWrp& cw = m_curves[curveIdx];
+
+
 
 	// clear existing curve & control polygon
 	cagdFreeSegment(cw.m_curveId);
 	cagdFreeSegment(cw.m_ctrPolyId);
 	// recalculate
+
+	// need to remove curve wrapper
+	if (cw.m_curve->polygonSize() == 0)
+	{
+		vector<CurveWrp> tmp = m_curves;
+		m_curves.clear();
+		for (int i = 0; i < tmp.size(); i++)
+		{
+			if (i != curveIdx)
+				m_curves.push_back(tmp[i]);
+		}
+		return false;
+	}
+
+
 	cw.m_curveId = cw.m_curve->DrawCurve();
 	cw.m_ctrPolyId = cw.m_curve->DrawCtrlPolygon();
 
@@ -93,6 +112,26 @@ bool CurveMgr::AddCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, int 
 
 	::OutputDebugString((LPCSTR)(m_curves[curveIdx].m_curve->toIrit(curveIdx).c_str()));
 
+	return true;
+}
+
+bool CurveMgr::RemoveCtrlPt(const CCagdPoint& pt)
+{
+	int windX, windY;
+	cagdToWindow(const_cast<CCagdPoint*>(&pt), &windX, &windY);
+	ControlPointInfo pi = PickControlPoint(windX, windY);
+	if (! pi.IsValid())
+		return false;
+	m_curves[pi.m_curveIdx].m_curve->RemoveCtrlPoint(pi.m_pointIdx);
+	vector<WeightControl> tmp = m_curves[pi.m_curveIdx].m_wc;
+	m_curves[pi.m_curveIdx].m_wc.clear();
+	for (int i = 0; i < tmp.size(); i++)
+	{
+		if (i != pi.m_pointIdx)
+			m_curves[pi.m_curveIdx].m_wc.push_back(tmp[i]);
+	}
+
+	RedrawCurve(pi.m_curveIdx);
 	return true;
 }
 
@@ -326,4 +365,42 @@ string CurveMgr::toIrit() const
 	return buf.str();
 }
 
+bool CurveMgr::showGrid(double density)
+{
+	m_showGrid = !m_showGrid;
+	for (int i = 0; i < m_grid.size(); i++)
+	{
+		cagdFreeSegment(m_grid[i]);
+	}
+	m_grid.clear();
+	for (double i = -10; i <= 10; i += density)
+	{
+		CCagdPoint vert[2];
+		CCagdPoint hor[2];
+		hor[0] = CCagdPoint(10, i, 0);
+		hor[1] = CCagdPoint(-10, i, 0);
+		vert[0] = CCagdPoint(i, 10, 0);
+		vert[1] = CCagdPoint(i, -10, 0);
 
+		UINT id = cagdAddPolyline(hor, 2, CAGD_SEGMENT_POLYLINE);
+		cagdSetSegmentColor(id, 30, 60, 0);
+		m_grid.push_back(id);
+		id = cagdAddPolyline(vert, 2, CAGD_SEGMENT_POLYLINE);
+		cagdSetSegmentColor(id, 30, 60, 0);
+		m_grid.push_back(id);
+	}
+	for (int i = 0; i < m_grid.size(); i++)
+	{
+		if (m_showGrid)
+		{
+			cagdShowSegment(m_grid[i]);
+		}
+		else
+		{
+			cagdHideSegment(m_grid[i]);
+		}
+	}
+	
+	
+	return m_showGrid;
+}

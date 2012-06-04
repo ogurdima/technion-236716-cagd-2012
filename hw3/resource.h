@@ -66,6 +66,11 @@
 #define ID_CONTEXTPOLYGON_SUBDIVIDEATT  32801
 #define ID_FILE_SAVEAS                  32802
 #define ID_FILE_SAVEAS32803             32803
+#define ID_CONTEXTPT_REMOVEPOINT        32804
+#define ID_OPTIONS_SHOWGRID             32805
+#define ID_FILE_SAVE32806               32806
+#define ID_FILE_SAVE_GEOMETRY           32807
+#define ID_FILE_SAVE32808               32808
 #define ID_INDICATOR_CURVATURE          61205
 #define ID_INDICATOR_TORSION            61206
 
@@ -75,7 +80,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        166
-#define _APS_NEXT_COMMAND_VALUE         32804
+#define _APS_NEXT_COMMAND_VALUE         32809
 #define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

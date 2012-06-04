@@ -87,15 +87,23 @@ void Bezier::RaiseDegree()
 	m_ctrlPts = newCtrl;
 }
 
-std::pair<vector<WeightedPt>, vector<WeightedPt>> Bezier::Subdivide()
+std::pair<int, int> Bezier::Subdivide()
 {
 	vector<WeightedPt> firstCtrl;
-
+	vector<WeightedPt> secondCtrl;
+	vector<WeightedPt> secondCtrlReversed;
 	for (int i = 0; i < m_ctrlPts.size(); i++)
 	{
 		firstCtrl.push_back(U::constructiveAlgorithm(m_ctrlPts, i, i, 0.5));
+		secondCtrlReversed.push_back(U::constructiveAlgorithm(m_ctrlPts, m_ctrlPts.size() - 1, i, 0.5));
 	}
-	m_ctrlPts = firstCtrl;
-	return std::pair<vector<WeightedPt>, vector<WeightedPt>>(firstCtrl, firstCtrl);
+	for (int i = 0; i < secondCtrlReversed.size(); i++)
+	{
+		secondCtrl.push_back(secondCtrlReversed[i]);
+	}
+	m_ctrlPts = secondCtrl;
+	//m_ctrlPts = firstCtrl;
+	//return std::pair<vector<WeightedPt>, vector<WeightedPt>>(firstCtrl, firstCtrl);
+	return std::pair<int,int>(1,1);
 }
 

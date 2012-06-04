@@ -148,4 +148,19 @@ vector<WeightedPt> Curve::ControlPoints()
 	return m_ctrlPts; // i think it copies the data
 }
 
+void Curve::RemoveCtrlPoint(int idx)
+{
+	if((idx < 0) || (idx >= m_ctrlPts.size()))
+	{ return; }
+
+	vector<WeightedPt> tmp = m_ctrlPts;
+	m_ctrlPts.clear();
+
+	for (int i = 0; i < tmp.size(); i++)
+	{
+		if (i != idx)
+			m_ctrlPts.push_back(tmp[i]);
+	}
+}
+
 

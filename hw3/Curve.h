@@ -54,6 +54,8 @@ public:
 	virtual string toDat(int id = 0) = 0;
 	vector<WeightedPt> ControlPoints();
 
+	virtual void RemoveCtrlPoint(int idx);
+
 protected:
 	virtual void Calculate() = 0;
 	// the control polygon

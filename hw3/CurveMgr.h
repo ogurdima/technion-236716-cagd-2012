@@ -183,6 +183,7 @@ public:
 	int NewBsplineCurve(unsigned int order);
 	bool AddLastCtrlPt(const CCagdPoint& pt, double weight, int curveIdx);
 	bool AddCtrlPt(const CCagdPoint& pt, double weight = 1, int curveIdx = -1, int polyPointIdx = -1);
+	bool RemoveCtrlPt(const CCagdPoint& pt);
 	bool UpdateCtrlPtPos(const ControlPointInfo& ptInfo, const CCagdPoint& pt);
 	bool UpdateCtrlPtWeight(const ControlPointInfo& ptInfo, double weight);
 	void ClearAll();
@@ -213,8 +214,11 @@ public:
 	string toDat() const;
 	string toIrit() const;
 
+	bool showGrid(double density = 1);
+
 	
 private:
 	std::vector<CurveWrp> m_curves;
-	
+	std::vector<UINT> m_grid;
+	bool m_showGrid;
 };

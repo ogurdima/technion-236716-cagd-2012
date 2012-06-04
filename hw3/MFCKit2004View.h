@@ -221,8 +221,9 @@ public:
 	afx_msg void OnUpdateContextptAdjustweight(CCmdUI *pCmdUI);
 	afx_msg void OnContextpolygonRaisedegree();
 	afx_msg void OnContextpolygonSubdivide();
-	afx_msg void OnFileSaveasItd();
-	afx_msg void OnFileSaveasDat();
+	afx_msg void OnContextptRemovepoint();
+	afx_msg void OnOptionsShowgrid();
+	afx_msg void OnFileSaveGeometry();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp

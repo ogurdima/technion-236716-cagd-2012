@@ -106,8 +106,7 @@ BEGIN
     BEGIN
         MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
         MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
-        MENUITEM "Save as .itd",                ID_FILE_SAVEAS32803
-        MENUITEM "Save as .dat",                ID_FILE_SAVEAS
+        MENUITEM "Save",                        ID_FILE_SAVE32808
         MENUITEM SEPARATOR
         MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
         MENUITEM SEPARATOR
@@ -126,6 +125,7 @@ BEGIN
             MENUITEM "&Less",                       ID_FUZZINESS_LESS
         END
         MENUITEM "&Reset",                      ID_OPTIONS_RESET
+        MENUITEM "Show Grid",                   ID_OPTIONS_SHOWGRID
         MENUITEM SEPARATOR
         POPUP "&Mouse Sensitivity"
         BEGIN
@@ -199,6 +199,7 @@ BEGIN
     POPUP "ContextPt"
     BEGIN
         MENUITEM "Adjust Weight",               ID_CONTEXTPT_ADJUSTWEIGHT
+        MENUITEM "Remove Point",                ID_CONTEXTPT_REMOVEPOINT
     END
 END
 

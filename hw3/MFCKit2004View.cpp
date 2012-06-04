@@ -91,8 +91,10 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_UPDATE_COMMAND_UI(ID_CONTEXTPT_ADJUSTWEIGHT, &CMFCKit2004View::OnUpdateContextptAdjustweight)
 	ON_COMMAND(ID_CONTEXTPOLYGON_RAISEDEGREE, &CMFCKit2004View::OnContextpolygonRaisedegree)
 	ON_COMMAND(ID_CONTEXTPOLYGON_SUBDIVIDEATT, &CMFCKit2004View::OnContextpolygonSubdivide)
-	ON_COMMAND(ID_FILE_SAVEAS32803, &CMFCKit2004View::OnFileSaveasItd)
-	ON_COMMAND(ID_FILE_SAVEAS, &CMFCKit2004View::OnFileSaveasDat)
+	ON_COMMAND(ID_CONTEXTPT_REMOVEPOINT, &CMFCKit2004View::OnContextptRemovepoint)
+	ON_COMMAND(ID_OPTIONS_SHOWGRID, &CMFCKit2004View::OnOptionsShowgrid)
+	ON_COMMAND(ID_FILE_SAVE32808, &CMFCKit2004View::OnFileSaveGeometry)
+	ON_COMMAND(ID_FILE_SAVE, &CMFCKit2004View::OnFileSaveGeometry)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1328,54 +1330,50 @@ void CMFCKit2004View::OnContextpolygonSubdivide()
 	Invalidate();
 }
 
-
-void CMFCKit2004View::OnFileSaveasItd()
+void CMFCKit2004View::OnContextptRemovepoint()
 {
-	CFileDialog fileDialog(FALSE, ".itd", NULL, 0, NULL, NULL, 0);
-	INT_PTR nResult = fileDialog.DoModal();
-	if(IDCANCEL == nResult) 
-	{
-		Invalidate();
-		return;
-	}
-
-	CString pathName = fileDialog.GetPathName();
-	CString fileName = fileDialog.GetFileTitle();
-	string filename = std::string(pathName);
-
-	string res = m_mgr.toIrit();
-
-	std::ofstream out(filename);
-
-	out << res;
-
-	out.close();
-	
+	m_mgr.RemoveCtrlPt(m_lastRbuttonUp);
 	Invalidate();
 }
 
 
-void CMFCKit2004View::OnFileSaveasDat()
+void CMFCKit2004View::OnOptionsShowgrid()
 {
-	CFileDialog fileDialog(FALSE, ".dat", NULL, 0, NULL, NULL, 0);
+	m_mgr.showGrid();
+	Invalidate();
+}
+
+
+void CMFCKit2004View::OnFileSaveGeometry()
+{
+	char strFilter[] = { "ITD Files (*.itd)|*.itd|DAT Diles (*.dat)|*.dat||" };
+	CFileDialog fileDialog = CFileDialog(FALSE, "itd", NULL, OFN_OVERWRITEPROMPT, strFilter, NULL);
 	INT_PTR nResult = fileDialog.DoModal();
 	if(IDCANCEL == nResult) 
 	{
 		Invalidate();
 		return;
 	}
-
 	CString pathName = fileDialog.GetPathName();
 	CString fileName = fileDialog.GetFileTitle();
+	string fileExt	 = std::string(fileDialog.GetFileExt());
 	string filename = std::string(pathName);
-
-	string res = m_mgr.toDat();
-
+	string res;
+	if ("itd" == fileExt)
+	{
+		res = m_mgr.toIrit();
+	}
+	else if ("dat" == fileExt)
+	{
+		res = m_mgr.toDat();
+	}
+	else
+	{
+		Invalidate();
+		return;
+	}
 	std::ofstream out(filename);
-
 	out << res;
-
 	out.close();
-
-	Invalidate();
+	Invalidate();	
 }
