@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Bspline.h"
+#include "BezierMath.h"
 #include <vector>
 using std::vector;
 
@@ -18,6 +19,25 @@ bool BSpline::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt)
 	{ return false; }
 
 	// update the knot vector
+	if(m_kv.empty())
+	{
+		m_kv.push_back(0.0);
+	}
+	else if(1 == m_kv.size())
+	{
+		// if we have only 1 value (0), finish the 0-1 interval with a 1.
+		m_kv.push_back(1.0);
+	}
+	else
+	{
+		// arbitrary number of points
+		if(m_kv.size() == ptIdxAt)
+		{
+			double hi_value = m_kv[m_kv.size()-1];
+			m_kv.push_back(hi_value+1.0);
+		}
+		
+	}
 	//m_kv.push_back(ptIdxAt);
 	return true;
 }
@@ -31,6 +51,20 @@ unsigned long BSpline::GetOrder(unsigned long order) const
 {
 	return m_order;
 }
+
+// In the following two cases,
+// it is natural for the program to decide the knots: 
+// 1. uniform float knot vector. 
+// 2. uniform open end. 
+bool BSpline::InsertKnot(int idx)
+{
+	return false;
+}
+bool BSpline::DeleteKnot(int idx)
+{
+	return false;
+}
+
 
 bool BSpline::SetKnotVector(const vector<double>& kv)
 {
@@ -145,6 +179,32 @@ void BSpline::Calculate()
 	//o0.close();
 
 }
+
+// everything gets transformed to a value between 0 and 1
+void BSpline::NormalizeKnotValues()
+{
+	if(m_kv.empty())
+	{ return; }
+
+	double low_value = m_kv[0];
+	for(int i=0; i<m_kv.size(); ++i)
+	{
+		m_kv[i] -= low_value;
+	}
+	
+	double hi_value = m_kv[m_kv.size()-1];
+	
+	// if the high value is zero they should all be zero anyway
+	if(U::NearlyEq(hi_value, 0.0))
+	{ return; }
+
+	for(int i=0; i<m_kv.size(); ++i)
+	{
+		m_kv[i] /= hi_value;
+	}
+}
+
+
 
 // evaluates at time t, ctrl pt index i, degree k
 double BSpline::BSplineBasis(double t, int i, int k)

@@ -14,6 +14,20 @@ enum ParseState
 	ParseStateDone
 };
 
+struct ParsedCurve
+{
+	ParsedCurve() : m_order(0), m_type(SplineTypeUnknown){} 
+	void Clear() 
+	{
+		m_pts.clear();
+		m_knots.clear();
+		m_type = SplineTypeUnknown;
+	}
+	vector<CCagdPoint> m_pts;
+	vector<double> m_knots;
+	int m_order;
+	SplineType m_type;
+};
 
 
 class BezierParser
@@ -21,20 +35,19 @@ class BezierParser
 public:
 	BezierParser(void);
 	~BezierParser(void);
-	SplineType Type() const;
 	void Clear();
 	
 	bool ParseFile(const std::string& filename);
 	bool ParseLine(const std::string& line);
 
-	vector<CCagdPoint> m_pts;
-	vector<double> m_knots;
+	vector<ParsedCurve> m_curves;
 
+	int m_intval;
 	int m_expectedPtCount;
 	int m_expectedKnotCount;
-	int m_order;
+	int m_crvIdx;
+	bool m_valid;
 
 	ParseState m_state;
-	SplineType m_type;
 };
 

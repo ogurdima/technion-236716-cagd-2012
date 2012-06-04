@@ -197,31 +197,40 @@ void CMFCKit2004View::OnFileOpen()
 	}
 
 	m_mgr.ClearAll();
-	if(SplineTypeBezier == m_parser.Type())
+	for(int i=0; i<m_parser.m_curves.size(); ++i)
 	{
-		m_currCurveIdx = m_mgr.NewBezierCurve();
-		for(int i=0; i<m_parser.m_pts.size(); ++i)
+		ParsedCurve& crv = m_parser.m_curves[i];
+		if(SplineTypeBezier == crv.m_type)
 		{
-			m_mgr.AddLastCtrlPt(m_parser.m_pts[i], 1.0, m_currCurveIdx);
+			m_currCurveIdx = m_mgr.NewBezierCurve();
+			for(int i=0; i<crv.m_pts.size(); ++i)
+			{
+				m_mgr.AddLastCtrlPt(crv.m_pts[i], 1.0, m_currCurveIdx);
+			}
 		}
-	}
-	else if(SplineTypeBspline == m_parser.Type())
-	{
-		m_currCurveIdx = m_mgr.NewBsplineCurve(m_parser.m_order);
-		for(int i=0; i<m_parser.m_pts.size(); ++i)
+		else if(SplineTypeBspline == crv.m_type)
 		{
-			CCagdPoint pt = m_parser.m_pts[i];
-			m_mgr.AddLastCtrlPt(CCagdPoint(pt.x, pt.y, 1.0), pt.z, m_currCurveIdx);
+			m_currCurveIdx = m_mgr.NewBsplineCurve(crv.m_order);
+			for(int i=0; i<crv.m_pts.size(); ++i)
+			{
+				CCagdPoint pt = crv.m_pts[i];
+				m_mgr.AddLastCtrlPt(CCagdPoint(pt.x, pt.y, 1.0), pt.z, m_currCurveIdx);
+			}
+			if(!m_mgr.SetKnotVector(m_currCurveIdx, crv.m_knots))
+			{
+				assert(false);
+			}
 		}
-		if(!m_mgr.SetKnotVector(m_currCurveIdx, m_parser.m_knots))
+		else
 		{
-			assert(false);
+			// fail
 		}
+		
 	}
-	else
-	{
-		// fail
-	}
+
+
+
+
 	//m_paramStartVal = m_parser.m_paramA;
 	//m_paramEndVal = m_parser.m_paramB;
 	//for(int i=0; i<3; ++i)
@@ -1372,7 +1381,7 @@ void CMFCKit2004View::OnFileSaveGeometry()
 		Invalidate();
 		return;
 	}
-	std::ofstream out(filename);
+	std::ofstream out(filename.c_str());
 	out << res;
 	out.close();
 	Invalidate();	

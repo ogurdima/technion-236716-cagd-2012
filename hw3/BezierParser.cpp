@@ -13,8 +13,8 @@ BezierParser::BezierParser(void)
 	: m_state(ParseStateNone)
 	, m_expectedPtCount(0)
 	, m_expectedKnotCount(0)
-	, m_type(SplineTypeUnknown)
-	, m_order(0)
+	, m_crvIdx(0)
+	, m_valid(true)
 {
 }
 
@@ -23,19 +23,14 @@ BezierParser::~BezierParser(void)
 {
 }
 
-SplineType BezierParser::Type() const
-{
-	return m_type;
-}
-
 void BezierParser::Clear()
 {
-	m_pts.clear();
-	m_knots.clear();
 	m_expectedPtCount = 0;
 	m_expectedKnotCount = 0;
 	m_state = ParseStateNone;
-	m_type = SplineTypeUnknown;
+	m_crvIdx = 0;
+	m_curves.clear();
+	m_valid = true;
 }
 
 bool BezierParser::ParseFile(const std::string& filename)
@@ -45,6 +40,7 @@ bool BezierParser::ParseFile(const std::string& filename)
 	std::ifstream fs(filename.c_str());
 	if(!fs) 
 	{
+		m_valid = false;
 		return false;
 	}
 
@@ -58,6 +54,7 @@ bool BezierParser::ParseFile(const std::string& filename)
 		if(!ParseLine(fileLine))
 		{ 
 			fs.close();
+			m_valid = false;
 			return false; 
 		}
 
@@ -66,9 +63,16 @@ bool BezierParser::ParseFile(const std::string& filename)
 	}
 
 	// eof
-	if(SplineTypeBspline == m_type)
+	if(SplineTypeBspline == m_curves[m_crvIdx].m_type)
 	{
 		if(ParseStatePoints == m_state)
+		{
+			m_state = ParseStateDone;
+		}
+	}
+	else if(SplineTypeBezier == m_curves[m_crvIdx].m_type)
+	{
+		if(ParseStateNone == m_state)
 		{
 			m_state = ParseStateDone;
 		}
@@ -88,11 +92,6 @@ bool BezierParser::ParseLine(const std::string& line)
 		::OutputDebugString("Empty\n");
 		return true;
 	}
-	if(line[0]=='#') 
-	{
-		::OutputDebugString("#\n");
-		return true;
-	}
 	int firstNonWhitespace = line.find_first_not_of(" \t\n\r");
 	int lastNonWhitespace = line.find_last_not_of(" \t\n\r");
 	if(-1 == firstNonWhitespace) 
@@ -103,22 +102,27 @@ bool BezierParser::ParseLine(const std::string& line)
 
 	// prepare a trimmed line
 	std::string line_trim = line.substr(firstNonWhitespace, (lastNonWhitespace+1) - firstNonWhitespace);
+	
+	if(line_trim[0]=='#') 
+	{
+		::OutputDebugString("#\n");
+		return true;
+	}
 
 	if(ParseStateNone == m_state)
 	{
 		// look for number 
-		int point_count = -1;
+		int int_val = -1;
 		std::stringstream sstrm(line_trim);
 
 		// try to parse the number
-		bool success = sstrm >> point_count;
+		bool success = sstrm >> int_val;
 		if(!success)
 		{ return false; }
 		
-		// record the count
-		m_expectedPtCount = point_count;
-		m_order = point_count;
-		
+		// record the integer value (not sure what it's for yet)
+		m_intval = int_val;
+
 		// advance the state
 		m_state = ParseStateFoundNumber;
 		
@@ -166,9 +170,15 @@ bool BezierParser::ParseLine(const std::string& line)
 				return false;
 			}
 			
+			// here, set up the arrays
+			m_curves.push_back(ParsedCurve());
+			m_crvIdx = m_curves.size()-1;
+			m_curves[m_crvIdx].m_order = m_intval;
+			m_curves[m_crvIdx].m_type = SplineTypeBspline;
+			
+
 			// upgrade the state
 			m_state = ParseStateKnots;
-			m_type = SplineTypeBspline;
 
 			// upgrade the line for below
 			int last_non_whitespace = line_trim.find_last_not_of(' \t\n\r');
@@ -179,6 +189,8 @@ bool BezierParser::ParseLine(const std::string& line)
 			if(-1 == first_non_whitespace)
 			{ return true; }
 			line_trim = line_trim.substr(first_non_whitespace);
+
+
 		}
 		else 
 		{
@@ -191,9 +203,14 @@ bool BezierParser::ParseLine(const std::string& line)
 				return false;
 			}
 
+			// here, set up the arrays
+			m_curves.push_back(ParsedCurve());
+			m_crvIdx = m_curves.size()-1;
+			m_curves[m_crvIdx].m_type = SplineTypeBezier;
+			m_expectedPtCount = m_intval;
+
 			// advance state to points
 			m_state = ParseStatePoints;
-			m_type = SplineTypeBezier;
 		}
 	}
 
@@ -211,11 +228,11 @@ bool BezierParser::ParseLine(const std::string& line)
 				return false;
 			}
 
-			m_knots.push_back(knot_val);
+			m_curves[m_crvIdx].m_knots.push_back(knot_val);
 		}
-		while((!sstrm.eof()) && (m_knots.size() < m_expectedKnotCount));
+		while((!sstrm.eof()) && (m_curves[m_crvIdx].m_knots.size() < m_expectedKnotCount));
 
-		if(m_knots.size() == m_expectedKnotCount)
+		if(m_curves[m_crvIdx].m_knots.size() == m_expectedKnotCount)
 		{
 			// if we've reached the expected knots, continue
 			m_state = ParseStatePoints;
@@ -226,6 +243,38 @@ bool BezierParser::ParseLine(const std::string& line)
 	// if state is points
 	if(ParseStatePoints == m_state)
 	{
+		// if it's an integer, 
+		if(U::IsIntegerUnsigned(line_trim))
+		{
+			// if we're parsing points, the only acceptable state is that
+			// we're constructing a bspline curve. if not, it's an error.
+			if(SplineTypeBspline != m_curves[m_crvIdx].m_type)
+			{
+				::OutputDebugString("Found integer while parsing points and not constructing a bspline.\n");
+				return false;
+			}
+			else
+			{
+				// look for number 
+				int int_val = -1;
+				std::stringstream sstrm(line_trim);
+
+				// try to parse the number
+				bool success = sstrm >> int_val;
+				if(!success)
+				{ return false; }
+				
+				// record the integer value (not sure what it's for yet)
+				m_intval = int_val;
+
+				// advance the state
+				m_state = ParseStateFoundNumber;
+				
+				// the number should be on its own line, so quit once we've found it; ignore everything else.
+				return true;
+			}
+		}
+
 		double x, y, z;
 		bool success = true;
 		std::stringstream sstrm(line_trim);
@@ -250,11 +299,12 @@ bool BezierParser::ParseLine(const std::string& line)
 		}
 
 		CCagdPoint newPt(x, y, z);
-		m_pts.push_back(newPt);
+		m_curves[m_crvIdx].m_pts.push_back(newPt);
 
-		if((SplineTypeBezier == m_type) && (m_pts.size() == m_expectedPtCount))
+		if((SplineTypeBezier == m_curves[m_crvIdx].m_type) && 
+			(m_curves[m_crvIdx].m_pts.size() == m_expectedPtCount))
 		{
-			m_state = ParseStateDone;
+			m_state = ParseStateNone;
 		}
 	}
 
