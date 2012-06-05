@@ -154,3 +154,187 @@ WeightedPt U::constructiveAlgorithm(vector<WeightedPt> pts, int subIdx, int supe
 }
 
 
+vector<WeightedPt> U::rotatePolyRoundFirstPt(vector<WeightedPt> orig, CCagdPoint direction)
+{
+	vector<CCagdPoint> pts;
+	for (int i = 0; i < orig.size(); i++)
+	{
+		pts.push_back(orig[i].m_pt);
+	}
+	pts = rotatePolyRoundFirstPt(pts, direction);
+	for (int i = 0; i < pts.size(); i++)
+	{
+		orig[i].m_pt = pts[i];
+	}
+	return orig;
+}
+
+vector<CCagdPoint> U::rotatePolyRoundFirstPt(vector<CCagdPoint> orig, CCagdPoint direction)
+{
+	if (2 > orig.size() || direction == CCagdPoint(0,0,0))
+		return orig;
+	CCagdPoint offset = orig[0] - CCagdPoint(0,0,0);
+
+	//=============================================================================
+	// Calculating rotation angle
+	//=============================================================================
+	double sAng = length( cross( direction, (orig[1] - orig[0]) ) );
+	double ang = asin(sAng);
+	double dotProd = dot(direction, (orig[1] - orig[0]));
+	if(dotProd < 0) {
+		ang = PI - ang;
+	}
+
+	//=============================================================================
+	// Moving the polygon to the origin
+	//=============================================================================
+	for (int i = 0; i < orig.size(); i++)
+	{
+		orig[i] = orig[i] - offset;
+	}
+
+	//=============================================================================
+	// Rotating and translating back
+	//=============================================================================
+	CCagdPoint rotated(0,0,0);
+	for (int i = 0; i < orig.size(); i++)
+	{
+		rotated.x = orig[i].x * cos(ang) - sin(ang) * orig[i].y;
+		rotated.y = orig[i].x * sin(ang) + cos(ang) * orig[i].y;
+		orig[i] = rotated;
+		orig[i] = orig[i] + offset;
+	}
+	return orig;
+}
+
+vector<WeightedPt> U::rotatePolyRoundLastPt(vector<WeightedPt> orig, CCagdPoint direction)
+{
+	vector<CCagdPoint> pts;
+	for (int i = 0; i < orig.size(); i++)
+	{
+		pts.push_back(orig[i].m_pt);
+	}
+	pts = rotatePolyRoundLastPt(pts, direction);
+	for (int i = 0; i < pts.size(); i++)
+	{
+		orig[i].m_pt = pts[i];
+	}
+	return orig;
+}
+
+vector<CCagdPoint> U::rotatePolyRoundLastPt(vector<CCagdPoint> orig, CCagdPoint direction)
+{
+	if (2 > orig.size() || direction == CCagdPoint(0,0,0))
+		return orig;
+	CCagdPoint offset = orig[orig.size() - 1] - CCagdPoint(0,0,0);
+
+	//=============================================================================
+	// Calculating rotation angle
+	//=============================================================================
+	double sAng = length( cross( normalize(direction), normalize((orig[orig.size() - 2] - orig[orig.size() - 1]) )) );
+	double ang = asin(sAng);
+	double dotProd = dot( normalize(direction), normalize((orig[1] - orig[0])) );
+	if(dotProd < 0) {
+		ang = PI - ang;
+	}
+
+	//=============================================================================
+	// Moving the polygon to the origin
+	//=============================================================================
+	for (int i = 0; i < orig.size(); i++)
+	{
+		orig[i] = orig[i] - offset;
+	}
+
+	//=============================================================================
+	// Rotating and translating back
+	//=============================================================================
+	CCagdPoint rotated(0,0,0);
+	for (int i = 0; i < orig.size(); i++)
+	{
+		rotated.x = orig[i].x * cos(ang) - sin(ang) * orig[i].y;
+		rotated.y = orig[i].x * sin(ang) + cos(ang) * orig[i].y;
+		orig[i] = rotated;
+		orig[i] = orig[i] + offset;
+	}
+	return orig;
+}
+
+vector<CCagdPoint> U::scalePoly(vector<CCagdPoint> orig, double factor)
+{
+	//=============================================================================
+	// Scaling each point will work
+	//=============================================================================
+	for (int i = 0; i < orig.size(); i++)
+	{
+		orig[i] = orig[i] * factor;
+	}
+	return orig;
+}
+
+vector<WeightedPt> U::scalePoly(vector<WeightedPt> orig, double factor)
+{
+	vector<CCagdPoint> pts;
+	for (int i = 0; i < orig.size(); i++)
+	{
+		pts.push_back(orig[i].m_pt);
+	}
+	pts = scalePoly(pts, factor);
+	for (int i = 0; i < pts.size(); i++)
+	{
+		orig[i].m_pt = pts[i];
+		orig[i].m_weight *= factor;
+	}
+	return orig;
+}
+
+vector<CCagdPoint> U::translateFirstPointTo(vector<CCagdPoint> orig, CCagdPoint dest)
+{
+	if (orig.size() == 0)
+		return orig;
+	CCagdPoint offset = orig[0] - dest;
+	for (int i = 0; i < orig.size(); i++)
+	{
+		orig[i] = orig[i] - offset;
+	}
+	return orig;
+}
+
+
+vector<CCagdPoint> U::translateLastPointTo(vector<CCagdPoint> orig, CCagdPoint dest)
+{
+	if (orig.size() == 0)
+		return orig;
+	CCagdPoint offset = orig[orig.size() - 1] - dest;
+	for (int i = 0; i < orig.size(); i++)
+	{
+		orig[i] = orig[i] - offset;
+	}
+	return orig;
+}
+
+
+vector<WeightedPt> U::translateFirstPointTo(vector<WeightedPt> orig, CCagdPoint dest)
+{
+	if (orig.size() == 0)
+		return orig;
+	CCagdPoint offset = orig[0].m_pt - dest;
+	for (int i = 0; i < orig.size(); i++)
+	{
+		orig[i].m_pt = orig[i].m_pt - offset;
+	}
+	return orig;
+}
+
+vector<WeightedPt> U::translateLastPointTo(vector<WeightedPt> orig, CCagdPoint dest)
+{
+	if (orig.size() == 0)
+		return orig;
+	CCagdPoint offset = orig[orig.size() - 1].m_pt - dest;
+	for (int i = 0; i < orig.size(); i++)
+	{
+		orig[i].m_pt = orig[i].m_pt - offset;
+	}
+	return orig;
+}
+

@@ -12,6 +12,7 @@
 #include "gl/glu.h"
 #include "expr2tree.h"
 #include "FrenetFrame.h"
+#include "KVgui.h"
 #include <string>
 #include <fstream>
 
@@ -95,6 +96,10 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_OPTIONS_SHOWGRID, &CMFCKit2004View::OnOptionsShowgrid)
 	ON_COMMAND(ID_FILE_SAVE32808, &CMFCKit2004View::OnFileSaveGeometry)
 	ON_COMMAND(ID_FILE_SAVE, &CMFCKit2004View::OnFileSaveGeometry)
+	ON_COMMAND(ID_CONTEXTBSPLINEPOLY_MODIFYKNOTVECTOR, &CMFCKit2004View::OnContextbsplinepolyModifyknotvector)
+	ON_COMMAND(ID_CONNECTTOWITHCONTINUITY_G0, &CMFCKit2004View::OnConnecttowithcontinuityG0)
+	ON_COMMAND(ID_CONNECTTOWITHCONTINUITY_G1, &CMFCKit2004View::OnConnecttowithcontinuityG1)
+	ON_COMMAND(ID_CONNECTTOWITHCONTINUITY_C1, &CMFCKit2004View::OnConnecttowithcontinuityC1)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -503,8 +508,10 @@ void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 
 	if(m_state == StateIdle)
 	{
+		bool found = m_kvmgr.attemptAnchor(point.x, point.y);
+		if (found)
+			return;
 		m_weightCtrlAnchor = m_mgr.AttemptWeightAnchor(point.x, point.y);
-
 		// look for the point within the curves
 		m_draggedPt.m_pt = m_mgr.PickControlPoint(point.x, point.y);
 		if(m_draggedPt.m_pt.IsValid())
@@ -513,7 +520,7 @@ void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 			m_draggedPt.m_startPosScreen = CCagdPoint(point.x, point.y);
 		}
 	}
-
+	
 
 	/*int frameIdx = m_ffmgr.PickFrame(point.x, point.y);
 	if(frameIdx >= 0) 
@@ -532,6 +539,12 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 	// release the dragged point
 	m_draggedPt.m_pt.Invalidate();
 	m_weightCtrlAnchor.Invalidate();
+	m_kvmgr.dropAnchor();
+
+	CCagdPoint cp[2];
+	cagdToObject(point.x, point.y, cp);
+	m_lastLbuttonUp = cp[0];
+	m_lastLbuttonUp.z = 0.0;
 
 	if(StateAddBezierPts == m_state)
 	{
@@ -547,6 +560,21 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 		cagdToObject(point.x, point.y, coord);
 		coord[0].z = 0.0;
 		m_mgr.AddLastCtrlPt(coord[0], 1, m_currCurveIdx);
+	}
+	else if (m_state == StateConnectingCurvesG0 || m_state == StateConnectingCurvesG1 || m_state == StateConnectingCurvesC1)
+	{
+		int idx2 = m_mgr.getCurveIndexByPointOnPolygon(m_lastLbuttonUp);
+		if (idx2 != -1)
+		{
+			if (m_state == StateConnectingCurvesG0)
+				m_mgr.connectG0(m_currCurveIdx, idx2);
+			else if (m_state == StateConnectingCurvesG1)
+				m_mgr.connectG1(m_currCurveIdx, idx2);
+			else if (m_state == StateConnectingCurvesC1)
+				m_mgr.connectC1(m_currCurveIdx, idx2);
+
+			m_state = StateIdle;
+		}
 	}
 
 	Invalidate();					// redraw scene
@@ -590,7 +618,7 @@ void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 		break;
 
 	case ContextBsplinePoly:
-		popupMenu.LoadMenu(IDR_MENU1);
+		popupMenu.LoadMenu(IDR_MENU3);
 		break;
 
 	case ContextBezierPt:
@@ -645,7 +673,16 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 	}
 	else
 	{
-		if (m_weightCtrlAnchor.IsValid())
+		if (m_kvmgr.isAnchored())
+		{
+			m_kvmgr.updateLastAnchor(point.x, point.y);
+			if (m_kvmgr.changedSinceLastGet(0.05))
+			{
+				vector<double> vec = m_kvmgr.getVector();
+				m_mgr.SetKnotVector(m_currCurveIdx, vec);
+			}
+		}
+		else if (m_weightCtrlAnchor.IsValid())
 		{
 			m_mgr.ChangeWeight(m_weightCtrlAnchor.m_curveIdx, m_weightCtrlAnchor.m_pointIdx, point.x, point.y);
 		}
@@ -695,6 +732,8 @@ BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
 	else
 	{
 		Scale(1 + double(zDelta)/300);
+		m_kvmgr.setDimensions(m_WindowWidth, m_WindowHeight);
+		m_kvmgr.show();
 	}
 	Invalidate();
 	return true;
@@ -1278,6 +1317,7 @@ void CMFCKit2004View::OnContextbgNewbsplinecurve()
 void CMFCKit2004View::OnContextbgClearall()
 {
 	m_mgr.ClearAll();
+	m_kvmgr.dismiss();
 	Invalidate();
 }
 
@@ -1385,4 +1425,39 @@ void CMFCKit2004View::OnFileSaveGeometry()
 	out << res;
 	out.close();
 	Invalidate();	
+}
+
+
+void CMFCKit2004View::OnContextbsplinepolyModifyknotvector()
+{
+	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
+	if (-1 != m_currCurveIdx)
+	{
+		//do stuff
+		vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
+		m_kvmgr.setDimensions(m_WindowWidth, m_WindowHeight);
+		m_kvmgr.setVector(kv);
+		m_kvmgr.show();
+	}
+	Invalidate();
+}
+
+void CMFCKit2004View::OnConnecttowithcontinuityG0()
+{
+	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
+	m_state = StateConnectingCurvesG0;
+}
+
+
+void CMFCKit2004View::OnConnecttowithcontinuityG1()
+{
+	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
+	m_state = StateConnectingCurvesG1;
+}
+
+
+void CMFCKit2004View::OnConnecttowithcontinuityC1()
+{
+	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
+	m_state = StateConnectingCurvesC1;
 }

@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "CurveMgr.h"
 #include <vector>
+#include "BezierMath.h"
 using std::vector;
 #pragma warning (disable : 4800)
 #pragma warning (disable : 4018)
@@ -293,7 +294,7 @@ vector<double> CurveMgr::GetKnotVector(int curveIdx)
 	if(SplineTypeBspline != cw.m_type)
 	{ return vector<double>(); }
 
-	return static_cast<BSpline*>(cw.m_curve)->GetKnotVector();
+	return dynamic_cast<BSpline*>(cw.m_curve)->GetKnotVector();
 
 }
 
@@ -324,14 +325,19 @@ bool CurveMgr::Subdivide(int curveIdx)
 {
 	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
 	{ return false; }
-	if (m_curves[curveIdx].m_type != SplineTypeBezier)
+	if (m_curves[curveIdx].m_type != SplineTypeBezier || m_curves[curveIdx].m_curve->polygonSize() < 2)
 		return false;
 	Bezier* pb = dynamic_cast<Bezier*>(m_curves[curveIdx].m_curve);
 	if (NULL == pb)
 	{
 		throw std::exception("Dynamic cast of Bezier failed to cast Bezier");
 	}
-	pb->Subdivide();
+
+	vector<WeightedPt> secondPart = pb->Subdivide();
+
+	//=============================================================================
+	// Update first part of the curve
+	//=============================================================================
 	m_curves[curveIdx].m_wc.clear();
 	vector<WeightedPt> newCtrl = pb->ControlPoints();
 	for (int i = 0; i < newCtrl.size(); i++)
@@ -340,6 +346,20 @@ bool CurveMgr::Subdivide(int curveIdx)
 		m_curves[curveIdx].m_wc.push_back(WeightControl(p.m_pt, p.m_weight));
 	}
 	RedrawCurve(curveIdx);
+
+	//=============================================================================
+	// Add second part
+	//=============================================================================
+	m_curves.push_back(CurveWrp(SplineTypeBezier));
+	curveIdx = m_curves.size() - 1;
+	m_curves[curveIdx].m_curve->SetPoly(secondPart);
+	for (int i = 0; i < secondPart.size(); i++)
+	{
+		WeightedPt p = secondPart[i];
+		m_curves[curveIdx].m_wc.push_back(WeightControl(p.m_pt, p.m_weight));
+	}
+	RedrawCurve(curveIdx);
+
 	return true;
 }
 
@@ -403,4 +423,53 @@ bool CurveMgr::showGrid(double density)
 	
 	
 	return m_showGrid;
+}
+
+
+void CurveMgr::connectG0(int it, int to)
+{
+	connectCustom(it, to, false, false);
+}
+
+void CurveMgr::connectG1(int it, int to)
+{
+	connectCustom(it, to, false, true);
+}
+
+void CurveMgr::connectC1(int it, int to)
+{
+	connectCustom(it, to, true, true);
+}
+
+void CurveMgr::connectCustom(int it, int to, bool doScale, bool doRotate)
+{
+	if((it < 0) || (it >= m_curves.size()) || (to < 0) || (to >= m_curves.size()) || it == to)
+	{ return; }
+
+	if (m_curves[to].m_curve->polygonSize() < 2 || m_curves[it].m_curve->polygonSize() < 2)
+		return;
+
+	std::ostringstream buff;
+	buff << "Connecting " << it << " to " << to << " doScale = " << doScale << " doRotate = " << doRotate << std::endl;
+	::OutputDebugString((LPCSTR)(buff.str().c_str()));
+
+	vector<WeightedPt> first = m_curves[it].m_curve->ControlPoints();
+
+	CCagdPoint dest = m_curves[to].m_curve->ControlPoints()[0].m_pt;
+
+	CCagdPoint dir = m_curves[to].m_curve->ControlPoints()[1].m_pt - m_curves[to].m_curve->ControlPoints()[0].m_pt;
+	CCagdPoint origDir = m_curves[it].m_curve->ControlPoints()[0].m_pt - m_curves[it].m_curve->ControlPoints()[1].m_pt;
+
+	double reqDer = m_curves[to].m_curve->polygonSize() * length(dir);
+	double curDer = m_curves[it].m_curve->polygonSize() * length(origDir);
+	double scaleFactor = reqDer / curDer;
+	
+	if (doScale)
+		first = U::scalePoly(first, scaleFactor);
+	if (doRotate)
+		first = U::rotatePolyRoundLastPt(first, dir);
+
+	first = U::translateLastPointTo(first, dest);
+	m_curves[it].m_curve->SetPoly(first);
+	RedrawCurve(it);
 }

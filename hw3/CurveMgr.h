@@ -141,13 +141,15 @@ struct CurveWrp
 		if (SplineTypeBezier == m_type)
 		{
 			m_curve = new Bezier();
+			*dynamic_cast<Bezier*>(m_curve)		= *dynamic_cast<Bezier*>(rhs.m_curve);
 		}
 		else
 		{
 			m_curve = new BSpline();
+			*dynamic_cast<BSpline*>(m_curve)		= *dynamic_cast<BSpline*>(rhs.m_curve);
 		}
 
-		*m_curve		= *rhs.m_curve;
+		
 	}
 	~CurveWrp()
 	{
@@ -155,13 +157,20 @@ struct CurveWrp
 	}
 	CurveWrp& operator=(const CurveWrp& rhs)
 	{
-		*m_curve		= *rhs.m_curve;
 		m_curveId		= rhs.m_curveId;
 		m_ctrPolyId		= rhs.m_ctrPolyId;
 		m_showCurve		= rhs.m_showCurve;
 		m_showCtrPoly	= rhs.m_showCtrPoly;
 		m_type			= rhs.m_type;	
 		m_wc			= rhs.m_wc;
+		if (SplineTypeBezier == m_type)
+		{
+			*dynamic_cast<Bezier*>(m_curve)		= *dynamic_cast<Bezier*>(rhs.m_curve);
+		}
+		else
+		{
+			*dynamic_cast<BSpline*>(m_curve)		= *dynamic_cast<BSpline*>(rhs.m_curve);
+		}
 		return *this;
 	}
 	Curve* m_curve;
@@ -216,8 +225,15 @@ public:
 
 	bool showGrid(double density = 1);
 
+	void connectG0(int it, int to);
+	void connectG1(int it, int to);
+	void connectC1(int it, int to);
+
 	
 private:
+
+	void connectCustom(int it, int to, bool doScale, bool doRotate);
+
 	std::vector<CurveWrp> m_curves;
 	std::vector<UINT> m_grid;
 	bool m_showGrid;

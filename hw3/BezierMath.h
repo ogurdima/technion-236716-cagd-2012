@@ -27,6 +27,19 @@ CCagdPoint convexCombination(CCagdPoint p1, CCagdPoint p2, double t = 0.5);
 WeightedPt constructiveAlgorithm(vector<WeightedPt> pts, int subIdx, int superIdx, double t = 0.5);
 
 double DistanceFromPointToLine(CCagdPoint p, CCagdPoint p1, CCagdPoint p2);
+vector<CCagdPoint> rotatePolyRoundFirstPt(vector<CCagdPoint> orig, CCagdPoint direction);
+vector<WeightedPt> rotatePolyRoundFirstPt(vector<WeightedPt> orig, CCagdPoint direction);
+vector<CCagdPoint> rotatePolyRoundLastPt(vector<CCagdPoint> orig, CCagdPoint direction);
+vector<WeightedPt> rotatePolyRoundLastPt(vector<WeightedPt> orig, CCagdPoint direction);
+
+vector<CCagdPoint> scalePoly(vector<CCagdPoint> orig, double factor);
+vector<WeightedPt> scalePoly(vector<WeightedPt> orig, double factor);
+
+vector<CCagdPoint> translateFirstPointTo(vector<CCagdPoint> orig, CCagdPoint dest);
+vector<WeightedPt> translateFirstPointTo(vector<WeightedPt> orig, CCagdPoint dest);
+
+vector<CCagdPoint> translateLastPointTo(vector<CCagdPoint> orig, CCagdPoint dest);
+vector<WeightedPt> translateLastPointTo(vector<WeightedPt> orig, CCagdPoint dest);
 
 }
 

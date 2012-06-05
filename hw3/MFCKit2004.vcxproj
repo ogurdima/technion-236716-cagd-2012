@@ -142,6 +142,7 @@
     </ClCompile>
     <ClCompile Include="FrenetFrame.cpp" />
     <ClCompile Include="FrenetParser.cpp" />
+    <ClCompile Include="KVgui.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MFCKit2004.cpp" />
     <ClCompile Include="MFCKit2004Doc.cpp" />
@@ -169,6 +170,7 @@
     <ClInclude Include="FrenetFrame.h" />
     <ClInclude Include="FrenetParser.h" />
     <ClInclude Include="internal.h" />
+    <ClInclude Include="KVgui.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MFCKit2004.h" />
     <ClInclude Include="MFCKit2004Doc.h" />

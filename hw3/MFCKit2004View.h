@@ -20,6 +20,7 @@
 #include "FrenetFrame.h"
 #include "Bezier.h"
 #include "CurveMgr.h"
+#include "KVgui.h"
 struct e2t_expr_node;
 
 #ifndef PI
@@ -126,12 +127,17 @@ public:
 	{
 		StateIdle,
 		StateAddBezierPts,
-		StateAddBSplinePts
+		StateAddBSplinePts,
+		StateConnectingCurvesG0,
+		StateConnectingCurvesG1,
+		StateConnectingCurvesC1
 	};
 
 	CurveMgr m_mgr;
+	KVgui m_kvmgr;
 	int m_currCurveIdx;
 	CCagdPoint m_lastRbuttonUp;
+	CCagdPoint m_lastLbuttonUp;
 	bool m_lastWeightControlStatus;
 	DragInfo m_draggedPt;
 	ControlPointInfo m_weightCtrlAnchor;
@@ -224,6 +230,10 @@ public:
 	afx_msg void OnContextptRemovepoint();
 	afx_msg void OnOptionsShowgrid();
 	afx_msg void OnFileSaveGeometry();
+	afx_msg void OnContextbsplinepolyModifyknotvector();
+	afx_msg void OnConnecttowithcontinuityG0();
+	afx_msg void OnConnecttowithcontinuityG1();
+	afx_msg void OnConnecttowithcontinuityC1();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp
