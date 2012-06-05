@@ -2,6 +2,8 @@
 
 #include "Bspline.h"
 
+
+
 class KVgui
 {
 public:
@@ -10,6 +12,7 @@ public:
 	bool setDimensions(int width, int height);
 	void setVector(vector<double> kv);
 	bool attemptAnchor(double x, double y);
+	bool isUnderCursor(double x, double y);
 	bool isAnchored();
 	void dropAnchor();
 	void updateLastAnchor(int x, int y);
@@ -17,6 +20,8 @@ public:
 	vector<double> getVector();
 	void dismiss();
 	void show();
+	int idxAtPoint(CCagdPoint p);
+	bool addKnotAtPoint(CCagdPoint p);
 	~KVgui();
 
 	static const double distDivFactor;
@@ -30,6 +35,7 @@ private:
 	CCagdPoint* guiLine();
 	int countePrevKnotsNearby(int idx);
 	void translateDown(CCagdPoint* tri, int times);
+	int idxUnderCursor(int x, int y);
 
 	vector<double> m_v;
 	vector<double> m_reported;

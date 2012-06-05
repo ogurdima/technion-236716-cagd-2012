@@ -460,8 +460,8 @@ void CurveMgr::connectCustom(int it, int to, bool doScale, bool doRotate)
 	CCagdPoint dir = m_curves[to].m_curve->ControlPoints()[1].m_pt - m_curves[to].m_curve->ControlPoints()[0].m_pt;
 	CCagdPoint origDir = m_curves[it].m_curve->ControlPoints()[0].m_pt - m_curves[it].m_curve->ControlPoints()[1].m_pt;
 
-	double reqDer = m_curves[to].m_curve->polygonSize() * length(dir);
-	double curDer = m_curves[it].m_curve->polygonSize() * length(origDir);
+	double reqDer = (m_curves[to].m_curve->polygonSize() - 1) * length(dir);
+	double curDer = (m_curves[it].m_curve->polygonSize() - 1) * length(origDir);
 	double scaleFactor = reqDer / curDer;
 	
 	if (doScale)

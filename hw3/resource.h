@@ -37,6 +37,7 @@
 #define IDR_MENU1                       163
 #define IDR_MENU2                       164
 #define IDR_MENU3                       166
+#define IDR_MENU4                       167
 #define IDC_X_T                         1007
 #define IDC_EDIT2                       1008
 #define IDC_Z_T                         1008
@@ -79,6 +80,8 @@
 #define ID_CONNECTTOWITHCONTINUITY_G0   32813
 #define ID_CONNECTTOWITHCONTINUITY_C1   32814
 #define ID_CONNECTTOWITHCONTINUITY_G1   32815
+#define ID_KNOTGUI_REMOVEKNOT           32816
+#define ID_KNOTGUI_INSERTKNOT           32817
 #define ID_INDICATOR_CURVATURE          61205
 #define ID_INDICATOR_TORSION            61206
 
@@ -87,8 +90,8 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        167
-#define _APS_NEXT_COMMAND_VALUE         32816
+#define _APS_NEXT_RESOURCE_VALUE        168
+#define _APS_NEXT_COMMAND_VALUE         32818
 #define _APS_NEXT_CONTROL_VALUE         1011
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

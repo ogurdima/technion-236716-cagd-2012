@@ -100,6 +100,8 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_CONNECTTOWITHCONTINUITY_G0, &CMFCKit2004View::OnConnecttowithcontinuityG0)
 	ON_COMMAND(ID_CONNECTTOWITHCONTINUITY_G1, &CMFCKit2004View::OnConnecttowithcontinuityG1)
 	ON_COMMAND(ID_CONNECTTOWITHCONTINUITY_C1, &CMFCKit2004View::OnConnecttowithcontinuityC1)
+	ON_COMMAND(ID_KNOTGUI_REMOVEKNOT, &CMFCKit2004View::OnKnotguiRemoveknot)
+	ON_COMMAND(ID_KNOTGUI_INSERTKNOT, &CMFCKit2004View::OnKnotguiInsertknot)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -155,6 +157,7 @@ CMFCKit2004View::CMFCKit2004View() {
 	m_currCurveIdx = -1;
 	m_lastWeightControlStatus = false;
 	m_bsplineOrder = 3;
+	m_modifiedCurveIdx = -1;
 
 }
 
@@ -188,7 +191,7 @@ void CMFCKit2004View::OnFileOpen()
 		Invalidate();
 		return;
 	}
-	
+	m_kvmgr.dismiss();
 	CString pathName = fileDialog.GetPathName();
 	CString fileName = fileDialog.GetFileTitle();
 	m_filename = std::string(pathName);
@@ -605,30 +608,37 @@ void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 	m_lastRbuttonUp = cp[0];
 	m_lastRbuttonUp.z = 0.0;
 	CMenu popupMenu;
-	PtContext cxt = m_mgr.getPtContext(m_lastRbuttonUp);
 
-	switch (cxt)
+	if (m_kvmgr.isUnderCursor(point.x, point.y))
 	{
-	case ContextEmpty:
-		popupMenu.LoadMenu(IDR_POPUPMENU);
-		break;
+		popupMenu.LoadMenu(IDR_MENU4);
+	}
+	else
+	{
+		PtContext cxt = m_mgr.getPtContext(m_lastRbuttonUp);
+		switch (cxt)
+		{
+		case ContextEmpty:
+			popupMenu.LoadMenu(IDR_POPUPMENU);
+			break;
 
-	case ContextBezierPoly:
-		popupMenu.LoadMenu(IDR_MENU1);
-		break;
+		case ContextBezierPoly:
+			popupMenu.LoadMenu(IDR_MENU1);
+			break;
 
-	case ContextBsplinePoly:
-		popupMenu.LoadMenu(IDR_MENU3);
-		break;
+		case ContextBsplinePoly:
+			popupMenu.LoadMenu(IDR_MENU3);
+			break;
 
-	case ContextBezierPt:
-		popupMenu.LoadMenu(IDR_MENU2);
-		break;
-	case ContextBsplinePt:
-		popupMenu.LoadMenu(IDR_MENU2);
-		break;
-	default:
-		popupMenu.LoadMenu(IDR_POPUPMENU);
+		case ContextBezierPt:
+			popupMenu.LoadMenu(IDR_MENU2);
+			break;
+		case ContextBsplinePt:
+			popupMenu.LoadMenu(IDR_MENU2);
+			break;
+		default:
+			popupMenu.LoadMenu(IDR_POPUPMENU);
+		}
 	}
 
 	m_draggedPt.m_pt = m_mgr.PickControlPoint(point.x, point.y);
@@ -679,7 +689,7 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 			if (m_kvmgr.changedSinceLastGet(0.05))
 			{
 				vector<double> vec = m_kvmgr.getVector();
-				m_mgr.SetKnotVector(m_currCurveIdx, vec);
+				m_mgr.SetKnotVector(m_modifiedCurveIdx, vec);
 			}
 		}
 		else if (m_weightCtrlAnchor.IsValid())
@@ -1434,6 +1444,7 @@ void CMFCKit2004View::OnContextbsplinepolyModifyknotvector()
 	if (-1 != m_currCurveIdx)
 	{
 		//do stuff
+		m_modifiedCurveIdx = m_currCurveIdx;
 		vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
 		m_kvmgr.setDimensions(m_WindowWidth, m_WindowHeight);
 		m_kvmgr.setVector(kv);
@@ -1460,4 +1471,32 @@ void CMFCKit2004View::OnConnecttowithcontinuityC1()
 {
 	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
 	m_state = StateConnectingCurvesC1;
+}
+
+
+void CMFCKit2004View::OnKnotguiRemoveknot()
+{
+	vector<double> kv = m_kvmgr.getVector();
+	int idx = m_kvmgr.idxAtPoint(m_lastRbuttonUp);
+	vector<double> newKv;
+	if (idx != -1)
+	{
+		for (int i = 0; i < kv.size(); i++)
+		{
+			if (i != idx)
+				newKv.push_back(kv[i]);
+		}
+		m_mgr.SetKnotVector(m_modifiedCurveIdx, newKv);
+		m_kvmgr.setVector(newKv);
+		m_kvmgr.show();
+	}
+}
+
+
+void CMFCKit2004View::OnKnotguiInsertknot()
+{
+	m_kvmgr.addKnotAtPoint(m_lastRbuttonUp);
+	
+	vector<double> kv = m_kvmgr.getVector(); // It sorts it inside
+	m_mgr.SetKnotVector(m_modifiedCurveIdx, kv);
 }

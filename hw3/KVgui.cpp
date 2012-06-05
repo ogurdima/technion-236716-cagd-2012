@@ -59,6 +59,33 @@ bool KVgui::attemptAnchor(double x, double y)
 	m_anchIdx = -1;
 	if (0 == m_lineId)
 		return false;
+	int idx = idxUnderCursor(x, y);
+	if (idx != -1)
+	{
+		m_anchIdx = idx;
+		return true;
+	}
+	return false;
+}
+
+bool KVgui::isUnderCursor(double x, double y)
+{
+	if (0 == m_lineId)
+		return false;
+	int idx = idxUnderCursor(x, y);
+	if (idx != -1)
+		return true;
+	cagdPick(x, y);
+	while (UINT someId = cagdPickNext())
+	{
+		if (m_lineId == someId)
+			return true;
+	}
+	return false;
+}
+
+int KVgui::idxUnderCursor(int x, int y)
+{
 	cagdPick(x, y);
 	while (UINT someId = cagdPickNext())
 	{
@@ -66,12 +93,11 @@ bool KVgui::attemptAnchor(double x, double y)
 		{
 			if (someId == m_ids[i])
 			{
-				m_anchIdx = i;
-				return true;
+				return i;
 			}
 		}
 	}
-	return false;
+	return -1;
 }
 
 void KVgui::dropAnchor()
@@ -192,9 +218,12 @@ void KVgui::updateLastAnchor(int x, int y)
 {
 	if (m_anchIdx == -1)
 		throw std::exception();
+
 	CCagdPoint tmp[2];
 	cagdToObject(x, y, tmp);
 	double newX = tmp[0].x;
+	if (newX <= m_l || newX >= m_r)
+		return;
 	m_v[m_anchIdx] = guiXtoknot(newX);
 	show();
 }
@@ -221,3 +250,28 @@ void KVgui::translateDown(CCagdPoint* tri, int times)
 	}
 }
 
+int KVgui::idxAtPoint(CCagdPoint p)
+{
+	if (0 == m_lineId)
+		return -1;
+	int x, y;
+	cagdToWindow(&p, &x, &y);
+	return idxUnderCursor(x, y);
+}
+
+
+bool KVgui::addKnotAtPoint(CCagdPoint p)
+{
+	if (0 == m_lineId)
+		return false;
+	double k = guiXtoknot(p.x);
+	int i = 0;
+	for (i; i < m_v.size(); i++)
+	{
+		if (m_v[i] > k)
+			break;
+	}
+	vector<double>::iterator pos = (m_v.begin() + i);
+	m_v.insert(pos, k);
+	show();
+}

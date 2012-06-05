@@ -142,6 +142,7 @@ public:
 	DragInfo m_draggedPt;
 	ControlPointInfo m_weightCtrlAnchor;
 	unsigned int m_bsplineOrder;
+	int m_modifiedCurveIdx;
 
 	ProgramState m_state;
 
@@ -234,6 +235,8 @@ public:
 	afx_msg void OnConnecttowithcontinuityG0();
 	afx_msg void OnConnecttowithcontinuityG1();
 	afx_msg void OnConnecttowithcontinuityC1();
+	afx_msg void OnKnotguiRemoveknot();
+	afx_msg void OnKnotguiInsertknot();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp

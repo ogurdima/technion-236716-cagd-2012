@@ -220,6 +220,15 @@ BEGIN
     END
 END
 
+IDR_MENU4 MENU
+BEGIN
+    POPUP "KnotGui"
+    BEGIN
+        MENUITEM "Remove Knot",                 ID_KNOTGUI_REMOVEKNOT
+        MENUITEM "Insert Knot",                 ID_KNOTGUI_INSERTKNOT
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
