@@ -139,7 +139,7 @@ CMFCKit2004View::CMFCKit2004View() {
 	m_lastTorsion = -1;
 	m_paramStartVal = 0;
 	m_paramEndVal = 1;
-	m_paramStepIncr = 0.005;
+	m_paramStepIncr = 0.01;
 	m_quadSphere = gluNewQuadric();
 
 	m_showAxes = false;
@@ -951,43 +951,31 @@ void CMFCKit2004View::TestCagdMath()
 
 void CMFCKit2004View::OnFrenetProperties() {
 	CPropDlg dlg;
-	dlg.m_minT = m_paramStartVal;
-	dlg.m_maxT = m_paramEndVal;
-	dlg.m_animSpeed = m_animSpeed;
-	dlg.m_offsetD = m_offsetD;
+	dlg.m_degree = m_bsplineOrder-1;
 	dlg.m_step = m_paramStepIncr;
-	dlg.m_xt = CString(m_curveParamEqn[0].c_str());
-	dlg.m_yt = CString(m_curveParamEqn[1].c_str());
-	dlg.m_zt = CString(m_curveParamEqn[2].c_str());
 	if (dlg.DoModal() == IDOK) 
 	{
-		m_paramStartVal = dlg.m_minT;
-		m_paramEndVal = dlg.m_maxT;
+    bool changed = false;
+    if(m_paramStepIncr != dlg.m_step)
+    {
+      changed = true;
+    }
+
 		m_paramStepIncr = dlg.m_step;
-		m_animSpeed = dlg.m_animSpeed;
-		m_offsetD = dlg.m_offsetD;
-		m_curveParamEqn[0] = std::string((LPCSTR)dlg.m_xt);
-		//m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
-		m_curveParamEqn[1] = std::string((LPCSTR)dlg.m_yt);
-		//m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
-		m_curveParamEqn[2] = std::string((LPCSTR)dlg.m_zt);
+		m_bsplineOrder = dlg.m_degree+1;
 		//m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
 		// do the rest of your stuff here:
-		RecalculateCurve();
+		
+    if(changed)
+    {
+      m_mgr.SetBSplineSamplingStep(m_paramStepIncr);
 
-		if(m_animStarted) {
-			this->KillTimer(1);
-			UINT timeMs = abs((int)(1000.0 * (1.0 / double(m_animSpeed))));
-			this->SetTimer(1, timeMs, NULL);      
-		}
-    
-    //::QueryPerformanceCounter(&liStart);
+      for(int i=0; i<m_mgr.CurveCount(); ++i)
+      {
+        m_mgr.RedrawCurve(i);
+      }
+    }
 
-		//::QueryPerformanceCounter(&liEnd);
-		//double timeElapsedS = double(liEnd.QuadPart-liStart.QuadPart) / double(liFreq.QuadPart);
-		//CString msg;
-		//msg.Format("Recalculate Curve Time: %f s", timeElapsedS);
-		//::OutputDebugString(msg);
 
 	}
 	Invalidate();

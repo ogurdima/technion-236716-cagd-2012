@@ -7,6 +7,7 @@ using std::vector;
 BSpline::BSpline()
 	: m_order(1)
   , m_openEnd(false)
+  , m_samplingStep(0.01)
 {
 }
 
@@ -239,7 +240,7 @@ void BSpline::Calculate()
 
 	// at each t, store a vector of basis function values
 	vector<double> basis_values;
-	for(double t=ta; t<=tb; t+=0.01)
+	for(double t=ta; t<=tb; t+=m_samplingStep)
 	{
 		while(t >= m_kv[curr_j+1])
 		{

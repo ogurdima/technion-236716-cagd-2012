@@ -39,9 +39,11 @@
 #define IDR_MENU3                       166
 #define IDR_MENU4                       167
 #define IDC_X_T                         1007
+#define IDC_X_DEGREE                    1007
 #define IDC_EDIT2                       1008
 #define IDC_Z_T                         1008
 #define IDC_Y_T                         1009
+#define IDC_X_SAMPLING_STEP             1009
 #define IDC_MIN_T                       1010
 #define IDC_MAX_T                       1011
 #define IDC_T_STEP                      1012

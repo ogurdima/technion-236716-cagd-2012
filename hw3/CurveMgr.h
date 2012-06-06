@@ -219,6 +219,8 @@ public:
   // for bsplines
   bool InsertKnot(int curveIdx, double knotVal);
 
+  bool SetBSplineSamplingStep(double step);
+
 	// for beziers
 	bool RaiseDegree(int curveIdx);
 	bool Subdivide(int curveIdx);
@@ -231,7 +233,7 @@ public:
 	void connectG0(int it, int to);
 	void connectG1(int it, int to);
 	void connectC1(int it, int to);
-
+  int CurveCount() const { return m_curves.size(); }
 	
 private:
 

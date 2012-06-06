@@ -19,12 +19,6 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 public:
-	CString m_xt;
-	CString m_yt;
-	CString m_zt;
-	double m_minT;
-	double m_maxT;
-	double m_step;
-	double m_offsetD;
-	int m_animSpeed;
+  int m_degree;
+  double m_step;
 };

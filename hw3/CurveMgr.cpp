@@ -318,6 +318,22 @@ bool CurveMgr::InsertKnot(int curveIdx, double knotVal)
   return success;
 }
 
+bool CurveMgr::SetBSplineSamplingStep(double step)
+{
+  if(step<0.0)
+  { return false; }
+
+  for(int i=0; i<m_curves.size(); ++i)
+  {
+    if(SplineTypeBspline == m_curves[i].m_type)
+    {
+      dynamic_cast<BSpline*>(m_curves[i].m_curve)->SetSamplingStep(step);
+      RedrawCurve(i);
+
+    }
+  }
+}
+
 
 bool CurveMgr::RaiseDegree(int curveIdx)
 {

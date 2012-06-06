@@ -17,6 +17,7 @@ public:
 	bool SetKnotVector(const vector<double> & kv);
 	vector<double> GetKnotVector();
 	virtual void Calculate();
+  void SetSamplingStep(double step) { m_samplingStep = step; }
 
 	virtual string toIrit(int id);
 	virtual string toDat(int id = 0);
@@ -30,4 +31,5 @@ protected:
 	vector<double> m_kv;
 	unsigned long m_order;
   bool m_openEnd;
+  double m_samplingStep;
 };
