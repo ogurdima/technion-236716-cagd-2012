@@ -203,6 +203,12 @@ BEGIN
         MENUITEM "Append Point(s)",             ID_CONTEXTPOLYGON_APPENDPOINT
         MENUITEM "Show/hide control polygon",   ID_CONTEXTPOLYGON_SHOW
         MENUITEM "Modify Knot Vector",          ID_CONTEXTBSPLINEPOLY_MODIFYKNOTVECTOR
+        POPUP "Connect to with continuity"
+        BEGIN
+            MENUITEM "G0 = C0",                     ID_CONNECTTOWITHCONTINUITY_G0
+            MENUITEM "C1",                          ID_CONNECTTOWITHCONTINUITY_C1
+            MENUITEM "G1",                          ID_CONNECTTOWITHCONTINUITY_G1
+        END
     END
 END
 

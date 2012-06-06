@@ -230,12 +230,12 @@ void KVgui::updateLastAnchor(int x, int y)
 
 int KVgui::countePrevKnotsNearby(int idx)
 {
-	double dist = 2 * sin(PI/12) * (m_r - m_l)/distDivFactor;
-	double currX = m_v[idx];
+	double dist = sin(PI/12) * (m_r - m_l)/distDivFactor;
+	double currX = knotToGuiX(m_v[idx]);
 	int count = 0;
 	for (int i = 0; i < idx; i++)
 	{
-		if ( abs(m_v[i] - currX) < dist)
+		if ( abs(knotToGuiX(m_v[i]) - currX) < dist)
 			count++;
 	}
 	return count;
@@ -243,7 +243,7 @@ int KVgui::countePrevKnotsNearby(int idx)
 
 void KVgui::translateDown(CCagdPoint* tri, int times)
 {
-	double dist = cos(PI/12) * (m_r - m_l)/100;
+	double dist = cos(PI/12) * (m_r - m_l)/distDivFactor;
 	for (int i = 0; i < 4; i++)
 	{
 		tri[i].y -= dist * times;

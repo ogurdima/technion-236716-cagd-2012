@@ -338,8 +338,11 @@ double BSpline::BSplineBasis(double t, int i, int k)
 	double N_i_plus_1 = 0.0;
 	if(m_kv[i+1+k]-m_kv[i+1] > 0) 
 	{
-		g_i_plus_1_n	= (m_kv[i+1+k] - t) / (m_kv[i+1+k]-m_kv[i+1]);
-		N_i_plus_1		= BSplineBasis(t, i+1, k-1);
+		if(m_kv[i+1+k]-m_kv[i+1] > 0) 
+		{
+			g_i_plus_1_n	= (m_kv[i+1+k] - t) / (m_kv[i+1+k]-m_kv[i+1]);
+			N_i_plus_1		= BSplineBasis(t, i+1, k-1);
+		}
 	}
 	return f_i_n*N_i + g_i_plus_1_n*N_i_plus_1;
 }

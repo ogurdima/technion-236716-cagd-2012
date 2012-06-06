@@ -46,6 +46,7 @@ bool Curve::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt)
 	if((-1 == idxToUse) || (0 == m_ctrlPts.size()))
 	{
 		WeightedPt p(pt, weight);
+		p.m_pt.z = 0;
 		m_ctrlPts.push_back(p);
 		return true;
 	}
@@ -53,7 +54,9 @@ bool Curve::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt)
 	{ return false; }
 	
 	vector<WeightedPt>::iterator pos = (m_ctrlPts.begin() + idxToUse);
-	m_ctrlPts.insert(pos, WeightedPt(pt, weight));
+	WeightedPt p(pt, weight);
+	p.m_pt.z = 0;
+	m_ctrlPts.insert(pos, p);
 
 	return true;
 }
@@ -86,7 +89,9 @@ void Curve::SetPoly(const vector<CCagdPoint>& pts)
 	m_ctrlPts.clear();
 	for(int i=0; i<pts.size(); ++i)
 	{
-		m_ctrlPts.push_back(WeightedPt(pts[i], 1.0));
+		WeightedPt p(pts[i], 1.0);
+		p.m_pt.z = 0;
+		m_ctrlPts.push_back(p);
 	}
 }
 

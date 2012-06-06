@@ -1323,6 +1323,9 @@ void CMFCKit2004View::OnContextpolygonInsertpoint()
 {
 	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
 	m_mgr.AddCtrlPt(m_lastRbuttonUp, 1, m_currCurveIdx);
+	m_modifiedCurveIdx = m_currCurveIdx;
+	vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
+	m_kvmgr.setVector(kv);
 	Invalidate();
 }
 
@@ -1380,6 +1383,10 @@ void CMFCKit2004View::OnContextpolygonSubdivide()
 void CMFCKit2004View::OnContextptRemovepoint()
 {
 	m_mgr.RemoveCtrlPt(m_lastRbuttonUp);
+	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
+	m_modifiedCurveIdx = m_currCurveIdx;
+	vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
+	m_kvmgr.setVector(kv);
 	Invalidate();
 }
 
@@ -1441,6 +1448,7 @@ void CMFCKit2004View::OnContextbsplinepolyModifyknotvector()
 	Invalidate();
 }
 
+
 void CMFCKit2004View::OnConnecttowithcontinuityG0()
 {
 	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
@@ -1483,11 +1491,11 @@ void CMFCKit2004View::OnKnotguiRemoveknot()
 
 void CMFCKit2004View::OnKnotguiInsertknot()
 {
-  double knotval = m_kvmgr.guiXtoknot(m_lastRbuttonUp.x);
+	double knotval = m_kvmgr.guiXtoknot(m_lastRbuttonUp.x);
 	if(m_mgr.InsertKnot(m_modifiedCurveIdx, knotval))
-  {
-	  m_kvmgr.addKnotAtPoint(m_lastRbuttonUp);
-  }
+	{
+		m_kvmgr.addKnotAtPoint(m_lastRbuttonUp);
+	}
 	//vector<double> kv = m_kvmgr.getVector(); // It sorts it inside
 	//m_mgr.SetKnotVector(m_modifiedCurveIdx, kv);
 }

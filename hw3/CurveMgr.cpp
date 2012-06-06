@@ -311,11 +311,18 @@ bool CurveMgr::InsertKnot(int curveIdx, double knotVal)
 	{ return false; }
 
 	bool success = dynamic_cast<BSpline*>(cw.m_curve)->InsertKnotBoehm(knotVal);
-  if(success)
-  {
-    RedrawCurve(curveIdx);
-  }
-  return success;
+	if(success)
+	{
+		vector<WeightedPt> newCtrl = cw.m_curve->ControlPoints();
+		m_curves[curveIdx].m_wc.clear();
+		for (int i = 0; i < newCtrl.size(); i++)
+		{
+			WeightedPt p = newCtrl[i];
+			m_curves[curveIdx].m_wc.push_back(WeightControl(p.m_pt, p.m_weight));
+		}
+		RedrawCurve(curveIdx);
+	}
+	return success;
 }
 
 bool CurveMgr::SetBSplineSamplingStep(double step)
@@ -465,17 +472,20 @@ bool CurveMgr::showGrid(double density)
 
 void CurveMgr::connectG0(int it, int to)
 {
-	connectCustom(it, to, false, false);
+	for (int i = 0; i < 10; i++)
+		connectCustom(it, to, false, false);
 }
 
 void CurveMgr::connectG1(int it, int to)
 {
-	connectCustom(it, to, false, true);
+	for (int i = 0; i < 10; i++)
+		connectCustom(it, to, false, true);
 }
 
 void CurveMgr::connectC1(int it, int to)
 {
-	connectCustom(it, to, true, true);
+	for (int i = 0; i < 10; i++)
+		connectCustom(it, to, true, true);
 }
 
 void CurveMgr::connectCustom(int it, int to, bool doScale, bool doRotate)
@@ -494,13 +504,19 @@ void CurveMgr::connectCustom(int it, int to, bool doScale, bool doRotate)
 
 	CCagdPoint dest = m_curves[to].m_curve->ControlPoints()[0].m_pt;
 
-	CCagdPoint dir = m_curves[to].m_curve->ControlPoints()[1].m_pt - m_curves[to].m_curve->ControlPoints()[0].m_pt;
-	CCagdPoint origDir = m_curves[it].m_curve->ControlPoints()[0].m_pt - m_curves[it].m_curve->ControlPoints()[1].m_pt;
+	vector<WeightedPt> itCtr = m_curves[it].m_curve->ControlPoints();
+	vector<WeightedPt> toCtr = m_curves[to].m_curve->ControlPoints();
+
+	int itSize = m_curves[it].m_curve->polygonSize();
+
+	CCagdPoint dir = toCtr[1].m_pt	- toCtr[0].m_pt;
+	CCagdPoint origDir = itCtr[itSize - 1].m_pt - itCtr[itSize - 2].m_pt;
 
 	double reqDer = (m_curves[to].m_curve->polygonSize() - 1) * length(dir);
 	double curDer = (m_curves[it].m_curve->polygonSize() - 1) * length(origDir);
-	double scaleFactor = reqDer / curDer;
+	double scaleFactor = abs(reqDer / curDer);
 	
+
 	if (doScale)
 		first = U::scalePoly(first, scaleFactor);
 	if (doRotate)

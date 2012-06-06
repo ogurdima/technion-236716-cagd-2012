@@ -229,22 +229,33 @@ vector<CCagdPoint> U::rotatePolyRoundLastPt(vector<CCagdPoint> orig, CCagdPoint 
 	CCagdPoint offset = orig[orig.size() - 1] - CCagdPoint(0,0,0);
 
 	//=============================================================================
-	// Calculating rotation angle
-	//=============================================================================
-	double sAng = length( cross( normalize(direction), normalize((orig[orig.size() - 2] - orig[orig.size() - 1]) )) );
-	double ang = asin(sAng);
-	double dotProd = dot( normalize(direction), normalize((orig[1] - orig[0])) );
-	if(dotProd < 0) {
-		ang = PI - ang;
-	}
-
-	//=============================================================================
 	// Moving the polygon to the origin
 	//=============================================================================
 	for (int i = 0; i < orig.size(); i++)
 	{
 		orig[i] = orig[i] - offset;
 	}
+
+
+	//=============================================================================
+	// Calculating rotation angle
+	//=============================================================================
+	CCagdPoint lastLineDir = (orig[orig.size() - 1] - orig[orig.size() - 2]);
+	double sAng = length( cross( normalize( lastLineDir ), normalize(direction)) );
+	double ang = asin(sAng);
+	double dotProd = dot( normalize( lastLineDir ), normalize(direction) );
+
+	
+	if(dotProd < 0) {
+		ang = PI + ang;
+		//ang = -ang;
+	}
+	if (cross( normalize( lastLineDir ), normalize(direction)).z < 0)
+	{
+		ang = 2*PI-ang;
+	}
+	
+
 
 	//=============================================================================
 	// Rotating and translating back
