@@ -9,7 +9,8 @@ public:
 	
 	bool InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt = -1);
 	void SetOrder(unsigned long order);
-	unsigned long GetOrder(unsigned long order) const;	
+	unsigned long GetOrder() const;	
+  inline unsigned long GetDegree() const;
 	bool InsertKnot(int idx);
 	bool DeleteKnot(int idx);
 	bool SetKnotVector(const vector<double> & kv);
@@ -27,4 +28,5 @@ private:
 protected:
 	vector<double> m_kv;
 	unsigned long m_order;
+  bool m_openEnd;
 };

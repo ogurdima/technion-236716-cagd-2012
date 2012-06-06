@@ -5,7 +5,8 @@
 using std::vector;
 
 BSpline::BSpline()
-	: m_order(0)
+	: m_order(1)
+  , m_openEnd(false)
 {
 }
 
@@ -18,26 +19,61 @@ bool BSpline::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt)
 	if(!Curve::InsertPt(pt, weight, ptIdxAt))
 	{ return false; }
 
-	// update the knot vector
-	if(m_kv.empty())
-	{
-		m_kv.push_back(0.0);
-	}
-	else if(1 == m_kv.size())
-	{
-		// if we have only 1 value (0), finish the 0-1 interval with a 1.
-		m_kv.push_back(1.0);
-	}
-	else
-	{
-		// arbitrary number of points
-		if(m_kv.size() == ptIdxAt)
-		{
-			double hi_value = m_kv[m_kv.size()-1];
-			m_kv.push_back(hi_value+1.0);
-		}
-		
-	}
+  // only start adding knots after the number of points = the order
+  if(m_ctrlPts.size() < GetOrder())
+  { 
+    return true; 
+  }
+  else
+  {
+    if(m_kv.empty())
+    {
+      // impose the open end condition
+      m_kv.insert(m_kv.begin(), GetOrder(), 0.0);
+      m_kv.insert(m_kv.begin()+GetOrder(), GetOrder(), 1.0);
+      m_openEnd = true;
+    }
+    else 
+    {
+      if(m_openEnd)
+      {
+
+        // update the knot vector
+          // which point is this?
+          size_t knotCount = m_kv.size();
+          size_t knotsInside = knotCount - (2*GetDegree());
+          size_t newKnotCountInside = knotsInside + 1;
+          double knotIncr = 1.0 / double(newKnotCountInside+1);
+          // modify points inside
+          unsigned int firstNonEdgeKnot = GetDegree();
+          unsigned int i = 0;
+          for(; i<knotsInside; ++i)
+          {
+            m_kv[firstNonEdgeKnot+i] = (i+1)*knotIncr;
+          }
+
+          vector<double>::iterator newPtIt = (m_kv.begin()+firstNonEdgeKnot+i);
+          double val = (i+1)*knotIncr;
+          m_kv.insert(newPtIt, val);
+
+	        // arbitrary number of points. use Boehm's knot insertion
+          //vector<double>::const_iterator 
+      }
+
+    }
+  }
+
+
+  // print them out
+  std::stringstream strmKnots;
+  strmKnots << "Knots: ";
+  for(int i=0; i<m_kv.size(); ++i)
+  {
+    strmKnots << m_kv[i] << " ";
+  }
+  strmKnots << std::endl;
+  ::OutputDebugString((LPCSTR)strmKnots.str().c_str());
+
 	//m_kv.push_back(ptIdxAt);
 	return true;
 }
@@ -47,9 +83,14 @@ void BSpline::SetOrder(unsigned long order)
 	m_order = order;
 }
 
-unsigned long BSpline::GetOrder(unsigned long order) const
+unsigned long BSpline::GetOrder() const
 {
 	return m_order;
+}
+
+inline unsigned long BSpline::GetDegree() const
+{
+  return m_order-1;
 }
 
 // In the following two cases,
@@ -98,8 +139,8 @@ void BSpline::Calculate()
 	// k = degree, N = #knots+1
 	unsigned long N			= m_kv.size()-1;
 	unsigned long k			= m_order-1;
-	unsigned long ta_idx	= k;
-	unsigned long tb_idx	= N-k;
+	unsigned long ta_idx	= 0;//k;
+	unsigned long tb_idx	= N;//N-k;
 	if((ta_idx > N) || (tb_idx <= 0))
 	{ return; }
 
@@ -142,7 +183,7 @@ void BSpline::Calculate()
 
 	// at each t, store a vector of basis function values
 	vector<double> basis_values;
-	for(double t=ta; t<=tb; t+=0.1)
+	for(double t=ta; t<=tb; t+=0.01)
 	{
 		while(t >= m_kv[curr_j+1])
 		{

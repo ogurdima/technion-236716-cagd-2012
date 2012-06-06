@@ -274,4 +274,5 @@ bool KVgui::addKnotAtPoint(CCagdPoint p)
 	vector<double>::iterator pos = (m_v.begin() + i);
 	m_v.insert(pos, k);
 	show();
+  return true;
 }

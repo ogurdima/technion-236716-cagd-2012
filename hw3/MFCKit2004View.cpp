@@ -156,7 +156,7 @@ CMFCKit2004View::CMFCKit2004View() {
 	m_state = StateIdle;
 	m_currCurveIdx = -1;
 	m_lastWeightControlStatus = false;
-	m_bsplineOrder = 3;
+	m_bsplineOrder = 4;
 	m_modifiedCurveIdx = -1;
 
 }
