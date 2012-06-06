@@ -215,6 +215,7 @@ void CMFCKit2004View::OnFileOpen()
 			m_currCurveIdx = m_mgr.NewBezierCurve();
 			for(int i=0; i<crv.m_pts.size(); ++i)
 			{
+				crv.m_pts[i].z = 0;
 				m_mgr.AddLastCtrlPt(crv.m_pts[i], 1.0, m_currCurveIdx);
 			}
 		}
@@ -224,7 +225,8 @@ void CMFCKit2004View::OnFileOpen()
 			for(int i=0; i<crv.m_pts.size(); ++i)
 			{
 				CCagdPoint pt = crv.m_pts[i];
-				m_mgr.AddLastCtrlPt(CCagdPoint(pt.x, pt.y, 1.0), pt.z, m_currCurveIdx, true);
+				pt.z = 0;
+				m_mgr.AddLastCtrlPt(CCagdPoint(pt.x, pt.y, 1.0), 1, m_currCurveIdx, true);
 			}
 			if(!m_mgr.SetKnotVector(m_currCurveIdx, crv.m_knots))
 			{

@@ -352,7 +352,7 @@ string BSpline::toIrit(int id)
 
 	std::ostringstream buf = std::ostringstream();
 	buf << "[OBJECT BSPLINE" << id << std::endl;
-	buf << "\t[CURVE BSPLINE " << numOfPoints << " " << m_degree - 1 << " P2" << std::endl;
+	buf << "\t[CURVE BSPLINE " << numOfPoints << " " << m_degree + 1 << " P2" << std::endl;
 	buf << "\t\t[KV";
 	for (int i = 0; i < m_kv.size(); i++)
 	{
@@ -375,7 +375,7 @@ string BSpline::toDat(int id)
 		return string("");
 
 	std::ostringstream buf = std::ostringstream();
-	buf << m_degree - 1 << std::endl;
+	buf << m_degree + 1 << std::endl;
 	buf << "knots[" << m_kv.size() << "] = " << std::endl << "\t";
 	for (int i = 0; i < m_kv.size(); i++)
 	{
