@@ -32,7 +32,7 @@ public:
 	*	Public members
 	*******************************************************************/
 	UINT DrawCtrlPolygon();
-	UINT DrawCurve();
+	virtual UINT DrawCurve();
 
 	/******************************************************************
 	*	Public methods

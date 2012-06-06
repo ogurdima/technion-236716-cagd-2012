@@ -15,6 +15,9 @@ CurveMgr::~CurveMgr()
 {
 }
 
+//=============================================================================
+// Curve insertion and manipulation
+//=============================================================================
 
 int CurveMgr::NewBezierCurve()
 {
@@ -22,21 +25,13 @@ int CurveMgr::NewBezierCurve()
 	return m_curves.size()-1;
 }
 
-int CurveMgr::NewBsplineCurve(unsigned int order)
+int CurveMgr::NewBsplineCurve(unsigned int degree)
 {
 	m_curves.push_back(CurveWrp(SplineTypeBspline));
 	int last_idx = m_curves.size()-1;
 	BSpline* bsp = static_cast<BSpline*>(m_curves[last_idx].m_curve);
-	bsp->SetOrder(order);
+	bsp->SetDegree(degree);
 	return m_curves.size()-1;
-}
-
-bool CurveMgr::ToggleShowPolygon(int curveIdx)
-{
-	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
-	{ return false; }
-	m_curves[curveIdx].m_showCtrPoly = !m_curves[curveIdx].m_showCtrPoly;
-	return RedrawCurve(curveIdx);
 }
 
 bool CurveMgr::RedrawCurve(int curveIdx)
@@ -151,6 +146,8 @@ bool CurveMgr::UpdateCtrlPtPos(const ControlPointInfo& ptInfo, const CCagdPoint&
 	RedrawCurve(ptInfo.m_curveIdx);
 	return success;
 }
+
+// Not used
 bool CurveMgr::UpdateCtrlPtWeight(const ControlPointInfo& ptInfo, double weight)
 {
 	if((0 > ptInfo.m_curveIdx) || (m_curves.size() <= ptInfo.m_curveIdx))
@@ -165,19 +162,9 @@ bool CurveMgr::UpdateCtrlPtWeight(const ControlPointInfo& ptInfo, double weight)
 	return success;
 }
 
-void CurveMgr::ClearAll()
-{
-	for(int i=0; i<m_curves.size(); ++i)
-	{
-		CurveWrp& cw = m_curves[i];
-		cagdFreeSegment(cw.m_ctrPolyId);
-		cw.m_ctrPolyId = 0;
-		cagdFreeSegment(cw.m_curveId);
-		cw.m_curveId = 0;
-	}
-	m_curves.clear();
-
-}
+//=============================================================================
+// Context, index
+//=============================================================================
 
 PtContext CurveMgr::getPtContext(const CCagdPoint& p)
 {
@@ -234,6 +221,9 @@ int CurveMgr::getCurveIndexByPointOnPolygon(const CCagdPoint& p)
 	return -1;
 }
 
+//=============================================================================
+// Weight manipulation
+//=============================================================================
 
 bool CurveMgr::ToggleWeightConrol(const CCagdPoint& p)
 {
@@ -273,6 +263,10 @@ ControlPointInfo CurveMgr::AttemptWeightAnchor(int x, int y)
 	}
 	return ControlPointInfo();
 }
+
+//=============================================================================
+// Knot vector stuff
+//=============================================================================
 
 bool CurveMgr::SetKnotVector(int curveIdx, const vector<double> & kv)
 {
@@ -325,6 +319,135 @@ bool CurveMgr::InsertKnot(int curveIdx, double knotVal)
 	return success;
 }
 
+//=============================================================================
+// Printing
+//=============================================================================
+
+string CurveMgr::toDat() const
+{
+	std::ostringstream buf = std::ostringstream();
+	for (int i = 0; i < m_curves.size(); i++)
+	{
+		buf << m_curves[i].m_curve->toDat() << std::endl;
+	}
+	return buf.str();
+}
+
+string CurveMgr::toIrit() const
+{
+	std::ostringstream buf = std::ostringstream();
+	for (int i = 0; i < m_curves.size(); i++)
+	{
+		buf << m_curves[i].m_curve->toIrit(i) << std::endl;
+	}
+	return buf.str();
+}
+
+//=============================================================================
+// Connecting Curves
+//=============================================================================
+
+void CurveMgr::connectG0(int it, int to)
+{
+	for (int i = 0; i < 10; i++)
+		connectCustom(it, to, false, false);
+}
+
+void CurveMgr::connectG1(int it, int to)
+{
+	for (int i = 0; i < 10; i++)
+		connectCustom(it, to, false, true);
+}
+
+void CurveMgr::connectC1(int it, int to)
+{
+	for (int i = 0; i < 10; i++)
+		connectCustom(it, to, true, true);
+}
+
+void CurveMgr::connectCustom(int it, int to, bool doScale, bool doRotate)
+{
+	if((it < 0) || (it >= m_curves.size()) || (to < 0) || (to >= m_curves.size()) || it == to)
+	{ return; }
+
+	if (m_curves[to].m_curve->polygonSize() < 2 || m_curves[it].m_curve->polygonSize() < 2)
+		return;
+
+	std::ostringstream buff;
+	buff << "Connecting " << it << " to " << to << " doScale = " << doScale << " doRotate = " << doRotate << std::endl;
+	::OutputDebugString((LPCSTR)(buff.str().c_str()));
+
+	vector<WeightedPt> first = m_curves[it].m_curve->ControlPoints();
+
+	CCagdPoint dest = m_curves[to].m_curve->ControlPoints()[0].m_pt;
+
+	vector<WeightedPt> itCtr = m_curves[it].m_curve->ControlPoints();
+	vector<WeightedPt> toCtr = m_curves[to].m_curve->ControlPoints();
+
+	int itSize = m_curves[it].m_curve->polygonSize();
+
+	CCagdPoint dir = toCtr[1].m_pt	- toCtr[0].m_pt;
+	CCagdPoint origDir = itCtr[itSize - 1].m_pt - itCtr[itSize - 2].m_pt;
+
+	double reqDer = (m_curves[to].m_curve->polygonSize() - 1) * length(dir);
+	double curDer = (m_curves[it].m_curve->polygonSize() - 1) * length(origDir);
+	double scaleFactor = abs(reqDer / curDer);
+	
+
+	if (doScale)
+		first = U::scalePoly(first, scaleFactor);
+	if (doRotate)
+		first = U::rotatePolyRoundLastPt(first, dir);
+
+	first = U::translateLastPointTo(first, dest);
+	m_curves[it].m_curve->SetPoly(first);
+	RedrawCurve(it);
+}
+
+//=============================================================================
+// Misc
+//=============================================================================
+
+bool CurveMgr::showGrid(double density)
+{
+	m_showGrid = !m_showGrid;
+	for (int i = 0; i < m_grid.size(); i++)
+	{
+		cagdFreeSegment(m_grid[i]);
+	}
+	m_grid.clear();
+	for (double i = -10; i <= 10; i += density)
+	{
+		CCagdPoint vert[2];
+		CCagdPoint hor[2];
+		hor[0] = CCagdPoint(10, i, 0);
+		hor[1] = CCagdPoint(-10, i, 0);
+		vert[0] = CCagdPoint(i, 10, 0);
+		vert[1] = CCagdPoint(i, -10, 0);
+
+		UINT id = cagdAddPolyline(hor, 2, CAGD_SEGMENT_POLYLINE);
+		cagdSetSegmentColor(id, 30, 60, 0);
+		m_grid.push_back(id);
+		id = cagdAddPolyline(vert, 2, CAGD_SEGMENT_POLYLINE);
+		cagdSetSegmentColor(id, 30, 60, 0);
+		m_grid.push_back(id);
+	}
+	for (int i = 0; i < m_grid.size(); i++)
+	{
+		if (m_showGrid)
+		{
+			cagdShowSegment(m_grid[i]);
+		}
+		else
+		{
+			cagdHideSegment(m_grid[i]);
+		}
+	}
+	
+	
+	return m_showGrid;
+}
+
 bool CurveMgr::SetBSplineSamplingStep(double step)
 {
   if(step<0.0)
@@ -340,7 +463,6 @@ bool CurveMgr::SetBSplineSamplingStep(double step)
     }
   }
 }
-
 
 bool CurveMgr::RaiseDegree(int curveIdx)
 {
@@ -407,122 +529,24 @@ bool CurveMgr::Subdivide(int curveIdx)
 	return true;
 }
 
-
-string CurveMgr::toDat() const
+void CurveMgr::ClearAll()
 {
-	std::ostringstream buf = std::ostringstream();
-	for (int i = 0; i < m_curves.size(); i++)
+	for(int i=0; i<m_curves.size(); ++i)
 	{
-		buf << m_curves[i].m_curve->toDat() << std::endl;
+		CurveWrp& cw = m_curves[i];
+		cagdFreeSegment(cw.m_ctrPolyId);
+		cw.m_ctrPolyId = 0;
+		cagdFreeSegment(cw.m_curveId);
+		cw.m_curveId = 0;
 	}
-	return buf.str();
+	m_curves.clear();
+
 }
 
-
-string CurveMgr::toIrit() const
+bool CurveMgr::ToggleShowPolygon(int curveIdx)
 {
-	std::ostringstream buf = std::ostringstream();
-	for (int i = 0; i < m_curves.size(); i++)
-	{
-		buf << m_curves[i].m_curve->toIrit(i) << std::endl;
-	}
-	return buf.str();
-}
-
-bool CurveMgr::showGrid(double density)
-{
-	m_showGrid = !m_showGrid;
-	for (int i = 0; i < m_grid.size(); i++)
-	{
-		cagdFreeSegment(m_grid[i]);
-	}
-	m_grid.clear();
-	for (double i = -10; i <= 10; i += density)
-	{
-		CCagdPoint vert[2];
-		CCagdPoint hor[2];
-		hor[0] = CCagdPoint(10, i, 0);
-		hor[1] = CCagdPoint(-10, i, 0);
-		vert[0] = CCagdPoint(i, 10, 0);
-		vert[1] = CCagdPoint(i, -10, 0);
-
-		UINT id = cagdAddPolyline(hor, 2, CAGD_SEGMENT_POLYLINE);
-		cagdSetSegmentColor(id, 30, 60, 0);
-		m_grid.push_back(id);
-		id = cagdAddPolyline(vert, 2, CAGD_SEGMENT_POLYLINE);
-		cagdSetSegmentColor(id, 30, 60, 0);
-		m_grid.push_back(id);
-	}
-	for (int i = 0; i < m_grid.size(); i++)
-	{
-		if (m_showGrid)
-		{
-			cagdShowSegment(m_grid[i]);
-		}
-		else
-		{
-			cagdHideSegment(m_grid[i]);
-		}
-	}
-	
-	
-	return m_showGrid;
-}
-
-
-void CurveMgr::connectG0(int it, int to)
-{
-	for (int i = 0; i < 10; i++)
-		connectCustom(it, to, false, false);
-}
-
-void CurveMgr::connectG1(int it, int to)
-{
-	for (int i = 0; i < 10; i++)
-		connectCustom(it, to, false, true);
-}
-
-void CurveMgr::connectC1(int it, int to)
-{
-	for (int i = 0; i < 10; i++)
-		connectCustom(it, to, true, true);
-}
-
-void CurveMgr::connectCustom(int it, int to, bool doScale, bool doRotate)
-{
-	if((it < 0) || (it >= m_curves.size()) || (to < 0) || (to >= m_curves.size()) || it == to)
-	{ return; }
-
-	if (m_curves[to].m_curve->polygonSize() < 2 || m_curves[it].m_curve->polygonSize() < 2)
-		return;
-
-	std::ostringstream buff;
-	buff << "Connecting " << it << " to " << to << " doScale = " << doScale << " doRotate = " << doRotate << std::endl;
-	::OutputDebugString((LPCSTR)(buff.str().c_str()));
-
-	vector<WeightedPt> first = m_curves[it].m_curve->ControlPoints();
-
-	CCagdPoint dest = m_curves[to].m_curve->ControlPoints()[0].m_pt;
-
-	vector<WeightedPt> itCtr = m_curves[it].m_curve->ControlPoints();
-	vector<WeightedPt> toCtr = m_curves[to].m_curve->ControlPoints();
-
-	int itSize = m_curves[it].m_curve->polygonSize();
-
-	CCagdPoint dir = toCtr[1].m_pt	- toCtr[0].m_pt;
-	CCagdPoint origDir = itCtr[itSize - 1].m_pt - itCtr[itSize - 2].m_pt;
-
-	double reqDer = (m_curves[to].m_curve->polygonSize() - 1) * length(dir);
-	double curDer = (m_curves[it].m_curve->polygonSize() - 1) * length(origDir);
-	double scaleFactor = abs(reqDer / curDer);
-	
-
-	if (doScale)
-		first = U::scalePoly(first, scaleFactor);
-	if (doRotate)
-		first = U::rotatePolyRoundLastPt(first, dir);
-
-	first = U::translateLastPointTo(first, dest);
-	m_curves[it].m_curve->SetPoly(first);
-	RedrawCurve(it);
+	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
+	{ return false; }
+	m_curves[curveIdx].m_showCtrPoly = !m_curves[curveIdx].m_showCtrPoly;
+	return RedrawCurve(curveIdx);
 }

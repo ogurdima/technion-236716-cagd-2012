@@ -102,6 +102,8 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_CONNECTTOWITHCONTINUITY_C1, &CMFCKit2004View::OnConnecttowithcontinuityC1)
 	ON_COMMAND(ID_KNOTGUI_REMOVEKNOT, &CMFCKit2004View::OnKnotguiRemoveknot)
 	ON_COMMAND(ID_KNOTGUI_INSERTKNOT, &CMFCKit2004View::OnKnotguiInsertknot)
+	ON_COMMAND(ID_CONTEXTBSPLINEPOLY_APPENDPOINT, &CMFCKit2004View::OnContextbsplinepolyAppendpoint)
+	ON_COMMAND(ID_KNOTGUI_INSERTKNOT32820, &CMFCKit2004View::OnKnotguiInsertknotBoehm)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -156,7 +158,7 @@ CMFCKit2004View::CMFCKit2004View() {
 	m_state = StateIdle;
 	m_currCurveIdx = -1;
 	m_lastWeightControlStatus = false;
-	m_bsplineOrder = 4;
+	m_bsplineDegree = 3;
 	m_modifiedCurveIdx = -1;
 
 }
@@ -218,7 +220,7 @@ void CMFCKit2004View::OnFileOpen()
 		}
 		else if(SplineTypeBspline == crv.m_type)
 		{
-			m_currCurveIdx = m_mgr.NewBsplineCurve(crv.m_order);
+			m_currCurveIdx = m_mgr.NewBsplineCurve(crv.m_order - 1);
 			for(int i=0; i<crv.m_pts.size(); ++i)
 			{
 				CCagdPoint pt = crv.m_pts[i];
@@ -563,6 +565,12 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 		cagdToObject(point.x, point.y, coord);
 		coord[0].z = 0.0;
 		m_mgr.AddLastCtrlPt(coord[0], 1, m_currCurveIdx);
+		if (m_modifiedCurveIdx == m_currCurveIdx)
+		{
+			vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
+			m_kvmgr.setVector(kv);
+			m_kvmgr.show();
+		}
 	}
 	else if (m_state == StateConnectingCurvesG0 || m_state == StateConnectingCurvesG1 || m_state == StateConnectingCurvesC1)
 	{
@@ -951,30 +959,30 @@ void CMFCKit2004View::TestCagdMath()
 
 void CMFCKit2004View::OnFrenetProperties() {
 	CPropDlg dlg;
-	dlg.m_degree = m_bsplineOrder-1;
+	dlg.m_degree = m_bsplineDegree;
 	dlg.m_step = m_paramStepIncr;
 	if (dlg.DoModal() == IDOK) 
 	{
-    bool changed = false;
-    if(m_paramStepIncr != dlg.m_step)
-    {
-      changed = true;
-    }
+		bool changed = false;
+		if(m_paramStepIncr != dlg.m_step)
+		{
+			changed = true;
+		}
 
 		m_paramStepIncr = dlg.m_step;
-		m_bsplineOrder = dlg.m_degree+1;
+		m_bsplineDegree = dlg.m_degree;
 		//m_curveParamEqn[i][m_curveParamEqn[i].size()-1] = '\0'; //remove Line feed
 		// do the rest of your stuff here:
-		
-    if(changed)
-    {
-      m_mgr.SetBSplineSamplingStep(m_paramStepIncr);
 
-      for(int i=0; i<m_mgr.CurveCount(); ++i)
-      {
-        m_mgr.RedrawCurve(i);
-      }
-    }
+		if(changed)
+		{
+			m_mgr.SetBSplineSamplingStep(m_paramStepIncr);
+
+			for(int i=0; i<m_mgr.CurveCount(); ++i)
+			{
+				m_mgr.RedrawCurve(i);
+			}
+		}
 
 
 	}
@@ -1309,13 +1317,14 @@ void CMFCKit2004View::OnContextbgNewbeziercurve()
 void CMFCKit2004View::OnContextbgNewbsplinecurve()
 {
 	m_state = StateAddBSplinePts;
-	m_currCurveIdx = m_mgr.NewBsplineCurve(m_bsplineOrder);
+	m_currCurveIdx = m_mgr.NewBsplineCurve(m_bsplineDegree);
 }
 
 void CMFCKit2004View::OnContextbgClearall()
 {
 	m_mgr.ClearAll();
 	m_kvmgr.dismiss();
+	m_modifiedCurveIdx = -1;
 	Invalidate();
 }
 
@@ -1323,9 +1332,12 @@ void CMFCKit2004View::OnContextpolygonInsertpoint()
 {
 	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
 	m_mgr.AddCtrlPt(m_lastRbuttonUp, 1, m_currCurveIdx);
-	m_modifiedCurveIdx = m_currCurveIdx;
-	vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
-	m_kvmgr.setVector(kv);
+	if (m_modifiedCurveIdx == m_currCurveIdx)
+	{
+		vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
+		m_kvmgr.setVector(kv);
+		m_kvmgr.show();
+	}
 	Invalidate();
 }
 
@@ -1384,9 +1396,12 @@ void CMFCKit2004View::OnContextptRemovepoint()
 {
 	m_mgr.RemoveCtrlPt(m_lastRbuttonUp);
 	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	m_modifiedCurveIdx = m_currCurveIdx;
-	vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
-	m_kvmgr.setVector(kv);
+	if (m_modifiedCurveIdx == m_currCurveIdx)
+	{
+		vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
+		m_kvmgr.setVector(kv);
+		m_kvmgr.show();
+	}
 	Invalidate();
 }
 
@@ -1490,6 +1505,26 @@ void CMFCKit2004View::OnKnotguiRemoveknot()
 
 
 void CMFCKit2004View::OnKnotguiInsertknot()
+{
+	m_kvmgr.addKnotAtPoint(m_lastRbuttonUp);
+	vector<double> kv = m_kvmgr.getVector(); // It sorts it inside
+	m_mgr.SetKnotVector(m_modifiedCurveIdx, kv);
+	m_kvmgr.show();
+}
+
+
+void CMFCKit2004View::OnContextbsplinepolyAppendpoint()
+{
+	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
+	if (-1 != m_currCurveIdx)
+	{
+		m_state = StateAddBSplinePts;
+	}
+	Invalidate();
+}
+
+
+void CMFCKit2004View::OnKnotguiInsertknotBoehm()
 {
 	double knotval = m_kvmgr.guiXtoknot(m_lastRbuttonUp.x);
 	if(m_mgr.InsertKnot(m_modifiedCurveIdx, knotval))

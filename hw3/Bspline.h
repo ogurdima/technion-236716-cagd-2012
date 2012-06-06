@@ -6,30 +6,35 @@ class BSpline : public Curve
 public:
 	BSpline();
 	~BSpline();
-	
-	bool InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt = -1);
- 	void SetOrder(unsigned long order);
+
 	unsigned long GetOrder() const;	
-  inline unsigned long GetDegree() const;
-  bool InsertKnotBoehm(double val);
-	bool InsertKnot(int idx);
-	bool DeleteKnot(int idx);
+	inline unsigned long GetDegree() const;
+	vector<double> GetKnotVector() const;
+
+	void SetDegree(unsigned long degree);
 	bool SetKnotVector(const vector<double> & kv);
-	vector<double> GetKnotVector();
+	void SetSamplingStep(double step);
+
+	bool InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt = -1);
+	bool InsertKnotBoehm(double val);
+	
 	virtual void Calculate();
-  void SetSamplingStep(double step) { m_samplingStep = step; }
 
 	virtual string toIrit(int id);
 	virtual string toDat(int id = 0);
+	bool stateIsLegal();
+
+	virtual UINT DrawCurve();
 
 private:
 	void NormalizeKnotValues();
+	void UpdateKnotVector();
 	// evaluates at time t, ctrl pt index i, degree k
 	double BSplineBasis(double t, int i, int k);
 	void TestBasisFunctions(int k);
 protected:
 	vector<double> m_kv;
-	unsigned long m_order;
-  bool m_openEnd;
-  double m_samplingStep;
+	unsigned long m_degree;
+	bool m_autoKv;
+	double m_samplingStep;
 };

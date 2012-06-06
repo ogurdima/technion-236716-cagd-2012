@@ -2,12 +2,19 @@
 #include "Bspline.h"
 #include "BezierMath.h"
 #include <vector>
+#include <iosfwd>
+#include <fstream>
+
 using std::vector;
 
+//=============================================================================
+// Constructors/Destructors
+//=============================================================================
+
 BSpline::BSpline()
-	: m_order(1)
-  , m_openEnd(false)
-  , m_samplingStep(0.01)
+	: m_degree(1)
+	, m_autoKv(true)
+	, m_samplingStep(0.01)
 {
 }
 
@@ -15,154 +22,33 @@ BSpline::~BSpline()
 {
 }
 
-bool BSpline::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt)
-{
-	if(!Curve::InsertPt(pt, weight, ptIdxAt))
-	{ return false; }
-
-  // only start adding knots after the number of points = the order
-  if(m_ctrlPts.size() < GetOrder())
-  { return true; }
-
-  if(m_kv.empty())
-  {
-    // impose the open end condition
-    m_kv.insert(m_kv.begin(),             GetOrder(), 0.0);
-    m_kv.insert(m_kv.begin()+GetOrder(),   GetOrder(), 1.0);
-    m_openEnd = true;
-  }
-  else 
-  {
-    if(m_openEnd)
-    {
-
-      // update the knot vector
-        // which point is this?
-        size_t knotCount = m_kv.size();
-        size_t knotsInside = knotCount - (2*GetDegree());
-        size_t newKnotCountInside = knotsInside + 1;
-        double knotIncr = 1.0 / double(newKnotCountInside+1);
-        // modify points inside
-        unsigned int firstNonEdgeKnot = GetDegree();
-        unsigned int i = 0;
-        for(; i<knotsInside; ++i)
-        {
-          m_kv[firstNonEdgeKnot+i] = (i+1)*knotIncr;
-        }
-
-        vector<double>::iterator newPtIt = (m_kv.begin()+firstNonEdgeKnot+i);
-        double val = (i+1)*knotIncr;
-        m_kv.insert(newPtIt, val);
-
-        // arbitrary number of points. use Boehm's knot insertion
-        //vector<double>::const_iterator 
-    }
-
-  }
-
-
-  // print them out
-  std::stringstream strmKnots;
-  strmKnots << "Knots: ";
-  for(int i=0; i<m_kv.size(); ++i)
-  {
-    strmKnots << m_kv[i] << " ";
-  }
-  strmKnots << std::endl;
-  ::OutputDebugString((LPCSTR)strmKnots.str().c_str());
-
-	//m_kv.push_back(ptIdxAt);
-	return true;
-}
-
-void BSpline::SetOrder(unsigned long order)
-{
-	m_order = order;
-}
+//=============================================================================
+// Getters
+//=============================================================================
 
 unsigned long BSpline::GetOrder() const
 {
-	return m_order;
+	return GetDegree() + 1;
 }
 
 inline unsigned long BSpline::GetDegree() const
 {
-  return m_order-1;
+	return m_degree;
 }
 
-bool BSpline::InsertKnotBoehm(double val)
+vector<double> BSpline::GetKnotVector() const
 {
-  int l = 0;
-  for(; l < m_kv.size()-1; ++l)
-  {
-    if((m_kv[l] < val) && (val <= m_kv[l+1]))
-    { break; }
-  }
-
-  vector<double> kvNew = m_kv;
-  vector<double>::iterator pos = kvNew.begin() + (l+1);
-  kvNew.insert(pos, val);
-
-  // if there are fewer or equal knots than points, skip out
-  if(kvNew.size() < m_ctrlPts.size())
-  { 
-    m_kv = kvNew;
-    return true; 
-  }
-
-  // otherwise recalculate points as per Boehm
-  vector<WeightedPt> newPts;
-  int k = GetDegree();
-  int newpts_start = l-k+1;
-  int newpts_end = l;
-  
-  if((newpts_start < 0) || ((newpts_end+k+1) >= m_kv.size()))
-  { return false; }
-
-  // Ai_new = Ai for i<=l-k
-  for(int i=0; i<newpts_start; ++i)
-  {
-    newPts.push_back(m_ctrlPts[i]);
-  }
-
-  // Ai_new = interp(Ai,Ai_,ti) for l-k+1 < i < l
-  for(int i=newpts_start; i<=newpts_end; ++i)
-  {
-    double fi = (val-m_kv[i]) / (m_kv[i+k+1]-m_kv[i]);
-    double gi = (m_kv[i+k+1] - val) / (m_kv[i+k+1]-m_kv[i]);
-    WeightedPt Ai = m_ctrlPts[i];
-    WeightedPt Ai_ = m_ctrlPts[i-1];
-    WeightedPt newPt;
-    newPt.m_pt = fi*Ai.m_pt + gi*Ai_.m_pt;
-    newPts.push_back(newPt);
-  }
-
-  for(int i=newpts_end+1; i<m_ctrlPts.size()+1; ++i)
-  {
-    newPts.push_back(m_ctrlPts[i-1]);
-  }
-
-  // now set the whole vector
-  m_ctrlPts.clear();
-  m_ctrlPts = newPts;
-  m_kv = kvNew;
-  return true;
+	return m_kv;
 }
 
+//=============================================================================
+// Setters
+//=============================================================================
 
-// In the following two cases,
-// it is natural for the program to decide the knots: 
-// 1. uniform float knot vector. 
-// 2. uniform open end. 
-bool BSpline::InsertKnot(int idx)
+void BSpline::SetDegree(unsigned long degree)
 {
-	return false;
+	m_degree = degree;
 }
-bool BSpline::DeleteKnot(int idx)
-{
-	return false;
-}
-
 
 bool BSpline::SetKnotVector(const vector<double>& kv)
 {
@@ -177,174 +63,246 @@ bool BSpline::SetKnotVector(const vector<double>& kv)
 
 	m_kv.clear();
 	m_kv = kv;
+	m_autoKv = false;
 	return true;
 }
 
-vector<double> BSpline::GetKnotVector()
+void BSpline::SetSamplingStep(double step) 
 {
-	return m_kv;
+	m_samplingStep = step; 
 }
 
-#include <iosfwd>
-#include <fstream>
+//=============================================================================
+// Insertion
+//=============================================================================
+
+bool BSpline::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt)
+{
+	if(!Curve::InsertPt(pt, weight, ptIdxAt))
+	{ 
+		return false; 
+	}
+	UpdateKnotVector();
+	return true;
+}
+
+bool BSpline::InsertKnotBoehm(double val)
+{
+	int insertedIn = -1;
+	vector<double> refinedKv;
+	for(int i = 0; i < m_kv.size()-1; ++i)
+	{
+		if( m_kv[i] > val && insertedIn == -1)
+		{
+			insertedIn = i-1;
+			double prev = refinedKv[refinedKv.size() - 1];
+			refinedKv.pop_back();
+			refinedKv.push_back(val);
+			refinedKv.push_back(prev);
+		}
+		refinedKv.push_back(m_kv[i]);
+	}
+	if (-1 == insertedIn)
+	{
+		refinedKv.push_back(val);
+		insertedIn = refinedKv.size() - 1;
+	}
+
+	if (insertedIn <= m_degree)
+		return false;
+
+	int initialI = insertedIn - m_degree;
+	if (initialI < 0)
+		initialI = 0;
+	vector<WeightedPt> newCtrl;
+	int stopped = -1;
+	for (int i = 0; i < m_ctrlPts.size(); i++)
+	{
+		if (i < insertedIn - m_degree)
+			newCtrl.push_back(m_ctrlPts[i]);
+		else if (i <= insertedIn)
+		{
+			double coeffA = ( abs(refinedKv[i+m_degree+1] - refinedKv[i]) > 0.0001) ? (val - refinedKv[i]) / ( refinedKv[i+m_degree+1] - refinedKv[i]) : 0;
+			double coeffB = ( abs(refinedKv[i+m_degree+1] - refinedKv[i]) > 0.0001) ? (refinedKv[i+m_degree+1] - val) / ( refinedKv[i+m_degree+1] - refinedKv[i]) : 0;
+			CCagdPoint np = coeffA * m_ctrlPts[i].m_pt + coeffB * m_ctrlPts[i-1].m_pt;
+			double nw = coeffA * m_ctrlPts[i].m_weight + coeffB * m_ctrlPts[i-1].m_weight;
+			newCtrl.push_back(WeightedPt(np, nw));
+		}
+		else
+		{
+			stopped = i;
+		}
+	}
+	if (stopped != -1)
+	{
+		for (int i = stopped - 1; i < m_ctrlPts.size(); i++)
+			newCtrl.push_back(m_ctrlPts[i]);
+	}
+	m_ctrlPts = newCtrl;
+	SetKnotVector(refinedKv);
+	return true;
+}
+
+
+
+
+
+//=============================================================================
+// 
+//=============================================================================
 
 void BSpline::Calculate()
 {
 	m_dataPts.clear();
+	
+	if (m_degree > m_kv.size() - 1 - m_degree)
+		return;
 
-	// calculate domain of the curve: [t_k, t_N_k)
-	// k = degree, N = #knots+1
-	unsigned long N			= m_kv.size()-1;
-	unsigned long k			= m_order-1;
-	unsigned long ta_idx	= 0;//k;
-	unsigned long tb_idx	= N;//N-k;
-	if((ta_idx > N) || (tb_idx <= 0))
-	{ return; }
-
-	if(m_kv.empty())
-	{ return; }
-
-	double ta				= m_kv[ta_idx];
-	double tb				= m_kv[tb_idx];
-	if(ta >= tb)
-	{ return; }
-
-	//if(m_kv.size() == 10)
-	//{
-	//	TestBasisFunctions();
-	//}
-
-	// j is the current knot idx. start at the first allowable knot (ta_idx)
-	int curr_j = ta_idx;
-
-	//std::ofstream o0("basis.csv");
-	//if(o0)
-	//{
-	//	o0 << "time,value" << std::endl;
-	//	double time = 0.0;
-	//	//for(int i=0; i<basis_0.size(); ++i)
-	//	//{
-	//	//	o0 << time << "," << 
-	//	//		basis_0[i] << "," <<
-	//	//		basis_1[i] << "," <<
-	//	//		basis_2[i] << "," <<
-	//	//		basis_3[i] <<
-	//	//		std::endl;
-	//	//	time += 0.001;
-	//	//}
-	//	
-	//}
-
-	//std::ofstream datafile("data.csv");
-	//datafile << "time,x,y,z" << std::endl;
-
-	// at each t, store a vector of basis function values
-	vector<double> basis_values;
-	for(double t=ta; t<=tb; t+=m_samplingStep)
+	int j = 0;
+	for (double t = m_kv[m_degree]; t <= m_kv[m_kv.size() - 1 - m_degree]; t += m_samplingStep, j++)
 	{
-		while(t >= m_kv[curr_j+1])
+		CCagdPoint cur(0,0,0);
+		double w = 0;
+		for (int i = 0; i < m_ctrlPts.size(); i++)
 		{
-			++curr_j;
+			double basis = BSplineBasis(t, i, m_degree); 
+			cur = cur +  m_ctrlPts[i].m_pt * m_ctrlPts[i].m_weight * basis;
+			w += m_ctrlPts[i].m_weight * basis;
 		}
+		m_dataPts.push_back(cur / w);
+	}
+}
 
-		// pre-compute basis function values
-		basis_values.clear();
-		for(int i=0; i<m_ctrlPts.size(); ++i)
+//=============================================================================
+// 
+//=============================================================================
+
+void BSpline::UpdateKnotVector()
+{
+
+	if(m_autoKv)
+	{
+		/*m_kv.clear();
+		for (int i = 0; i <= m_degree; i++)
 		{
-			double basis_val = BSplineBasis(t, i, k);
-			basis_values.push_back(basis_val);
+			m_kv.push_back(0.0);
+		}
+		if (m_ctrlPts.size() + m_degree + 1 > (2 * m_degree))
+		{
+			int innerKnots = m_ctrlPts.size() + m_degree + 1 - (2 * m_degree);
+			double inc = 1.0 / (innerKnots + 2);
+			for (double i = inc; i < 1.0; i += inc)
+			{
+				m_kv.push_back(i);
+			}
 		}
 		
-		// find the normalizing sum (for rational bsplines)
-		double norm_sum = 0.0;
-		for(int i=0; i<m_ctrlPts.size(); ++i)
+		for (int i = 0; i <= m_degree; i++)
 		{
-			norm_sum += basis_values[i]*m_ctrlPts[i].m_weight;
-		}
-		//double norm_sum = 1.0;
-
-		// finally, compute the value
-		CCagdPoint val_at_t;
-		for(int i=0; i<m_ctrlPts.size(); ++i)
+			m_kv.push_back(1.0);
+		}*/
+		m_kv.clear();
+		int numOfKnots = m_ctrlPts.size() + m_degree + 1;
+		double inc = 1.0 / (numOfKnots);
+		for (double i = 0; i <= 1.0; i += inc)
 		{
-			val_at_t += (basis_values[i] * m_ctrlPts[i].m_weight * m_ctrlPts[i].m_pt) / norm_sum;
+			m_kv.push_back(i);
 		}
-		//o0 << "Basis: " << basis_values[i] << "
-		m_dataPts.push_back(val_at_t);
-		//datafile << t << "," << val_at_t.x << "," << val_at_t.y << "," << val_at_t.z << std::endl;
 	}
-	//datafile.close();
-	//o0.close();
-
+	else
+	{
+		bool OK = true;
+	}
 }
 
 // everything gets transformed to a value between 0 and 1
 void BSpline::NormalizeKnotValues()
 {
 	if(m_kv.empty())
-	{ return; }
+	{ 
+		return; 
+	}
 
 	double low_value = m_kv[0];
 	for(int i=0; i<m_kv.size(); ++i)
 	{
 		m_kv[i] -= low_value;
 	}
-	
+
 	double hi_value = m_kv[m_kv.size()-1];
-	
+
 	// if the high value is zero they should all be zero anyway
 	if(U::NearlyEq(hi_value, 0.0))
-	{ return; }
-
+	{ 
+		return; 
+	}
 	for(int i=0; i<m_kv.size(); ++i)
 	{
 		m_kv[i] /= hi_value;
 	}
 }
 
-
-
 // evaluates at time t, ctrl pt index i, degree k
 double BSpline::BSplineBasis(double t, int i, int k)
 {
-	if(t < m_kv[i])
+	int m = m_kv.size() - 1;
+
+	if (i < 0 || i > m - k - 1) //Ith Bspline not defined here
+	{
+		return 0.0;
+	}
+	
+	//=============================================================================
+	// Basis of the recursion
+	//=============================================================================
+	if (k == 0)
+	{
+		double lowT = m_kv[i];
+		double highT = m_kv[i + 1];
+		if (t < lowT || t >= highT)
+		{
+			return 0.0;
+		}
+		return 1.0;
+	}
+
+	//=============================================================================
+	// Recursion itself
+	//=============================================================================
+
+	if (m_kv[i] >= m_kv[i + 1 + k])
+	{
+		return 0.0;
+	}
+	if (t < m_kv[i] || t >= m_kv[i+1+k])
 	{
 		return 0.0;
 	}
 
-	if(k == 0)
+	double resA = 0;
+	double resB = 0;
+	if (abs(m_kv[i+k] - m_kv[i]) > 0.0001) // else 0
 	{
-		if((t >= m_kv[i]) && (t < m_kv[i+1]))
-		{
-			return 1.0;
-		}
-		else
-		{
-			return 0.0;
-		}
-
+		double coefA = (t - m_kv[i]) / (m_kv[i+k] - m_kv[i]);
+		double recA = BSplineBasis(t, i, k-1);
+		resA = coefA * recA;
+	}
+	else 
+	{
+		resA = 0;
+	}
+	if (abs(m_kv[i+1+k] - m_kv[i+1]) > 0.0001) // else 0
+	{
+		double coefB = (m_kv[i+1+k] - t) / (m_kv[i+1+k] - m_kv[i+1]);
+		double recB = BSplineBasis(t, i+1, k-1);
+		resB = coefB * recB;
+	}
+	else 
+	{
+		resB = 0;
 	}
 
-	// otherwise, interpolate normally:
-	// N_i_k = f_i_n(t) * N_i_n-1		+	g_i_n(t) * N_i+1_n-1
-	double f_i_n = 0.0;
-	double N_i = 0.0;
-	if(m_kv[i+k]-m_kv[i] > 0.0)
-	{
-		f_i_n			= (t - m_kv[i]) / (m_kv[i+k] - m_kv[i]);
-		N_i				= BSplineBasis(t, i, k-1);
-	}
-	double g_i_plus_1_n = 0.0;
-	double N_i_plus_1 = 0.0;
-	if(m_kv[i+1+k]-m_kv[i+1] > 0) 
-	{
-		if(m_kv[i+1+k]-m_kv[i+1] > 0) 
-		{
-			g_i_plus_1_n	= (m_kv[i+1+k] - t) / (m_kv[i+1+k]-m_kv[i+1]);
-			N_i_plus_1		= BSplineBasis(t, i+1, k-1);
-		}
-	}
-	return f_i_n*N_i + g_i_plus_1_n*N_i_plus_1;
+	return resA + resB;
 }
 
 void BSpline::TestBasisFunctions(int k)
@@ -382,6 +340,10 @@ void BSpline::TestBasisFunctions(int k)
 
 }
 
+//=============================================================================
+// Printing
+//=============================================================================
+
 string BSpline::toIrit(int id)
 {
 	int numOfPoints = m_ctrlPts.size();
@@ -390,7 +352,7 @@ string BSpline::toIrit(int id)
 
 	std::ostringstream buf = std::ostringstream();
 	buf << "[OBJECT BSPLINE" << id << std::endl;
-	buf << "\t[CURVE BSPLINE " << numOfPoints << " " << m_order << " P2" << std::endl;
+	buf << "\t[CURVE BSPLINE " << numOfPoints << " " << m_degree - 1 << " P2" << std::endl;
 	buf << "\t\t[KV";
 	for (int i = 0; i < m_kv.size(); i++)
 	{
@@ -413,7 +375,7 @@ string BSpline::toDat(int id)
 		return string("");
 
 	std::ostringstream buf = std::ostringstream();
-	buf << m_order << std::endl;
+	buf << m_degree - 1 << std::endl;
 	buf << "knots[" << m_kv.size() << "] = " << std::endl << "\t";
 	for (int i = 0; i < m_kv.size(); i++)
 	{
@@ -430,4 +392,23 @@ string BSpline::toDat(int id)
 	}
 	buf << std::endl; 
 	return buf.str();
+}
+
+
+//=============================================================================
+// Misc
+//=============================================================================
+
+bool BSpline::stateIsLegal()
+{
+	return (m_ctrlPts.size() + m_degree + 1 <= m_kv.size()) && m_kv.size() != 0 && ! (m_degree > m_kv.size() - 1 - m_degree);
+}
+
+UINT BSpline::DrawCurve()
+{
+	if (stateIsLegal())
+	{
+		return Curve::DrawCurve();
+	}
+	return 0;
 }

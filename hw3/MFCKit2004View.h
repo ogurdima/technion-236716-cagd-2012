@@ -141,7 +141,7 @@ public:
 	bool m_lastWeightControlStatus;
 	DragInfo m_draggedPt;
 	ControlPointInfo m_weightCtrlAnchor;
-	unsigned int m_bsplineOrder;
+	unsigned int m_bsplineDegree;
 	int m_modifiedCurveIdx;
 
 	ProgramState m_state;
@@ -237,6 +237,9 @@ public:
 	afx_msg void OnConnecttowithcontinuityC1();
 	afx_msg void OnKnotguiRemoveknot();
 	afx_msg void OnKnotguiInsertknot();
+	afx_msg void OnContextbsplinepolyAppendpoint();
+	afx_msg void OnKnotguiRemoveknot32819();
+	afx_msg void OnKnotguiInsertknotBoehm();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp

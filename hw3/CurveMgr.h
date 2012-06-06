@@ -189,7 +189,7 @@ public:
 	~CurveMgr();
 
 	int NewBezierCurve();
-	int NewBsplineCurve(unsigned int order);
+	int NewBsplineCurve(unsigned int degree);
 	bool AddLastCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, bool noRecalc = false);
 	bool AddCtrlPt(const CCagdPoint& pt, double weight = 1, int curveIdx = -1, int polyPointIdx = -1, bool noRecalc = false);
 	bool RemoveCtrlPt(const CCagdPoint& pt);

@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -81,7 +79,7 @@ IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
 // Toolbar
 //
 
-IDR_MAINFRAME TOOLBAR  16, 15
+IDR_MAINFRAME TOOLBAR 16, 15
 BEGIN
     BUTTON      ID_FILE_NEW
     BUTTON      ID_FILE_OPEN
@@ -102,7 +100,7 @@ END
 // Menu
 //
 
-IDR_MAINFRAME MENU 
+IDR_MAINFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
@@ -158,7 +156,7 @@ BEGIN
     END
 END
 
-IDR_POPUPMENU MENU 
+IDR_POPUPMENU MENU
 BEGIN
     POPUP "ContextBG"
     BEGIN
@@ -168,7 +166,7 @@ BEGIN
     END
 END
 
-IDR_MENU1 MENU 
+IDR_MENU1 MENU
 BEGIN
     POPUP "ContextPolygon"
     BEGIN
@@ -186,7 +184,7 @@ BEGIN
     END
 END
 
-IDR_MENU2 MENU 
+IDR_MENU2 MENU
 BEGIN
     POPUP "ContextPt"
     BEGIN
@@ -195,12 +193,12 @@ BEGIN
     END
 END
 
-IDR_MENU3 MENU 
+IDR_MENU3 MENU
 BEGIN
     POPUP "ContextBsplinePoly"
     BEGIN
         MENUITEM "Insert Point",                ID_CONTEXTPOLYGON_INSERTPOINT
-        MENUITEM "Append Point(s)",             ID_CONTEXTPOLYGON_APPENDPOINT
+        MENUITEM "Append Point(s)",             ID_CONTEXTBSPLINEPOLY_APPENDPOINT
         MENUITEM "Show/hide control polygon",   ID_CONTEXTPOLYGON_SHOW
         MENUITEM "Modify Knot Vector",          ID_CONTEXTBSPLINEPOLY_MODIFYKNOTVECTOR
         POPUP "Connect to with continuity"
@@ -212,12 +210,13 @@ BEGIN
     END
 END
 
-IDR_MENU4 MENU 
+IDR_MENU4 MENU
 BEGIN
     POPUP "KnotGui"
     BEGIN
         MENUITEM "Remove Knot",                 ID_KNOTGUI_REMOVEKNOT
         MENUITEM "Insert Knot",                 ID_KNOTGUI_INSERTKNOT
+        MENUITEM "Insert Knot (Boehm)",         ID_KNOTGUI_INSERTKNOT32820
     END
 END
 
@@ -227,7 +226,7 @@ END
 // Accelerator
 //
 
-IDR_MAINFRAME ACCELERATORS 
+IDR_MAINFRAME ACCELERATORS
 BEGIN
     "N",            ID_FILE_NEW,            VIRTKEY, CONTROL
     "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL
@@ -250,7 +249,7 @@ END
 // Dialog
 //
 
-IDD_ABOUTBOX DIALOG  0, 0, 235, 55
+IDD_ABOUTBOX DIALOG 0, 0, 235, 55
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About MFCKit2004"
 FONT 8, "MS Sans Serif"
@@ -320,7 +319,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
@@ -346,18 +345,18 @@ END
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDR_MAINFRAME           "MFCKit2004\n\nMFCKit\n\n\nMFCKit2004.Document\nMFCKit Document"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     AFX_IDS_APP_TITLE       "MFCKit2004"
     AFX_IDS_IDLEMESSAGE     "Ready"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_INDICATOR_EXT        "EXT"
     ID_INDICATOR_CAPS       "CAP"
@@ -367,7 +366,7 @@ BEGIN
     ID_INDICATOR_REC        "REC"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_FILE_NEW             "Create a new document\nNew"
     ID_FILE_OPEN            "Open an existing document\nOpen"
@@ -376,13 +375,13 @@ BEGIN
     ID_FILE_SAVE_AS         "Save the active document with a new name\nSave As"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
     ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_FILE_MRU_FILE1       "Open this document"
     ID_FILE_MRU_FILE2       "Open this document"
@@ -402,18 +401,18 @@ BEGIN
     ID_FILE_MRU_FILE16      "Open this document"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
     ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_EDIT_CLEAR           "Erase the selection\nErase"
     ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
@@ -428,13 +427,13 @@ BEGIN
     ID_EDIT_REDO            "Redo the previously undone action\nRedo"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     ID_VIEW_TOOLBAR         "Show or hide the toolbar\nToggle ToolBar"
     ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle StatusBar"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     AFX_IDS_SCSIZE          "Change the window size"
     AFX_IDS_SCMOVE          "Change the window position"
@@ -445,7 +444,7 @@ BEGIN
     AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     AFX_IDS_SCRESTORE       "Restore the window to normal size"
     AFX_IDS_SCTASKLIST      "Activate Task List"
@@ -453,7 +452,7 @@ BEGIN
     ID_INDICATOR_TORSION    "Default"
 END
 
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
