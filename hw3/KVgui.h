@@ -23,14 +23,14 @@ public:
 	int idxAtPoint(CCagdPoint p);
 	bool addKnotAtPoint(CCagdPoint p);
 	~KVgui();
+	double knotToGuiX(double k);
+	double guiXtoknot(double k);
 
 	static const double distDivFactor;
 
 private:
 
 	void freeGui();
-	double knotToGuiX(double k);
-	double guiXtoknot(double k);
 	CCagdPoint* knotToGuiItem(double k);
 	CCagdPoint* guiLine();
 	int countePrevKnotsNearby(int idx);

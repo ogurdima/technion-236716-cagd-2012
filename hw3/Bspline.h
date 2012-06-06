@@ -8,9 +8,10 @@ public:
 	~BSpline();
 	
 	bool InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt = -1);
-	void SetOrder(unsigned long order);
+ 	void SetOrder(unsigned long order);
 	unsigned long GetOrder() const;	
   inline unsigned long GetDegree() const;
+  bool InsertKnotBoehm(double val);
 	bool InsertKnot(int idx);
 	bool DeleteKnot(int idx);
 	bool SetKnotVector(const vector<double> & kv);

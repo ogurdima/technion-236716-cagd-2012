@@ -21,46 +21,42 @@ bool BSpline::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt)
 
   // only start adding knots after the number of points = the order
   if(m_ctrlPts.size() < GetOrder())
-  { 
-    return true; 
-  }
-  else
+  { return true; }
+
+  if(m_kv.empty())
   {
-    if(m_kv.empty())
+    // impose the open end condition
+    m_kv.insert(m_kv.begin(),             GetOrder(), 0.0);
+    m_kv.insert(m_kv.begin()+GetOrder(),   GetOrder(), 1.0);
+    m_openEnd = true;
+  }
+  else 
+  {
+    if(m_openEnd)
     {
-      // impose the open end condition
-      m_kv.insert(m_kv.begin(), GetOrder(), 0.0);
-      m_kv.insert(m_kv.begin()+GetOrder(), GetOrder(), 1.0);
-      m_openEnd = true;
+
+      // update the knot vector
+        // which point is this?
+        size_t knotCount = m_kv.size();
+        size_t knotsInside = knotCount - (2*GetDegree());
+        size_t newKnotCountInside = knotsInside + 1;
+        double knotIncr = 1.0 / double(newKnotCountInside+1);
+        // modify points inside
+        unsigned int firstNonEdgeKnot = GetDegree();
+        unsigned int i = 0;
+        for(; i<knotsInside; ++i)
+        {
+          m_kv[firstNonEdgeKnot+i] = (i+1)*knotIncr;
+        }
+
+        vector<double>::iterator newPtIt = (m_kv.begin()+firstNonEdgeKnot+i);
+        double val = (i+1)*knotIncr;
+        m_kv.insert(newPtIt, val);
+
+        // arbitrary number of points. use Boehm's knot insertion
+        //vector<double>::const_iterator 
     }
-    else 
-    {
-      if(m_openEnd)
-      {
 
-        // update the knot vector
-          // which point is this?
-          size_t knotCount = m_kv.size();
-          size_t knotsInside = knotCount - (2*GetDegree());
-          size_t newKnotCountInside = knotsInside + 1;
-          double knotIncr = 1.0 / double(newKnotCountInside+1);
-          // modify points inside
-          unsigned int firstNonEdgeKnot = GetDegree();
-          unsigned int i = 0;
-          for(; i<knotsInside; ++i)
-          {
-            m_kv[firstNonEdgeKnot+i] = (i+1)*knotIncr;
-          }
-
-          vector<double>::iterator newPtIt = (m_kv.begin()+firstNonEdgeKnot+i);
-          double val = (i+1)*knotIncr;
-          m_kv.insert(newPtIt, val);
-
-	        // arbitrary number of points. use Boehm's knot insertion
-          //vector<double>::const_iterator 
-      }
-
-    }
   }
 
 
@@ -92,6 +88,66 @@ inline unsigned long BSpline::GetDegree() const
 {
   return m_order-1;
 }
+
+bool BSpline::InsertKnotBoehm(double val)
+{
+  int l = 0;
+  for(; l < m_kv.size()-1; ++l)
+  {
+    if((m_kv[l] < val) && (val <= m_kv[l+1]))
+    { break; }
+  }
+
+  vector<double> kvNew = m_kv;
+  vector<double>::iterator pos = kvNew.begin() + (l+1);
+  kvNew.insert(pos, val);
+
+  // if there are fewer or equal knots than points, skip out
+  if(kvNew.size() < m_ctrlPts.size())
+  { 
+    m_kv = kvNew;
+    return true; 
+  }
+
+  // otherwise recalculate points as per Boehm
+  vector<WeightedPt> newPts;
+  int k = GetDegree();
+  int newpts_start = l-k+1;
+  int newpts_end = l;
+  
+  if((newpts_start < 0) || ((newpts_end+k+1) >= m_kv.size()))
+  { return false; }
+
+  // Ai_new = Ai for i<=l-k
+  for(int i=0; i<newpts_start; ++i)
+  {
+    newPts.push_back(m_ctrlPts[i]);
+  }
+
+  // Ai_new = interp(Ai,Ai_,ti) for l-k+1 < i < l
+  for(int i=newpts_start; i<=newpts_end; ++i)
+  {
+    double fi = (val-m_kv[i]) / (m_kv[i+k+1]-m_kv[i]);
+    double gi = (m_kv[i+k+1] - val) / (m_kv[i+k+1]-m_kv[i]);
+    WeightedPt Ai = m_ctrlPts[i];
+    WeightedPt Ai_ = m_ctrlPts[i-1];
+    WeightedPt newPt;
+    newPt.m_pt = fi*Ai.m_pt + gi*Ai_.m_pt;
+    newPts.push_back(newPt);
+  }
+
+  for(int i=newpts_end+1; i<m_ctrlPts.size()+1; ++i)
+  {
+    newPts.push_back(m_ctrlPts[i-1]);
+  }
+
+  // now set the whole vector
+  m_ctrlPts.clear();
+  m_ctrlPts = newPts;
+  m_kv = kvNew;
+  return true;
+}
+
 
 // In the following two cases,
 // it is natural for the program to decide the knots: 

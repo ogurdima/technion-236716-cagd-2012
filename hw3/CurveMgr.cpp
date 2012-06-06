@@ -81,14 +81,14 @@ bool CurveMgr::RedrawCurve(int curveIdx)
 	return true;
 }
 
-bool CurveMgr::AddLastCtrlPt(const CCagdPoint& pt, double weight, int curveIdx)
+bool CurveMgr::AddLastCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, bool noRecalc)
 {
 	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
 	{ return false; }
-	return AddCtrlPt(pt, weight, curveIdx, m_curves[curveIdx].m_curve->polygonSize());
+	return AddCtrlPt(pt, weight, curveIdx, m_curves[curveIdx].m_curve->polygonSize(), noRecalc);
 }
 
-bool CurveMgr::AddCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, int polyPointIdx)
+bool CurveMgr::AddCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, int polyPointIdx, bool noRecalc)
 {
 	if (-1 == curveIdx)
 	{
@@ -109,7 +109,10 @@ bool CurveMgr::AddCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, int 
 	vector<WeightControl>::iterator pos = (cw.m_wc.begin() + polyPointIdx);
 	cw.m_wc.insert(pos, WeightControl(pt, weight));
 
-	RedrawCurve(curveIdx);
+  if(!noRecalc)
+  {
+	  RedrawCurve(curveIdx);
+  }
 
 	::OutputDebugString((LPCSTR)(m_curves[curveIdx].m_curve->toIrit(curveIdx).c_str()));
 
@@ -297,6 +300,24 @@ vector<double> CurveMgr::GetKnotVector(int curveIdx)
 	return dynamic_cast<BSpline*>(cw.m_curve)->GetKnotVector();
 
 }
+
+bool CurveMgr::InsertKnot(int curveIdx, double knotVal)
+{
+	if((curveIdx < 0) || (curveIdx >= m_curves.size()))
+	{ return false; }
+
+	CurveWrp& cw = m_curves[curveIdx];
+	if(SplineTypeBspline != cw.m_type)
+	{ return false; }
+
+	bool success = dynamic_cast<BSpline*>(cw.m_curve)->InsertKnotBoehm(knotVal);
+  if(success)
+  {
+    RedrawCurve(curveIdx);
+  }
+  return success;
+}
+
 
 bool CurveMgr::RaiseDegree(int curveIdx)
 {

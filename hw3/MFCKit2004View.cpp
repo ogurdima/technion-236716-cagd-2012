@@ -222,7 +222,7 @@ void CMFCKit2004View::OnFileOpen()
 			for(int i=0; i<crv.m_pts.size(); ++i)
 			{
 				CCagdPoint pt = crv.m_pts[i];
-				m_mgr.AddLastCtrlPt(CCagdPoint(pt.x, pt.y, 1.0), pt.z, m_currCurveIdx);
+				m_mgr.AddLastCtrlPt(CCagdPoint(pt.x, pt.y, 1.0), pt.z, m_currCurveIdx, true);
 			}
 			if(!m_mgr.SetKnotVector(m_currCurveIdx, crv.m_knots))
 			{
@@ -1495,8 +1495,11 @@ void CMFCKit2004View::OnKnotguiRemoveknot()
 
 void CMFCKit2004View::OnKnotguiInsertknot()
 {
-	m_kvmgr.addKnotAtPoint(m_lastRbuttonUp);
-	
-	vector<double> kv = m_kvmgr.getVector(); // It sorts it inside
-	m_mgr.SetKnotVector(m_modifiedCurveIdx, kv);
+  double knotval = m_kvmgr.guiXtoknot(m_lastRbuttonUp.x);
+	if(m_mgr.InsertKnot(m_modifiedCurveIdx, knotval))
+  {
+	  m_kvmgr.addKnotAtPoint(m_lastRbuttonUp);
+  }
+	//vector<double> kv = m_kvmgr.getVector(); // It sorts it inside
+	//m_mgr.SetKnotVector(m_modifiedCurveIdx, kv);
 }

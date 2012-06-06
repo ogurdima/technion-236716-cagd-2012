@@ -190,8 +190,8 @@ public:
 
 	int NewBezierCurve();
 	int NewBsplineCurve(unsigned int order);
-	bool AddLastCtrlPt(const CCagdPoint& pt, double weight, int curveIdx);
-	bool AddCtrlPt(const CCagdPoint& pt, double weight = 1, int curveIdx = -1, int polyPointIdx = -1);
+	bool AddLastCtrlPt(const CCagdPoint& pt, double weight, int curveIdx, bool noRecalc = false);
+	bool AddCtrlPt(const CCagdPoint& pt, double weight = 1, int curveIdx = -1, int polyPointIdx = -1, bool noRecalc = false);
 	bool RemoveCtrlPt(const CCagdPoint& pt);
 	bool UpdateCtrlPtPos(const ControlPointInfo& ptInfo, const CCagdPoint& pt);
 	bool UpdateCtrlPtWeight(const ControlPointInfo& ptInfo, double weight);
@@ -215,6 +215,9 @@ public:
 
 	// for bsplines. returns empty vector if curve is not a bspline
 	std::vector<double> GetKnotVector(int curveIdx);
+
+  // for bsplines
+  bool InsertKnot(int curveIdx, double knotVal);
 
 	// for beziers
 	bool RaiseDegree(int curveIdx);
