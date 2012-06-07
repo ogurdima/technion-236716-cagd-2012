@@ -53,6 +53,7 @@ public:
 	virtual string toIrit(int id) = 0;
 	virtual string toDat(int id = 0) = 0;
 	vector<WeightedPt> ControlPoints();
+  const vector<CCagdPoint>& DataPoints() const { return m_dataPts; }
 
 	virtual void RemoveCtrlPoint(int idx);
 
