@@ -90,15 +90,12 @@ bool BSpline::InsertKnotBoehm(double val)
 {
 	int insertedIn = -1;
 	vector<double> refinedKv;
-	for(int i = 0; i < m_kv.size()-1; ++i)
+	for(int i = 0; i < m_kv.size(); ++i)
 	{
 		if( m_kv[i] > val && insertedIn == -1)
 		{
-			insertedIn = i-1;
-			double prev = refinedKv[refinedKv.size() - 1];
-			refinedKv.pop_back();
+			insertedIn = i;
 			refinedKv.push_back(val);
-			refinedKv.push_back(prev);
 		}
 		refinedKv.push_back(m_kv[i]);
 	}
@@ -110,13 +107,15 @@ bool BSpline::InsertKnotBoehm(double val)
 
 	if (insertedIn <= m_degree)
 		return false;
+  else if(insertedIn > m_ctrlPts.size())
+    return false;
 
 	int initialI = insertedIn - m_degree;
 	if (initialI < 0)
 		initialI = 0;
 	vector<WeightedPt> newCtrl;
 	int stopped = -1;
-	for (int i = 0; i < m_ctrlPts.size(); i++)
+	for (int i = 0; i <= m_ctrlPts.size(); i++)
 	{
 		if (i < insertedIn - m_degree)
 			newCtrl.push_back(m_ctrlPts[i]);
@@ -124,8 +123,25 @@ bool BSpline::InsertKnotBoehm(double val)
 		{
 			double coeffA = ( abs(refinedKv[i+m_degree+1] - refinedKv[i]) > 0.0001) ? (val - refinedKv[i]) / ( refinedKv[i+m_degree+1] - refinedKv[i]) : 0;
 			double coeffB = ( abs(refinedKv[i+m_degree+1] - refinedKv[i]) > 0.0001) ? (refinedKv[i+m_degree+1] - val) / ( refinedKv[i+m_degree+1] - refinedKv[i]) : 0;
-			CCagdPoint np = coeffA * m_ctrlPts[i].m_pt + coeffB * m_ctrlPts[i-1].m_pt;
-			double nw = coeffA * m_ctrlPts[i].m_weight + coeffB * m_ctrlPts[i-1].m_weight;
+			CCagdPoint np(0,0,0);
+      double nw = 0.0;
+      if(!U::NearlyEq(coeffA,0.0))
+      {
+        np += coeffA * m_ctrlPts[i].m_pt;  
+        nw += coeffA * m_ctrlPts[i].m_weight;
+      }
+      else{
+        bool ok =true;
+      }
+      if(!U::NearlyEq(coeffB,0.0))
+      {
+        np += coeffB * m_ctrlPts[i-1].m_pt;
+        nw += coeffB * m_ctrlPts[i-1].m_weight;
+      }
+      else{
+        bool ok =true;
+      }
+			 
 			newCtrl.push_back(WeightedPt(np, nw));
 		}
 		else
@@ -142,9 +158,6 @@ bool BSpline::InsertKnotBoehm(double val)
 	SetKnotVector(refinedKv);
 	return true;
 }
-
-
-
 
 
 //=============================================================================
