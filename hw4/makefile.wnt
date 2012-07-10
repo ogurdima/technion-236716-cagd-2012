@@ -1,0 +1,7 @@
+
+CFLAGS = 
+ChrOBJS = test.obj expr2tree.obj
+ChrFILES = test.c expr2tree.c
+
+test.exe: $(ChrOBJS)
+	link -out:test.exe $(CFLAGS) $(ChrOBJS)
