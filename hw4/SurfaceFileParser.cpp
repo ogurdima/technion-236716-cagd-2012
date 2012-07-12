@@ -504,7 +504,7 @@ bool SurfaceFileParser::parse_points()
 			++curr_points;
 			++m_current_line;
 			// if we're not done and we've reached the end of the string list fail.
-			if(curr_points < (total_points_exp-1))
+			if(curr_points < (total_points_exp))
 			{
 				if(m_current_line >= m_lines.size())
 				{ return false; }
