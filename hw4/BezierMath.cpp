@@ -68,7 +68,7 @@ bool U::IsIntegerUnsigned(const std::string& str)
 	bool isNumber = true;
 	for(std::string::const_iterator k = str.begin(); k != str.end(); ++k)
 	{
-		isNumber &= isdigit(*k);
+		isNumber &= static_cast<bool>(isdigit(*k));
 	}
 	return isNumber;
 }

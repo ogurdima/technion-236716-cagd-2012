@@ -154,46 +154,7 @@ void CMFCKit2004View::OnFileOpen()
 	m_filename = std::string(pathName);
 	bool parseRes = false;
 	
-	parseRes = m_parser.ParseFile(m_filename);
-	if (! parseRes)
-	{
-		Invalidate();
-		return;
-	}
-
-	m_mgr.ClearAll();
-	for(int i=0; i<m_parser.m_curves.size(); ++i)
-	{
-		ParsedCurve& crv = m_parser.m_curves[i];
-		if(SplineTypeBezier == crv.m_type)
-		{
-			m_currCurveIdx = m_mgr.NewBezierCurve();
-			for(int i=0; i<crv.m_pts.size(); ++i)
-			{
-				crv.m_pts[i].z = 0;
-				m_mgr.AddLastCtrlPt(crv.m_pts[i], 1.0, m_currCurveIdx);
-			}
-		}
-		else if(SplineTypeBspline == crv.m_type)
-		{
-			m_currCurveIdx = m_mgr.NewBsplineCurve(crv.m_order - 1);
-			for(int i=0; i<crv.m_pts.size(); ++i)
-			{
-				CCagdPoint pt = crv.m_pts[i];
-				pt.z = 0;
-				m_mgr.AddLastCtrlPt(CCagdPoint(pt.x, pt.y, 1.0), 1, m_currCurveIdx, true);
-			}
-			if(!m_mgr.SetKnotVector(m_currCurveIdx, crv.m_knots))
-			{
-				assert(false);
-			}
-		}
-		else
-		{
-			// fail
-		}
-		
-	}
+	parseRes = m_parser2.parse_file(m_filename);
 
 
 

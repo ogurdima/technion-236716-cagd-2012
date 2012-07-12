@@ -54,7 +54,7 @@ bool BSpline::SetKnotVector(const vector<double>& kv)
 {
 	if(2 <= kv.size())
 	{
-		for(int i=0; i<kv.size()-1; ++i)
+		for(unsigned int i=0; i<kv.size()-1; ++i)
 		{
 			if(kv[i+1] < kv[i])
 			{ return false; }
@@ -90,7 +90,7 @@ bool BSpline::InsertKnotBoehm(double val)
 {
 	int insertedIn = -1;
 	vector<double> refinedKv;
-	for(int i = 0; i < m_kv.size(); ++i)
+	for(unsigned int i = 0; i < m_kv.size(); ++i)
 	{
 		if( m_kv[i] > val && insertedIn == -1)
 		{
@@ -115,7 +115,7 @@ bool BSpline::InsertKnotBoehm(double val)
 		initialI = 0;
 	vector<WeightedPt> newCtrl;
 	int stopped = -1;
-	for (int i = 0; i <= m_ctrlPts.size(); i++)
+	for (unsigned int i = 0; i <= m_ctrlPts.size(); i++)
 	{
 		if (i < insertedIn - m_degree)
 			newCtrl.push_back(m_ctrlPts[i]);
@@ -237,7 +237,7 @@ void BSpline::NormalizeKnotValues()
 	}
 
 	double low_value = m_kv[0];
-	for(int i=0; i<m_kv.size(); ++i)
+	for(unsigned int i=0; i<m_kv.size(); ++i)
 	{
 		m_kv[i] -= low_value;
 	}
@@ -249,7 +249,7 @@ void BSpline::NormalizeKnotValues()
 	{ 
 		return; 
 	}
-	for(int i=0; i<m_kv.size(); ++i)
+	for(unsigned int i=0; i<m_kv.size(); ++i)
 	{
 		m_kv[i] /= hi_value;
 	}
@@ -337,7 +337,7 @@ void BSpline::TestBasisFunctions(int k)
 	{
 		o0 << "time,value" << std::endl;
 		double time = 0.0;
-		for(int i=0; i<basis_0.size(); ++i)
+		for(unsigned int i=0; i<basis_0.size(); ++i)
 		{
 			o0 << time << "," << 
 				basis_0[i] << "," <<
@@ -359,7 +359,7 @@ void BSpline::TestBasisFunctions(int k)
 
 string BSpline::toIrit(int id)
 {
-	int numOfPoints = m_ctrlPts.size();
+	unsigned int numOfPoints = m_ctrlPts.size();
 	if (0 == numOfPoints)
 		return string("");
 
@@ -367,12 +367,12 @@ string BSpline::toIrit(int id)
 	buf << "[OBJECT BSPLINE" << id << std::endl;
 	buf << "\t[CURVE BSPLINE " << numOfPoints << " " << m_degree + 1 << " P2" << std::endl;
 	buf << "\t\t[KV";
-	for (int i = 0; i < m_kv.size(); i++)
+	for (unsigned int i = 0; i < m_kv.size(); i++)
 	{
 		buf << " " << m_kv[i];
 	}
 	buf << "]" << std::endl;
-	for (int i = 0; i < numOfPoints; i++)
+	for (unsigned int i = 0; i < numOfPoints; i++)
 	{
 		buf << "\t\t[" << (m_ctrlPts[i].m_weight) << " " << (m_ctrlPts[i].m_pt.x) << 
 			" " << (m_ctrlPts[i].m_pt.y) << "]" << std::endl;
@@ -390,7 +390,7 @@ string BSpline::toDat(int id)
 	std::ostringstream buf = std::ostringstream();
 	buf << m_degree + 1 << std::endl;
 	buf << "knots[" << m_kv.size() << "] = " << std::endl << "\t";
-	for (int i = 0; i < m_kv.size(); i++)
+	for (unsigned int i = 0; i < m_kv.size(); i++)
 	{
 		buf <<  m_kv[i] << " ";
 		if (i > 0 && i % 5 == 0)

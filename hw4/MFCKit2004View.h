@@ -15,6 +15,7 @@
 #include "cagd.h"
 #include <string>
 #include "BezierParser.h"
+#include "SurfaceFileParser.h"
 #include "MainFrm.h"
 #include <vector>
 #include "Bezier.h"
@@ -82,7 +83,8 @@ public:
 	int m_curveIdx;
 
 	std::string m_filename;	
-	BezierParser m_parser;
+	//BezierParser m_parser;
+	SurfaceFileParser m_parser2;
 	double m_lastCurvature;
 	double m_lastTorsion;
 

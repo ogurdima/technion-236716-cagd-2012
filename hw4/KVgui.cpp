@@ -89,7 +89,7 @@ int KVgui::idxUnderCursor(int x, int y)
 	cagdPick(x, y);
 	while (UINT someId = cagdPickNext())
 	{
-		for (int i = 0; i < m_ids.size(); i++)
+		for (unsigned int i = 0; i < m_ids.size(); i++)
 		{
 			if (someId == m_ids[i])
 			{
@@ -112,7 +112,7 @@ bool KVgui::isAnchored()
 
 bool KVgui::changedSinceLastGet(double delta)
 {
-	for (int i = 0; i < m_v.size(); i++)
+	for (unsigned int i = 0; i < m_v.size(); i++)
 	{
 		if (abs(m_v[i] - m_reported[i]) > delta)
 			return true;
@@ -155,7 +155,7 @@ void KVgui::show()
 	double gPart = 255;
 	int inc =  255/(m_v.size());
 
-	for (int i = 0; i < m_v.size(); i++)
+	for (unsigned int i = 0; i < m_v.size(); i++)
 	{
 		CCagdPoint* currItem = knotToGuiItem(m_v[i]);
 		int otherKnots = countePrevKnotsNearby(i);
@@ -170,7 +170,7 @@ void KVgui::show()
 
 void KVgui::freeGui()
 {
-	for (int i = 0; i < m_ids.size(); i++)
+	for (unsigned int i = 0; i < m_ids.size(); i++)
 	{
 		cagdFreeSegment(m_ids[i]);
 	}
@@ -265,7 +265,7 @@ bool KVgui::addKnotAtPoint(CCagdPoint p)
 	if (0 == m_lineId)
 		return false;
 	double k = guiXtoknot(p.x);
-	int i = 0;
+	unsigned int i = 0;
 	for (i; i < m_v.size(); i++)
 	{
 		if (m_v[i] > k)

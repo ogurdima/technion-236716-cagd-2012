@@ -92,12 +92,12 @@ vector<WeightedPt> Bezier::Subdivide()
 	vector<WeightedPt> firstCtrl;
 	vector<WeightedPt> secondCtrl;
 	vector<WeightedPt> secondCtrlReversed;
-	for (int i = 0; i < m_ctrlPts.size(); i++)
+	for (unsigned int i = 0; i < m_ctrlPts.size(); i++)
 	{
 		firstCtrl.push_back(U::constructiveAlgorithm(m_ctrlPts, i, i, 0.5));
 		secondCtrlReversed.push_back(U::constructiveAlgorithm(m_ctrlPts, m_ctrlPts.size() - 1, i, 0.5));
 	}
-	for (int i = 0; i < secondCtrlReversed.size(); i++)
+	for (unsigned int i = 0; i < secondCtrlReversed.size(); i++)
 	{
 		secondCtrl.push_back(secondCtrlReversed[i]);
 	}

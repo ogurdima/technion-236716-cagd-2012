@@ -151,6 +151,7 @@
     <ClCompile Include="Bezier.cpp" />
     <ClCompile Include="Bspline.cpp" />
     <ClCompile Include="CurveMgr.cpp" />
+    <ClCompile Include="SurfaceFileParser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFCKit2004.rc" />
@@ -172,6 +173,7 @@
     <ClInclude Include="Bezier.h" />
     <ClInclude Include="Bspline.h" />
     <ClInclude Include="CurveMgr.h" />
+    <ClInclude Include="SurfaceFileParser.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\MFCKit2004.ico" />

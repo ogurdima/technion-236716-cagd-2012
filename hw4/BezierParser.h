@@ -5,17 +5,12 @@
 #include "CurveMgr.h"
 using std::vector;
 
-enum ParseState
-{
-	ParseStateNone,
-	ParseStateFoundNumber,
-	ParseStateKnots,
-	ParseStatePoints,
-	ParseStateDone
-};
+
 
 struct ParsedCurve
 {
+
+
 	ParsedCurve() : m_order(0), m_type(SplineTypeUnknown){} 
 	void Clear() 
 	{
@@ -32,6 +27,14 @@ struct ParsedCurve
 
 class BezierParser
 {
+	enum ParseState
+	{
+		ParseStateNone,
+		ParseStateFoundNumber,
+		ParseStateKnots,
+		ParseStatePoints,
+		ParseStateDone
+	};
 public:
 	BezierParser(void);
 	~BezierParser(void);

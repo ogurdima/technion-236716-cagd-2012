@@ -181,11 +181,11 @@ bool BezierParser::ParseLine(const std::string& line)
 			m_state = ParseStateKnots;
 
 			// upgrade the line for below
-			int last_non_whitespace = line_trim.find_last_not_of(' \t\n\r');
+			int last_non_whitespace = line_trim.find_last_not_of(" \t\n\r");
 			line_trim = line_trim.substr(equals_pos+1, last_non_whitespace);
 			if(0 >= line_trim.size())
 			{ return true; }
-			int first_non_whitespace = line_trim.find_first_not_of(' \t\n\r');
+			int first_non_whitespace = line_trim.find_first_not_of(" \t\n\r");
 			if(-1 == first_non_whitespace)
 			{ return true; }
 			line_trim = line_trim.substr(first_non_whitespace);
