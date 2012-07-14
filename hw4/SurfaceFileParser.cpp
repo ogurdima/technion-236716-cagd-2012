@@ -39,6 +39,8 @@ void SurfaceFileParser::clear()
 	m_exp_pts_u			= 0;
 	m_exp_pts_v			= 0;
 	m_valid				= false;
+
+	m_temp_surf.Clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -264,7 +266,7 @@ bool SurfaceFileParser::_parse_knots_uv(UVAxis axis)
 {
 	std::string axis_str;
 	int* m_pexp_knot_count				= NULL;
-	vector<float>* m_temp_surf_knot_vec	= NULL;
+	vector<double>* m_temp_surf_knot_vec	= NULL;
 	
 	if(UVAxisU == axis){
 		axis_str = "u";

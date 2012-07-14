@@ -90,7 +90,7 @@ void Curve::SetPoly(const vector<CCagdPoint>& pts)
 	for(int i=0; i<pts.size(); ++i)
 	{
 		WeightedPt p(pts[i], 1.0);
-		p.m_pt.z = 0;
+		//p.m_pt.z = 0;
 		m_ctrlPts.push_back(p);
 	}
 }

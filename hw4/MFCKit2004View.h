@@ -22,6 +22,8 @@
 #include "CurveMgr.h"
 #include "KVgui.h"
 
+#include "BsplineSurface.h"
+
 #ifndef PI
 #define PI (3.1415926535897932384626433832795) 
 #endif
@@ -124,6 +126,20 @@ public:
 
 
 
+	BsplineSurface m_bs;
+
+	enum Axis
+	{
+		AxisU,
+		AxisV,
+		AxisUndef
+	};
+
+	Axis m_modifiedAxis;
+
+
+
+
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMFCKit2004View)
@@ -195,6 +211,8 @@ public:
 	afx_msg void OnContextbsplinepolyAppendpoint();
 	afx_msg void OnKnotguiRemoveknot32819();
 	afx_msg void OnKnotguiInsertknotBoehm();
+	afx_msg void OnModifyknotvectorU();
+	afx_msg void OnModifyknotvectorV();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp

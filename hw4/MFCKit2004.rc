@@ -125,7 +125,6 @@ BEGIN
             MENUITEM "&Less",                       ID_FUZZINESS_LESS
         END
         MENUITEM "&Reset",                      ID_OPTIONS_RESET
-        MENUITEM "Show Grid",                   ID_OPTIONS_SHOWGRID
         MENUITEM SEPARATOR
         POPUP "&Mouse Sensitivity"
         BEGIN
@@ -153,6 +152,14 @@ BEGIN
     POPUP "&Help"
     BEGIN
         MENUITEM "&About MFCKit2004...",        ID_APP_ABOUT
+    END
+    POPUP "Surfaces"
+    BEGIN
+        POPUP "Modify Knot Vector"
+        BEGIN
+            MENUITEM "U - axis",                    ID_MODIFYKNOTVECTOR_U
+            MENUITEM "V - axis",                    ID_MODIFYKNOTVECTOR_V
+        END
     END
 END
 

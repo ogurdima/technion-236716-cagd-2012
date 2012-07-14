@@ -186,6 +186,24 @@ void BSpline::Calculate()
 	}
 }
 
+CCagdPoint BSpline::CalculateAtPoint(double t)
+{
+	if (m_degree > m_kv.size() - 1 - m_degree)
+		throw std::exception();
+	if (t < m_kv[m_degree] || t > m_kv[m_kv.size() - 1 - m_degree])
+		throw std::exception();
+
+	CCagdPoint cur(0,0,0);
+	double w = 0;
+	for (int i = 0; i < m_ctrlPts.size(); i++)
+	{
+		double basis = BSplineBasis(t, i, m_degree); 
+		cur = cur +  m_ctrlPts[i].m_pt * m_ctrlPts[i].m_weight * basis;
+		w += m_ctrlPts[i].m_weight * basis;
+	}
+	return (cur / w);
+}
+
 //=============================================================================
 // 
 //=============================================================================

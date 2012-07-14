@@ -83,6 +83,8 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_KNOTGUI_INSERTKNOT, &CMFCKit2004View::OnKnotguiInsertknot)
 	ON_COMMAND(ID_CONTEXTBSPLINEPOLY_APPENDPOINT, &CMFCKit2004View::OnContextbsplinepolyAppendpoint)
 	ON_COMMAND(ID_KNOTGUI_INSERTKNOT32820, &CMFCKit2004View::OnKnotguiInsertknotBoehm)
+	ON_COMMAND(ID_MODIFYKNOTVECTOR_U, &CMFCKit2004View::OnModifyknotvectorU)
+	ON_COMMAND(ID_MODIFYKNOTVECTOR_V, &CMFCKit2004View::OnModifyknotvectorV)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -116,6 +118,11 @@ CMFCKit2004View::CMFCKit2004View() {
 	m_bsplineDegree = 3;
 	m_modifiedCurveIdx = -1;
 
+
+
+	m_modifiedAxis = AxisUndef;
+
+
 }
 
 CMFCKit2004View::~CMFCKit2004View() {
@@ -148,7 +155,12 @@ void CMFCKit2004View::OnFileOpen()
 		Invalidate();
 		return;
 	}
-	m_kvmgr.dismiss();
+
+
+	OnOptionsReset();
+
+	m_parser2 = SurfaceFileParser();
+
 	CString pathName = fileDialog.GetPathName();
 	CString fileName = fileDialog.GetFileTitle();
 	m_filename = std::string(pathName);
@@ -157,7 +169,12 @@ void CMFCKit2004View::OnFileOpen()
 	parseRes = m_parser2.parse_file(m_filename);
 
 
-
+	if (parseRes)
+	{
+		
+		m_bs = BsplineSurface(m_parser2.m_temp_surf);
+		m_bs.Draw();
+	}
 
 
 	Invalidate();
@@ -459,6 +476,31 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 	m_lastLbuttonUp = cp[0];
 	m_lastLbuttonUp.z = 0.0;
 
+
+	//======================================================
+	// Picking for the 4th HW
+	//======================================================
+
+	
+	if(! ::GetAsyncKeyState(VK_CONTROL))
+	{ 
+		cagdPick(point.x, point.y);
+
+		UINT id = cagdPickNext();
+		if (0 != id)
+		{
+			//CCagdPoint* p_underMouse = NULL;
+			//UINT idx = cagdGetNearestVertex(id, point.x, point.y);
+			//p_underMouse = cagdGetVertex(id, idx);
+
+			// do something
+			
+		}
+	}	
+
+	//======================================================
+	// OLD BEZIER CODE
+	//======================================================
 	if(StateAddBezierPts == m_state)
 	{
 		CCagdPoint coord[2];
@@ -510,7 +552,7 @@ void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 	if (GetCapture() == this) ::ReleaseCapture();
 	RButtonDown = false;
 
-	
+	return;
 
 	if (StateIdle != m_state)
 	{
@@ -605,10 +647,13 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 			if (m_kvmgr.changedSinceLastGet(0.05))
 			{
 				vector<double> vec = m_kvmgr.getVector();
-				m_mgr.SetKnotVector(m_modifiedCurveIdx, vec);
+				if (m_modifiedAxis == AxisU)
+					m_bs.SetKnotVectorU(vec);
+				if (m_modifiedAxis == AxisV)
+					m_bs.SetKnotVectorV(vec);
 			}
 		}
-		else if (m_weightCtrlAnchor.IsValid())
+		/*else if (m_weightCtrlAnchor.IsValid())
 		{
 			m_mgr.ChangeWeight(m_weightCtrlAnchor.m_curveIdx, m_weightCtrlAnchor.m_pointIdx, point.x, point.y);
 		}
@@ -618,7 +663,7 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 			cagdToObject(point.x, point.y, pts);
 			pts[0].z = 0.0;
 			m_mgr.UpdateCtrlPtPos(m_draggedPt.m_pt, pts[0]);
-		}
+		}*/
 	}
 
 	Invalidate();					// redraw scene
@@ -765,6 +810,10 @@ void CMFCKit2004View::OnFuzzinessLess() {
 	lessFuzziness();
 }
 void CMFCKit2004View::OnOptionsReset() {
+	m_kvmgr.dismiss();
+	m_modifiedAxis = AxisUndef;
+	m_bs.invalidate();
+	cagdFreeAllSegments();
 	cagdReset();
 	Scale(20.0);
 	Invalidate();
@@ -847,9 +896,8 @@ void CMFCKit2004View::OnContextbgNewbsplinecurve()
 
 void CMFCKit2004View::OnContextbgClearall()
 {
-	m_mgr.ClearAll();
 	m_kvmgr.dismiss();
-	m_modifiedCurveIdx = -1;
+	cagdFreeAllSegments();
 	Invalidate();
 }
 
@@ -1058,4 +1106,28 @@ void CMFCKit2004View::OnKnotguiInsertknotBoehm()
 	}
 	//vector<double> kv = m_kvmgr.getVector(); // It sorts it inside
 	//m_mgr.SetKnotVector(m_modifiedCurveIdx, kv);
+}
+
+
+void CMFCKit2004View::OnModifyknotvectorU()
+{
+	return;
+	m_kvmgr.dismiss();
+	m_modifiedAxis = AxisU;
+	vector<double> kv = m_bs.KnotVectorU();
+	m_kvmgr.setDimensions(m_WindowWidth, m_WindowHeight);
+	m_kvmgr.setVector(kv);
+	m_kvmgr.show();
+}
+
+
+void CMFCKit2004View::OnModifyknotvectorV()
+{
+	return;
+	m_kvmgr.dismiss();
+	m_modifiedAxis = AxisV;
+	vector<double> kv = m_bs.KnotVectorU();
+	m_kvmgr.setDimensions(m_WindowWidth, m_WindowHeight);
+	m_kvmgr.setVector(kv);
+	m_kvmgr.show();
 }

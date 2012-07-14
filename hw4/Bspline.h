@@ -26,6 +26,8 @@ public:
 
 	virtual UINT DrawCurve();
 
+	CCagdPoint CalculateAtPoint(double t);
+
 private:
 	void NormalizeKnotValues();
 	void UpdateKnotVector();

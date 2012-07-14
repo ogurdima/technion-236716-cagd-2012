@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClCompile Include="BezierMath.cpp" />
     <ClCompile Include="BezierParser.cpp" />
+    <ClCompile Include="BsplineSurface.cpp" />
     <ClCompile Include="cagd.cpp" />
     <ClCompile Include="Curve.cpp" />
     <ClCompile Include="KVgui.cpp" />
@@ -159,6 +160,7 @@
   <ItemGroup>
     <ClInclude Include="BezierMath.h" />
     <ClInclude Include="BezierParser.h" />
+    <ClInclude Include="BsplineSurface.h" />
     <ClInclude Include="cagd.h" />
     <ClInclude Include="Curve.h" />
     <ClInclude Include="internal.h" />

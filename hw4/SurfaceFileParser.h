@@ -33,8 +33,8 @@ public:
 	// u and v knot vectors
 	struct Knots
 	{
-		vector<float> m_u;
-		vector<float> m_v;
+		vector<double> m_u;
+		vector<double> m_v;
 	} m_knots;
 
 	// control points
