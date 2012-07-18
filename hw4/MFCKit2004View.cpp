@@ -433,7 +433,12 @@ void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 	SetCapture();	// capture the mouse 'right button up' command
 	prevMouseLocation = point;
 	LButtonDown = true;
-	findCtlPoint(point.x, point.y);
+
+
+	if(! ::GetAsyncKeyState(VK_CONTROL))
+	{ 
+		m_bs.OnLButtonDown(point.x, point.y);
+	}	
 
 
 	if(m_state == StateIdle)
@@ -477,27 +482,8 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 	m_lastLbuttonUp.z = 0.0;
 
 
-	//======================================================
-	// Picking for the 4th HW
-	//======================================================
-
+	m_bs.OnLButtonUp();
 	
-	if(! ::GetAsyncKeyState(VK_CONTROL))
-	{ 
-		cagdPick(point.x, point.y);
-
-		UINT id = cagdPickNext();
-		if (0 != id)
-		{
-			//CCagdPoint* p_underMouse = NULL;
-			//UINT idx = cagdGetNearestVertex(id, point.x, point.y);
-			//p_underMouse = cagdGetVertex(id, idx);
-
-			// do something
-			
-		}
-	}	
-
 	//======================================================
 	// OLD BEZIER CODE
 	//======================================================
@@ -621,6 +607,11 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 	if (m_state != StateIdle)
 		return;
 
+	
+
+
+
+
 	if(::GetAsyncKeyState(VK_CONTROL))
 	{ 
 		// This is the movement ammount 
@@ -641,6 +632,16 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 	}
 	else
 	{
+		// dragging points of control mesh
+		CCagdPoint p1[2];
+		CCagdPoint p2[2];
+		cagdToObject(prevMouseLocation.x, prevMouseLocation.y, p1);
+		cagdToObject(point.x, point.y, p2);
+		CCagdPoint diff = p2[0] - p1[0];
+		m_bs.OnMouseMove(diff);
+
+
+
 		if (m_kvmgr.isAnchored())
 		{
 			m_kvmgr.updateLastAnchor(point.x, point.y);
@@ -653,17 +654,6 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 					m_bs.SetKnotVectorV(vec);
 			}
 		}
-		/*else if (m_weightCtrlAnchor.IsValid())
-		{
-			m_mgr.ChangeWeight(m_weightCtrlAnchor.m_curveIdx, m_weightCtrlAnchor.m_pointIdx, point.x, point.y);
-		}
-		else if(m_draggedPt.m_pt.IsValid())
-		{
-			CCagdPoint pts[2];
-			cagdToObject(point.x, point.y, pts);
-			pts[0].z = 0.0;
-			m_mgr.UpdateCtrlPtPos(m_draggedPt.m_pt, pts[0]);
-		}*/
 	}
 
 	Invalidate();					// redraw scene

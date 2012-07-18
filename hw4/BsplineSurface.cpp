@@ -10,6 +10,8 @@ BsplineSurface::BsplineSurface()
 
 BsplineSurface::BsplineSurface(ParsedSurface p)
 {
+	m_draggedPtId = 0;
+
 	m_order.m_u = p.m_order.m_u;
 	m_order.m_v = p.m_order.m_v;
 
@@ -23,11 +25,11 @@ BsplineSurface::BsplineSurface(ParsedSurface p)
 
 	
 
-	m_samplesPerCurve.m_u = 500;
-	m_samplesPerCurve.m_v = 500;
+	m_samplesPerCurve.m_u = 300;
+	m_samplesPerCurve.m_v = 300;
 
-	m_isoNum.m_u = 70;
-	m_isoNum.m_v = 70;
+	m_isoNum.m_u = 40;
+	m_isoNum.m_v = 40;
 
 	m_isValid = true;
 }
@@ -41,6 +43,10 @@ BsplineSurface& BsplineSurface::operator=(const BsplineSurface& rhs)
 	m_order = rhs.m_order;
 	m_points = rhs.m_points;
 	m_samplesPerCurve = rhs.m_samplesPerCurve;
+	m_draggedPt = rhs.m_draggedPt;
+	m_draggedPtId = rhs.m_draggedPtId;
+	m_idToIdx =	rhs.m_idToIdx;
+	m_dataIds = rhs.m_dataIds;
 	return *this;
 }
 
@@ -52,6 +58,7 @@ BsplineSurface::~BsplineSurface(void)
 
 void BsplineSurface::invalidate()
 {
+	m_draggedPtId = 0;
 	m_isValid = false;
 }
 
@@ -132,14 +139,76 @@ SamplingFreq BsplineSurface::samplesPerCurve()
 }
 
 
+
+void BsplineSurface::OnLButtonDown(int x, int y)
+{
+	cagdPick(x, y);
+	UINT id = 0;
+	m_draggedPtId = 0;
+	while (id = cagdPickNext())
+	{
+		if (! m_idToIdx.count(id))
+		{
+			continue;
+		}
+		UINT type = cagdGetSegmentType(id);
+		if (CAGD_SEGMENT_POINT == type)
+		{
+			CCagdPoint p;
+			cagdGetSegmentLocation(id, &p);
+			m_draggedPt = p;
+			m_draggedPtId = id;
+		}
+		else
+		{
+			m_draggedPtId = 0;
+		}
+	}
+}
+
+void BsplineSurface::OnMouseMove(CCagdPoint diff)
+{
+	if (! m_draggedPtId)
+		return;
+	
+	CCagdPoint n = m_draggedPt + diff;
+	cagdReusePoint(m_draggedPtId, &n);
+	cagdSetSegmentColor(m_draggedPtId, 0, 255, 0);
+	m_draggedPt = n;
+
+	MatrixIdx midx = m_idToIdx[m_draggedPtId];
+	m_points[midx.m_row][midx.m_col] = m_draggedPt;
+}
+
+void BsplineSurface::OnLButtonUp(int x, int y)
+{
+	if (! m_isValid)
+		return;
+
+	if (m_draggedPtId)
+	{
+		// User moved control points
+		for (int i = 0; i < m_dataIds.size(); i++)
+			cagdFreeSegment(m_dataIds[i]);
+		m_dataIds.clear();
+		DrawIsocurvesConstU();
+		DrawIsocurvesConstV();
+	}
+	m_draggedPtId = 0;
+}
+
+
 void BsplineSurface::Draw()
 {
 	if (! m_isValid)
 		return;
 
+	m_dataIds.clear();
+	DrawCtrlMesh();
 	DrawIsocurvesConstU();
 	DrawIsocurvesConstV();
 }
+
 
 vector<vector<CCagdPoint>> BsplineSurface::transposeMatrixVectorOfPoints(vector<vector<CCagdPoint>> original)
 {
@@ -159,13 +228,27 @@ vector<vector<CCagdPoint>> BsplineSurface::transposeMatrixVectorOfPoints(vector<
 	return res;
 }
 
+void BsplineSurface::DrawCtrlMesh()
+{
+	m_idToIdx.clear();
+	for (int i = 0; i < m_points.size(); i++)
+	{
+		for (int j = 0; j < m_points[i].size(); j++)
+		{
+			int id = cagdAddPoint(&(m_points[i][j]));
+			cagdSetSegmentColor(id, 255, 20, 20);
+			m_idToIdx.insert( std::pair<int, MatrixIdx>(id, MatrixIdx(i,j)) );
+		}
+	}
+}
+
 void BsplineSurface::DrawIsocurvesConstU()
 {
 	double lU = m_knots.m_u[m_order.m_u - 1];
 	double rU = m_knots.m_u[m_knots.m_u.size() - m_order.m_u];
 	double uInc = (rU - lU) / ( (double) (m_isoNum.m_u + 1) );
 
-	double lV = m_knots.m_v[m_order.m_v];
+	double lV = m_knots.m_v[m_order.m_v - 1];
 	double rV = m_knots.m_v[m_knots.m_v.size() - m_order.m_v];
 	double vInc = (rV - lV) / ( (double) (m_samplesPerCurve.m_v) );
 
@@ -194,11 +277,12 @@ void BsplineSurface::DrawIsocurvesConstU()
 
 		//now we have control polygon for specific u = t.
 		bsv.SetPoly(tmpctrp);
-		cagdSetSegmentColor(bsv.DrawCurve(), 200, 255, 200);
+		UINT id = bsv.DrawCurve();
+		m_dataIds.push_back(id);
+		cagdSetSegmentColor(id, 255, 255, 100);
 		tmpctrp.clear();
 	}
 }
-
 
 void BsplineSurface::DrawIsocurvesConstV()
 {
@@ -220,7 +304,7 @@ void BsplineSurface::DrawIsocurvesConstV()
 	bsu.SetKnotVector(m_knots.m_u);
 	bsu.SetSamplingStep(uInc);
 
-
+	
 
 	vector<vector<CCagdPoint>> pointsTransposed = transposeMatrixVectorOfPoints(m_points);
 
@@ -237,7 +321,9 @@ void BsplineSurface::DrawIsocurvesConstV()
 
 		//now we have control polygon for specific v = t.
 		bsu.SetPoly(tmpctrp);
-		cagdSetSegmentColor(bsu.DrawCurve(), 255, 200, 200);
+		UINT id = bsu.DrawCurve();
+		m_dataIds.push_back(id);
+		cagdSetSegmentColor(id, 100, 255, 255);
 		tmpctrp.clear();
 	}
 }

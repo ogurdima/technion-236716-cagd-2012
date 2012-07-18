@@ -2,6 +2,9 @@
 
 #include "SurfaceFileParser.h"
 #include "Bspline.h"
+#include <map>
+
+using std::map;
 
 struct Order
 {
@@ -25,6 +28,14 @@ struct SamplingFreq
 {
 	int m_u;
 	int m_v;
+};
+
+struct MatrixIdx
+{
+	MatrixIdx() : m_row(-1), m_col(-1) {}
+	MatrixIdx(int i, int j) : m_row(i), m_col(j) {}
+	int m_row;
+	int m_col;
 };
 
 class BsplineSurface
@@ -54,6 +65,13 @@ public:
 	BsplineSurface& operator=(const BsplineSurface& rhs);
 
 
+	void OnLButtonDown(int x, int y);
+
+	void OnMouseMove(CCagdPoint diff);
+
+	void OnLButtonUp(int x = 0, int y = 0);
+
+
 private:
 	//order for u and v splines
 	Order m_order;
@@ -64,6 +82,12 @@ private:
 	// control points
 	vector<vector<CCagdPoint>> m_points;
 
+	// ids of control points
+	map<int, MatrixIdx> m_idToIdx;
+
+	// ids of data points
+	vector<int> m_dataIds;
+
 	// Number of isocurves for each dimension
 	IsocurvesNumber m_isoNum;
 
@@ -72,10 +96,15 @@ private:
 
 	bool m_isValid;
 
+	CCagdPoint m_draggedPt;
+
+	int m_draggedPtId;
+
 	void fixEmptyKnots();
 	vector<vector<CCagdPoint>> transposeMatrixVectorOfPoints(vector<vector<CCagdPoint>> original);
 	void DrawIsocurvesConstU();
 	void DrawIsocurvesConstV();
+	void DrawCtrlMesh();
 
 };
 

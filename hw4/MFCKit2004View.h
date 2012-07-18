@@ -140,6 +140,7 @@ public:
 
 
 
+
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMFCKit2004View)
