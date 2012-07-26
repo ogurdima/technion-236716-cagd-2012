@@ -186,6 +186,8 @@ void BSpline::Calculate()
 	}
 }
 
+
+
 CCagdPoint BSpline::CalculateAtPoint(double t)
 {
 	if (m_degree > m_kv.size() - 1 - m_degree)
@@ -203,6 +205,71 @@ CCagdPoint BSpline::CalculateAtPoint(double t)
 	}
 	return (cur / w);
 }
+
+CCagdPoint BSpline::DerivativeAtPoint(double t, int j)
+{
+	/*CCagdPoint cur(0,0,0);
+	double w = 0;
+	for (int i = 0; i < m_ctrlPts.size(); i++)
+	{
+		CCagdPoint Q = QforDeriv(j, i, m_degree);
+		double basis = BSplineBasis(t, i+1, m_degree-j); 
+		cur = cur +  Q * m_ctrlPts[i].m_weight * basis;
+		w += m_ctrlPts[i].m_weight * basis;
+	}
+	return (cur / w);*/
+
+	CCagdPoint p0, p1;
+
+	double h = 0.01;
+
+	if (0 == j)
+	{
+		return CalculateAtPoint(t);
+	}
+
+	CCagdPoint res;
+	if(U::NearlyEq(t, 0.0, 0.001))
+	{
+		p1 = DerivativeAtPoint(t + h, j - 1);
+		p0 = DerivativeAtPoint(t, j - 1);
+		res = (p1 - p0) / h;
+	}
+	else
+	{
+		p1 = DerivativeAtPoint(t + h, j - 1);
+		p0 = DerivativeAtPoint(t - h, j - 1);
+		res = (p1 - p0) / 2*h;
+	}
+	return res;
+}
+
+CCagdPoint BSpline::QforDeriv(int j, int ptidx, int k)
+{
+	if(0 == j)
+	{
+		return m_ctrlPts[ptidx].m_pt;
+	}
+	
+	CCagdPoint Q = (k-j+1) * QforDeriv(j-1, ptidx, k);
+	if(ptidx > 0)
+	{
+		Q -= QforDeriv(j-1, ptidx-1, k);
+	}
+	Q /= (m_kv[ptidx + k - j + 1] - m_kv[ptidx]);
+
+	return Q;
+
+}
+
+Extents1D BSpline::GetExtents() const
+{
+	Extents1D ext;
+	ext.m_min = m_kv[m_degree];
+	ext.m_max = m_kv[m_kv.size() - 1 - m_degree];
+	return ext;
+}
+
 
 //=============================================================================
 // 

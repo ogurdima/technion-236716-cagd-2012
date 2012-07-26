@@ -206,13 +206,13 @@ bool CMFCKit2004View::InitializeOpenGL()
 	}
 
     // specify black as clear color
-    ::glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+    ::glClearColor( 0.75f, 0.75f, 0.75f, 0.0f );
     // specify the back of the buffer as clear depth (0 closest, 1 farmost)
     ::glClearDepth( 1.0f );
     // enable depth testing (Enable zbuffer - hidden surface removal)
     ::glEnable( GL_DEPTH_TEST );
 	// Set default black as background color.
-	::glClearColor(0.0, 0.0, 0.0, 1.0f);
+	::glClearColor(0.75, 0.75, 0.75, 1.0f);
 
 
     return TRUE;
@@ -431,7 +431,8 @@ void CMFCKit2004View::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) {
 
 void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 	SetCapture();	// capture the mouse 'right button up' command
-	prevMouseLocation = point;
+	m_prevMouseLocation = point;
+	m_mouseDownLocation = point;
 	LButtonDown = true;
 
 
@@ -529,7 +530,7 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 
 void CMFCKit2004View::OnRButtonDown(UINT nFlags, CPoint point) {
 	SetCapture();	// capture the mouse 'right button up' command
-	prevMouseLocation = point;
+	m_prevMouseLocation = point;
 	RButtonDown = true;
 
 }
@@ -615,8 +616,8 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 	if(::GetAsyncKeyState(VK_CONTROL))
 	{ 
 		// This is the movement ammount 
-		int valuex(point.x - prevMouseLocation.x);
-		int valuey(point.y - prevMouseLocation.y);	
+		int valuex(point.x - m_prevMouseLocation.x);
+		int valuey(point.y - m_prevMouseLocation.y);	
 		if (LButtonDown) // rotateXY
 			RotateXY(valuey*RSense,valuex*RSense);
 		else if (RButtonDown) // rotateZ
@@ -624,8 +625,8 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 	}
 	else if (::GetAsyncKeyState(VK_SHIFT))
 	{
-		int valuex(point.x - prevMouseLocation.x);
-		int valuey(point.y - prevMouseLocation.y);	
+		int valuex(point.x - m_prevMouseLocation.x);
+		int valuey(point.y - m_prevMouseLocation.y);	
 		if (LButtonDown)  // translateXY
 			translateXY(valuex*TSense,-valuey*TSense);
 
@@ -635,7 +636,8 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 		// dragging points of control mesh
 		CCagdPoint p1[2];
 		CCagdPoint p2[2];
-		cagdToObject(prevMouseLocation.x, prevMouseLocation.y, p1);
+		cagdToObject(m_prevMouseLocation.x, m_prevMouseLocation.y, p1);
+		//cagdToObject(m_mouseDownLocation.x, m_mouseDownLocation.y, p1);
 		cagdToObject(point.x, point.y, p2);
 		CCagdPoint diff = p2[0] - p1[0];
 		m_bs.OnMouseMove(diff);
@@ -657,15 +659,37 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 	}
 
 	Invalidate();					// redraw scene
-	prevMouseLocation = point;
+	m_prevMouseLocation = point;
 }
 
-
 BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
-	UINT state = ::GetAsyncKeyState(VK_CONTROL);
-	if(state)
+	UINT stateCtrl	= ::GetAsyncKeyState(VK_CONTROL);
+	UINT stateShift = ::GetAsyncKeyState(VK_SHIFT);
+	if(stateCtrl)
 	{
+		// u
+		DrawPt ptUV = m_bs.GetDrawPt();
+		double newU = ptUV.m_u + double(zDelta)/5000.0;
+		ptUV.m_u = newU;
+		m_bs.SetDrawPt(ptUV);
+		std::stringstream strm;
+		strm << "U updated. Eval point now (" << ptUV.m_u << "," << ptUV.m_v << ")." << std::endl;
+		::OutputDebugString((LPCSTR)strm.str().c_str());
+		m_bs.Draw();
+	}
+	else if(stateShift)
+	{
+		// v
+		DrawPt ptUV = m_bs.GetDrawPt();
+		double newV = ptUV.m_v + double(zDelta)/5000.0;
+		//newV = U::Clamp(newV, minV, maxV);
+		ptUV.m_v = newV;
+		m_bs.SetDrawPt(ptUV);	
 
+		std::stringstream strm;
+		strm << "V updated. Eval point now (" << ptUV.m_u << "," << ptUV.m_v << ")." << std::endl;
+		::OutputDebugString((LPCSTR)strm.str().c_str());
+		m_bs.Draw();
 	}
 	else
 	{
@@ -1101,23 +1125,23 @@ void CMFCKit2004View::OnKnotguiInsertknotBoehm()
 
 void CMFCKit2004View::OnModifyknotvectorU()
 {
-	return;
 	m_kvmgr.dismiss();
 	m_modifiedAxis = AxisU;
 	vector<double> kv = m_bs.KnotVectorU();
 	m_kvmgr.setDimensions(m_WindowWidth, m_WindowHeight);
 	m_kvmgr.setVector(kv);
 	m_kvmgr.show();
+	Invalidate();
 }
 
 
 void CMFCKit2004View::OnModifyknotvectorV()
 {
-	return;
 	m_kvmgr.dismiss();
 	m_modifiedAxis = AxisV;
 	vector<double> kv = m_bs.KnotVectorU();
 	m_kvmgr.setDimensions(m_WindowWidth, m_WindowHeight);
 	m_kvmgr.setVector(kv);
 	m_kvmgr.show();
+	Invalidate();
 }

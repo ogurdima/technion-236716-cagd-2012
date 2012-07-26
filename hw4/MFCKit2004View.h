@@ -62,7 +62,8 @@ public:
 	int m_WindowWidth;			// hold the windows width
 	int m_WindowHeight;			// hold the windows height
 	double m_AspectRatio;		// hold the fixed Aspect Ration
-	CPoint prevMouseLocation;	// last position of the mouse
+	CPoint m_prevMouseLocation;	// last position of the mouse
+	CPoint m_mouseDownLocation; // where user clicked
 	double modelView[16];		// the modelview Matrix
 	bool LButtonDown, RButtonDown;
 	bool CtrlKeyDown; // not needed?

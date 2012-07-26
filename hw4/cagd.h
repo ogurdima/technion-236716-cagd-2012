@@ -127,12 +127,16 @@ CCagdPoint operator+(const CCagdPoint& p1, const CCagdPoint& p2);
 CCagdPoint& operator+=(CCagdPoint& p1, const CCagdPoint& p2);
 // sub -(vector, vector)
 CCagdPoint operator-(const CCagdPoint& p1, const CCagdPoint& p2);
+// sub -=(vector, vector)
+CCagdPoint& operator-=(CCagdPoint& p1, const CCagdPoint& p2);
 // mult *(vector, scalar)
 CCagdPoint operator*(const CCagdPoint& p1, double scalar);
 // mult *(scalar, vector)
 CCagdPoint operator*(double scalar, const CCagdPoint& p1);
 // div /(vector, scalar)
 CCagdPoint operator/(const CCagdPoint& p1, double scalar);
+// div /=(vector, scalar)
+CCagdPoint operator/=(CCagdPoint& p1, double scalar);
 // dot (vector, vector);
 double dot(const CCagdPoint& p1, const CCagdPoint& p2);
 // cross (vector, vector);

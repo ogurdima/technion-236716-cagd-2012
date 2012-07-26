@@ -41,6 +41,9 @@ vector<WeightedPt> translateFirstPointTo(vector<WeightedPt> orig, CCagdPoint des
 vector<CCagdPoint> translateLastPointTo(vector<CCagdPoint> orig, CCagdPoint dest);
 vector<WeightedPt> translateLastPointTo(vector<WeightedPt> orig, CCagdPoint dest);
 
+
+double Clamp(double val, double min, double max);
+
 }
 
 

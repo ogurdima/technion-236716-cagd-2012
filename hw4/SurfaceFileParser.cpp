@@ -330,37 +330,6 @@ bool SurfaceFileParser::_parse_knots_uv(UVAxis axis)
 	}
 
 	// now loop until we've found enough knots
-	//bool done = false;
-	//while(!done)
-	//{
-	//	std::stringstream sstrm(knots_line);
-	//	while(!sstrm.eof() && !done)
-	//	{
-	//		double knot_val;
-	//		bool success = sstrm >> knot_val;
-	//		if(!success)
-	//		{
-	//			::OutputDebugString(std::string(std::string("Parse error at ") + sstrm.str()).c_str());
-	//			return false;
-	//		}
-
-	//		m_temp_surf_knot_vec->push_back(knot_val);
-	//		if(*m_pexp_knot_count == m_temp_surf_knot_vec->size())
-	//		{
-	//			done = true;
-	//		}
-	//	}
-	//	++m_current_line;
-	//	if(!done)
-	//	{
-	//		if(m_lines.size() <= m_current_line)
-	//		{ return false; } 
-	//		knots_line = m_lines[m_current_line];
-	//	}
-	//}
-
-
-	// now loop until we've found enough knots
 	int total_knots_exp = *m_pexp_knot_count;
 	int curr_knots = 0;
 

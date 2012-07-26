@@ -118,7 +118,6 @@ bool U::IsFloat(const std::string& str)
 }
 
 //-----------------------------------------------------------------------------
-
 double U::DistanceFromPointToLine(CCagdPoint p, CCagdPoint p1, CCagdPoint p2)
 {
 	CCagdPoint v1 = p - p1;
@@ -127,6 +126,7 @@ double U::DistanceFromPointToLine(CCagdPoint p, CCagdPoint p1, CCagdPoint p2)
 	return length(cross(v1, v2))/length(vLine);
 }
 
+//-----------------------------------------------------------------------------
 WeightedPt U::convexCombination(WeightedPt p1, WeightedPt p2, double t)
 {
 	double newW = (p1.m_weight * (1-t)) + (t * p2.m_weight);
@@ -134,11 +134,13 @@ WeightedPt U::convexCombination(WeightedPt p1, WeightedPt p2, double t)
 		newW); //weight w
 }
 
+//-----------------------------------------------------------------------------
 CCagdPoint U::convexCombination(CCagdPoint p1, CCagdPoint p2, double t)
 {
 	return (p1 * (1-t)) + (p2 * t);
 }
 
+//-----------------------------------------------------------------------------
 WeightedPt U::constructiveAlgorithm(vector<WeightedPt> pts, int subIdx, int superIdx, double t)
 {
 	if (superIdx < 0 || superIdx >= pts.size() || subIdx >= pts.size() || subIdx < 0)
@@ -153,7 +155,7 @@ WeightedPt U::constructiveAlgorithm(vector<WeightedPt> pts, int subIdx, int supe
 	return pts[subIdx];
 }
 
-
+//-----------------------------------------------------------------------------
 vector<WeightedPt> U::rotatePolyRoundFirstPt(vector<WeightedPt> orig, CCagdPoint direction)
 {
 	vector<CCagdPoint> pts;
@@ -169,6 +171,7 @@ vector<WeightedPt> U::rotatePolyRoundFirstPt(vector<WeightedPt> orig, CCagdPoint
 	return orig;
 }
 
+//-----------------------------------------------------------------------------
 vector<CCagdPoint> U::rotatePolyRoundFirstPt(vector<CCagdPoint> orig, CCagdPoint direction)
 {
 	if (2 > orig.size() || direction == CCagdPoint(0,0,0))
@@ -207,6 +210,7 @@ vector<CCagdPoint> U::rotatePolyRoundFirstPt(vector<CCagdPoint> orig, CCagdPoint
 	return orig;
 }
 
+//-----------------------------------------------------------------------------
 vector<WeightedPt> U::rotatePolyRoundLastPt(vector<WeightedPt> orig, CCagdPoint direction)
 {
 	vector<CCagdPoint> pts;
@@ -222,6 +226,7 @@ vector<WeightedPt> U::rotatePolyRoundLastPt(vector<WeightedPt> orig, CCagdPoint 
 	return orig;
 }
 
+//-----------------------------------------------------------------------------
 vector<CCagdPoint> U::rotatePolyRoundLastPt(vector<CCagdPoint> orig, CCagdPoint direction)
 {
 	if (2 > orig.size() || direction == CCagdPoint(0,0,0))
@@ -271,6 +276,7 @@ vector<CCagdPoint> U::rotatePolyRoundLastPt(vector<CCagdPoint> orig, CCagdPoint 
 	return orig;
 }
 
+//-----------------------------------------------------------------------------
 vector<CCagdPoint> U::scalePoly(vector<CCagdPoint> orig, double factor)
 {
 	//=============================================================================
@@ -283,6 +289,7 @@ vector<CCagdPoint> U::scalePoly(vector<CCagdPoint> orig, double factor)
 	return orig;
 }
 
+//-----------------------------------------------------------------------------
 vector<WeightedPt> U::scalePoly(vector<WeightedPt> orig, double factor)
 {
 	vector<CCagdPoint> pts;
@@ -299,6 +306,7 @@ vector<WeightedPt> U::scalePoly(vector<WeightedPt> orig, double factor)
 	return orig;
 }
 
+//-----------------------------------------------------------------------------
 vector<CCagdPoint> U::translateFirstPointTo(vector<CCagdPoint> orig, CCagdPoint dest)
 {
 	if (orig.size() == 0)
@@ -311,7 +319,7 @@ vector<CCagdPoint> U::translateFirstPointTo(vector<CCagdPoint> orig, CCagdPoint 
 	return orig;
 }
 
-
+//-----------------------------------------------------------------------------
 vector<CCagdPoint> U::translateLastPointTo(vector<CCagdPoint> orig, CCagdPoint dest)
 {
 	if (orig.size() == 0)
@@ -324,7 +332,7 @@ vector<CCagdPoint> U::translateLastPointTo(vector<CCagdPoint> orig, CCagdPoint d
 	return orig;
 }
 
-
+//-----------------------------------------------------------------------------
 vector<WeightedPt> U::translateFirstPointTo(vector<WeightedPt> orig, CCagdPoint dest)
 {
 	if (orig.size() == 0)
@@ -337,6 +345,7 @@ vector<WeightedPt> U::translateFirstPointTo(vector<WeightedPt> orig, CCagdPoint 
 	return orig;
 }
 
+//-----------------------------------------------------------------------------
 vector<WeightedPt> U::translateLastPointTo(vector<WeightedPt> orig, CCagdPoint dest)
 {
 	if (orig.size() == 0)
@@ -349,3 +358,8 @@ vector<WeightedPt> U::translateLastPointTo(vector<WeightedPt> orig, CCagdPoint d
 	return orig;
 }
 
+//-----------------------------------------------------------------------------
+double U::Clamp(double val, double min, double max)
+{
+	return min(max(val, min), max);
+}

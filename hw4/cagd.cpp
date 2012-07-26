@@ -378,6 +378,14 @@ CCagdPoint operator-(const CCagdPoint& p1, const CCagdPoint& p2)
 	return CCagdPoint(p1.x-p2.x, p1.y-p2.y, p1.z-p2.z);
 }
 //-----------------------------------------------------------------------------
+CCagdPoint& operator-=(CCagdPoint& p1, const CCagdPoint& p2)
+{
+	p1.x -= p2.x;
+	p1.y -= p2.y;
+	p1.z -= p2.z;
+	return p1;
+}
+//-----------------------------------------------------------------------------
 CCagdPoint operator*(const CCagdPoint& p1, double scalar)
 {
 	return CCagdPoint(p1.x*scalar, p1.y*scalar, p1.z*scalar);
@@ -391,6 +399,11 @@ CCagdPoint operator*(double scalar, const CCagdPoint& p1)
 CCagdPoint operator/(const CCagdPoint& p1, double scalar)
 {
 	return (p1*(1.0/scalar));
+}
+//-----------------------------------------------------------------------------
+CCagdPoint operator/=(CCagdPoint& p1, double scalar)
+{
+	return p1/scalar;
 }
 //-----------------------------------------------------------------------------
 double dot(const CCagdPoint& p1, const CCagdPoint& p2)

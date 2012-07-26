@@ -1,6 +1,12 @@
 #pragma once
 #include "Curve.h"
 
+struct Extents1D
+{
+	double m_min;
+	double m_max;
+};
+
 class BSpline : public Curve
 {
 public:
@@ -27,6 +33,11 @@ public:
 	virtual UINT DrawCurve();
 
 	CCagdPoint CalculateAtPoint(double t);
+	CCagdPoint DerivativeAtPoint(double t, int j);
+	CCagdPoint QforDeriv(int i, int ptidx, int k);
+
+	Extents1D GetExtents() const;
+
 
 private:
 	void NormalizeKnotValues();
