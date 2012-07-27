@@ -11,6 +11,7 @@
 #include "gl/gl.h"
 #include "gl/glu.h"
 #include "KVgui.h"
+#include "NewSurfaceDlg.h"
 #include <string>
 #include <fstream>
 
@@ -85,6 +86,7 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_KNOTGUI_INSERTKNOT32820, &CMFCKit2004View::OnKnotguiInsertknotBoehm)
 	ON_COMMAND(ID_MODIFYKNOTVECTOR_U, &CMFCKit2004View::OnModifyknotvectorU)
 	ON_COMMAND(ID_MODIFYKNOTVECTOR_V, &CMFCKit2004View::OnModifyknotvectorV)
+	ON_COMMAND(ID_CONTEXTBG_NEWSURFACE, &CMFCKit2004View::OnContextbgNewsurface)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -539,59 +541,20 @@ void CMFCKit2004View::OnRButtonUp(UINT nFlags, CPoint point) {
 	if (GetCapture() == this) ::ReleaseCapture();
 	RButtonDown = false;
 
-	return;
-
 	if (StateIdle != m_state)
 	{
 		m_state = StateIdle;
 		return;
 	}
+
 	// this code pops up the menu called "IDR_POPUPMENU" on the screen at coordinate "point"
 	CCagdPoint cp[2];
 	cagdToObject(point.x, point.y, cp);
-
 	m_lastRbuttonUp = cp[0];
 	m_lastRbuttonUp.z = 0.0;
+
 	CMenu popupMenu;
-
-	if (m_kvmgr.isUnderCursor(point.x, point.y))
-	{
-		popupMenu.LoadMenu(IDR_MENU4);
-	}
-	else
-	{
-		PtContext cxt = m_mgr.getPtContext(m_lastRbuttonUp);
-		switch (cxt)
-		{
-		case ContextEmpty:
-			popupMenu.LoadMenu(IDR_POPUPMENU);
-			break;
-
-		case ContextBezierPoly:
-			popupMenu.LoadMenu(IDR_MENU1);
-			break;
-
-		case ContextBsplinePoly:
-			popupMenu.LoadMenu(IDR_MENU3);
-			break;
-
-		case ContextBezierPt:
-			popupMenu.LoadMenu(IDR_MENU2);
-			break;
-		case ContextBsplinePt:
-			popupMenu.LoadMenu(IDR_MENU2);
-			break;
-		default:
-			popupMenu.LoadMenu(IDR_POPUPMENU);
-		}
-	}
-
-	m_draggedPt.m_pt = m_mgr.PickControlPoint(point.x, point.y);
-	if(m_draggedPt.m_pt.IsValid())
-	{
-		CCagdPoint(point.x, point.y);
-	}
-	
+	popupMenu.LoadMenu(IDR_POPUPMENU);	
 
 	CMenu* subMenu = popupMenu.GetSubMenu(0);
 	ClientToScreen(&point);
@@ -1144,4 +1107,46 @@ void CMFCKit2004View::OnModifyknotvectorV()
 	m_kvmgr.setVector(kv);
 	m_kvmgr.show();
 	Invalidate();
+}
+
+
+void CMFCKit2004View::OnContextbgNewsurface()
+{
+	CNewSurfaceDlg newSurfDlg;
+	newSurfDlg.SaveValues();
+	if(IDOK == newSurfDlg.DoModal())
+	{
+		ParsedSurface psurf;
+		// set the order
+		psurf.m_order.m_u = newSurfDlg.m_orderU;
+		psurf.m_order.m_v = newSurfDlg.m_orderV;
+		// add points
+		vector<CCagdPoint> newArr;
+		for(int v=0; v<newSurfDlg.m_ctrlPtCountV; ++v)
+		{
+			psurf.m_points.push_back(newArr);
+			for(int u=0; u<newSurfDlg.m_ctrlPtCountU; ++u)			
+			{
+				CCagdPoint newPt(double(u)*(1.0/double(newSurfDlg.m_ctrlPtCountU-1)),
+					double(v)*(1.0/double(newSurfDlg.m_ctrlPtCountV-1)),
+					0.0);
+				psurf.m_points[v].push_back(newPt);
+			}
+			
+		}
+
+		// create the knot vector (parse)
+		//psurf.m_knots.m_u;
+		//psurf.m_knots.m_v;
+		
+		m_bs = BsplineSurface(psurf);		
+
+		m_bs.Draw();
+		Invalidate();
+	}
+	else
+	{
+		newSurfDlg.RestoreSavedValues();
+	}
+
 }

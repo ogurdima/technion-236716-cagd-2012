@@ -21,7 +21,7 @@
 #include "Bezier.h"
 #include "CurveMgr.h"
 #include "KVgui.h"
-
+#include "NewSurfaceDlg.h"
 #include "BsplineSurface.h"
 
 #ifndef PI
@@ -141,7 +141,6 @@ public:
 
 
 
-
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMFCKit2004View)
@@ -215,6 +214,7 @@ public:
 	afx_msg void OnKnotguiInsertknotBoehm();
 	afx_msg void OnModifyknotvectorU();
 	afx_msg void OnModifyknotvectorV();
+	afx_msg void OnContextbgNewsurface();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp

@@ -167,9 +167,7 @@ IDR_POPUPMENU MENU
 BEGIN
     POPUP "ContextBG"
     BEGIN
-        MENUITEM "New Bezier Curve",            ID_CONTEXTBG_NEWBEZIERCURVE
-        MENUITEM "New BSpline Curve",           ID_CONTEXTBG_NEWBSPLINECURVE
-        MENUITEM "Clear All",                   ID_CONTEXTBG_CLEARALL
+        MENUITEM "New Surface",                 ID_CONTEXTBG_NEWSURFACE
     END
 END
 
@@ -460,6 +458,62 @@ BEGIN
 END
 
 #endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Hebrew (Israel) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_HEB)
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+#pragma code_page(1255)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_NEWSURFACEDLG DIALOGEX 0, 0, 326, 202
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,209,181,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,269,181,50,14
+    LTEXT           "Number of Control Points:",IDC_STATIC,17,22,84,8
+    EDITTEXT        IDC_SURFDLG_CTRLPTS_U,109,20,31,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SURFDLG_CTRLPTS_V,149,20,31,14,ES_AUTOHSCROLL
+    LTEXT           "BSpline Surface Order:",IDC_STATIC,17,41,74,8
+    EDITTEXT        IDC_SURFDLG_ORDER_U,110,39,31,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SURFDLG_ORDER_V,150,39,31,14,ES_AUTOHSCROLL
+    LTEXT           "Knot vector U:",IDC_STATIC,17,59,48,8
+    EDITTEXT        IDC_SURFDLG_KVTXTV,14,122,290,38,ES_AUTOHSCROLL
+    PUSHBUTTON      "Import Knots",IDC_SURFDLG_IMPORT_KNOTS,15,163,53,16,BS_MULTILINE
+    PUSHBUTTON      "Import All\r\nSurface Data",IDC_SURFDLG_IMPORT_SURFACE2,255,28,59,23,BS_MULTILINE
+    LTEXT           "Knot vector V:",IDC_STATIC,17,110,47,8
+    EDITTEXT        IDC_SURFDLG_KVTXTU,14,68,290,38,ES_AUTOHSCROLL
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_NEWSURFACEDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 319
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 195
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Hebrew (Israel) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

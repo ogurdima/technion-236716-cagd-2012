@@ -17,7 +17,7 @@ BsplineSurface::BsplineSurface(ParsedSurface p)
 	m_order.m_u = p.m_order.m_u;
 	m_order.m_v = p.m_order.m_v;
 
-	m_points = p.m_points;
+	SetPoints(p.m_points);
 
 	// Important: copy order and points before knots, because fixEmptyKnots() uses them
 	SetKnotVectorU(p.m_knots.m_u);
@@ -37,7 +37,7 @@ BsplineSurface::BsplineSurface(ParsedSurface p)
 	m_isoNum.m_u = 40;
 	m_isoNum.m_v = 40;
 
-	DrawPt pt(0,0);
+	DrawPt pt(0.5,0.5);
 	SetDrawPt(pt);
 
 	m_isValid = true;
@@ -64,6 +64,13 @@ BsplineSurface& BsplineSurface::operator=(const BsplineSurface& rhs)
 	return *this;
 }
 
+//-----------------------------------------------------------------------------
+void BsplineSurface::SetPoints(const vector<vector<CCagdPoint>>& pts)
+{
+	m_points = pts;
+}
+
+//-----------------------------------------------------------------------------
 const Extents2D& BsplineSurface::GetExtentsUV() const
 {
 	return m_extentsUV;
@@ -775,13 +782,17 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 
 	double uk1 = (M - k1*F) / k1Denom;
 	double vk1 = (L - k1*E) / k1Denom;
-	CCagdPoint p3 = m_point + (normalize(m_tangentV) * uk1) + (normalize(cross(m_tangentV, m_normal)) * vk1);
+	double uk1n = uk1 / sqrt(uk1*uk1 + vk1*vk1);
+	double vk1n = vk1 / sqrt(uk1*uk1 + vk1*vk1);
+	CCagdPoint p3 = m_point + (normalize(m_tangentU) * uk1n) + (normalize(m_tangentV) * vk1n);
 	CCagdPoint direction1 = p3 - m_point;
 
 
 	double uk2 = (M - k2*F) / k2Denom;
 	double vk2 = (L - k2*E) / k2Denom;
-	p3 = m_point + (normalize(m_tangentU) * uk2) + (normalize(cross(m_tangentU, m_normal)) * vk2);
+	double uk2n = uk2 / sqrt(uk2*uk2 + vk2*vk2);
+	double vk2n = vk2 / sqrt(uk2*uk2 + vk2*vk2);
+	p3 = m_point + (normalize(m_tangentU) * uk2n) + (normalize(m_tangentV) * vk2n);
 	CCagdPoint direction2 = p3 - m_point;
 
 	CCagdPoint vec[2];

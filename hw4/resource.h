@@ -3,6 +3,7 @@
 // Used by MFCKit2004.rc
 //
 #define IDD_ABOUTBOX                    100
+#define IDD_NEWSURFACEDLG               103
 #define IDR_MAINFRAME                   128
 #define IDR_MFCKITTYPE                  129
 #define IDR_POPUPMENU                   131
@@ -42,14 +43,23 @@
 #define IDC_X_DEGREE                    1007
 #define IDC_EDIT2                       1008
 #define IDC_Z_T                         1008
+#define IDC_SURFDLG_KVTXT               1008
+#define IDC_SURFDLG_KVTXTV              1008
 #define IDC_Y_T                         1009
 #define IDC_X_SAMPLING_STEP             1009
+#define IDC_SURFDLG_KVTXTU              1009
 #define IDC_MIN_T                       1010
 #define IDC_MAX_T                       1011
+#define IDC_SURFDLG_CTRLPTS_U           1011
 #define IDC_T_STEP                      1012
+#define IDC_SURFDLG_CTRLPTS_V           1012
 #define IDC_OFFSET_D                    1013
+#define IDC_SURFDLG_ORDER_U             1013
 #define IDC_OFFSET_D2                   1014
 #define IDC_ANIM_SPEED                  1014
+#define IDC_SURFDLG_ORDER_V             1014
+#define IDC_SURFDLG_IMPORT_KNOTS        1015
+#define IDC_SURFDLG_IMPORT_SURFACE2     1016
 #define ID_POPUP_CLOSE                  32776
 #define ID_STUFF_2                      32777
 #define ID_STUFF_3                      32778
@@ -90,6 +100,7 @@
 #define ID_SURFACES_MODIFYKNOTVECTOR    32821
 #define ID_MODIFYKNOTVECTOR_U           32822
 #define ID_MODIFYKNOTVECTOR_V           32823
+#define ID_CONTEXTBG_NEWSURFACE         32824
 #define ID_INDICATOR_CURVATURE          61205
 #define ID_INDICATOR_TORSION            61206
 
@@ -99,8 +110,8 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        168
-#define _APS_NEXT_COMMAND_VALUE         32824
-#define _APS_NEXT_CONTROL_VALUE         1011
-#define _APS_NEXT_SYMED_VALUE           101
+#define _APS_NEXT_COMMAND_VALUE         32825
+#define _APS_NEXT_CONTROL_VALUE         1016
+#define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

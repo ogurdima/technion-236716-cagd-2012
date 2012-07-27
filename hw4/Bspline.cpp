@@ -221,7 +221,7 @@ CCagdPoint BSpline::DerivativeAtPoint(double t, int j)
 
 	CCagdPoint p0, p1;
 
-	double h = 0.01;
+	double h = 0.1;
 
 	if (0 == j)
 	{

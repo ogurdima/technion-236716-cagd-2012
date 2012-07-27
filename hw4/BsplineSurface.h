@@ -62,6 +62,8 @@ public:
 
 	void invalidate();
 
+	void SetPoints(const vector<vector<CCagdPoint>>& pts);
+
 	void SetKnotVectorU(vector<double> kv);
 	void SetKnotVectorV(vector<double> kv);
 	

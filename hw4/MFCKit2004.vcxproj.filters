@@ -52,6 +52,9 @@
     <ClCompile Include="BsplineSurface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="NewSurfaceDlg.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bezier.h">
@@ -106,6 +109,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BsplineSurface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NewSurfaceDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
