@@ -564,43 +564,48 @@ void BsplineSurface::DrawIsocurves(UVAxis axis)
 	if (0 == incOuter || 0 == incInner)
 		return;
 
-	// now do the evaluation
-	for (double t = lOuter; t <= rOuter; t += incOuter)
+// now do the evaluation
+	double t = lOuter;
+	for (int i = 0; i < 2; i++)
 	{
-		vector<CCagdPoint> tmpctrp;
-		CCagdPoint coeff;
-		for (int i = 0; i < ctrlPtsToUse.size(); i++)
+		for (; t <= rOuter; t += incOuter)
 		{
-			bsOuter.SetPoly(ctrlPtsToUse[i]);
-			coeff = bsOuter.CalculateAtPoint(t);			
-			tmpctrp.push_back(coeff);
-		}
-
-		//now we have control polygon for specific u = t.
-		bsInner.SetPoly(tmpctrp);
-		UINT id = bsInner.DrawCurve();
-
-		vector<double> idToInnerArg = bsInner.GetIdxToArg();
-		vector<CCagdPoint> dataInner = bsInner.DataPoints();
-		for (int i = 0; i < idToInnerArg.size(); i++)
-		{
-			UVspace dest = (axis == UVAxisU) ? UVspace(t, idToInnerArg[i]) : UVspace(idToInnerArg[i], t);
-			m_3dToUV.insert(std::pair<CCagdPoint, UVspace>(dataInner[i], dest) );
-		}
-
-		if(0 != id)
-		{
-			m_dataIds.push_back(id);
-			if(axis == UVAxisU)
+			vector<CCagdPoint> tmpctrp;
+			CCagdPoint coeff;
+			for (int i = 0; i < ctrlPtsToUse.size(); i++)
 			{
-				cagdSetSegmentColor(id, 255, 255, 0);
+				bsOuter.SetPoly(ctrlPtsToUse[i]);
+				coeff = bsOuter.CalculateAtPoint(t);			
+				tmpctrp.push_back(coeff);
 			}
-			else
+
+			//now we have control polygon for specific u = t.
+			bsInner.SetPoly(tmpctrp);
+			UINT id = bsInner.DrawCurve();
+
+			vector<double> idToInnerArg = bsInner.GetIdxToArg();
+			vector<CCagdPoint> dataInner = bsInner.DataPoints();
+			for (int i = 0; i < idToInnerArg.size(); i++)
 			{
-				cagdSetSegmentColor(id, 0, 255, 255);
+				UVspace dest = (axis == UVAxisU) ? UVspace(t, idToInnerArg[i]) : UVspace(idToInnerArg[i], t);
+				m_3dToUV.insert(std::pair<CCagdPoint, UVspace>(dataInner[i], dest) );
 			}
-		}		
-		tmpctrp.clear();
+
+			if(0 != id)
+			{
+				m_dataIds.push_back(id);
+				if(axis == UVAxisU)
+				{
+					cagdSetSegmentColor(id, 255, 255, 0);
+				}
+				else
+				{
+					cagdSetSegmentColor(id, 0, 255, 255);
+				}
+			}		
+			tmpctrp.clear();
+		}
+		t = rOuter - incOuter/20.0;
 	}
 
 }
@@ -924,7 +929,9 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 		vec[1] = 0.5*normalize(direction1) + m_point;
 		double k1Rad = 1.0 / k1;
 		CCagdPoint k1Ctr = m_point + k1Rad*normalize(m_normal);
-		m_idDir1 = DrawCircle(k1Ctr, normalize(m_normal), direction2, k1Rad);
+		
+		cagdAddPoint(&k1Ctr);
+		m_idDir1 = DrawCircle(k1Ctr, normalize(m_normal), cross(m_normal, normalize(direction1)), k1Rad);
 		cagdSetSegmentColor(m_idDir1, 1,1,1);
 	}
 
@@ -937,7 +944,7 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 		vec[1] = 0.5*normalize(direction2) + m_point;
 		double k2Rad = 1.0 / k2;
 		CCagdPoint k2Ctr = m_point + k2Rad*normalize(m_normal);
-		m_idDir2 = DrawCircle(k2Ctr, normalize(m_normal), direction1, k2Rad);
+		m_idDir2 = DrawCircle(k2Ctr, normalize(m_normal), cross(m_normal, direction2), k2Rad);
 		cagdSetSegmentColor(m_idDir2, 255,50,255);	
 	}
 
@@ -951,13 +958,44 @@ CCagdPoint BsplineSurface::GetPrincipalDir(double E, double F, double L, double 
 	}
 
 	double kDenom = sqrt( (M-k*F)*(M-k*F) + (L - k*E)*(L - k*E) );
-	if(U::NearlyEq(kDenom, 0))
+
+	double uk = 0.0;
+	double vk = 0.0;
+	if(kDenom != 0)
 	{
-		return CCagdPoint(0,0,0);
+		uk = (M - k*F) / kDenom;
+		vk = -(L - k*E) / kDenom;
+	}
+	else
+	{
+		//if(U::NearlyEq((M - k*F), 0.0, 0.00000001))
+		//{
+		//	uk = 0.0;
+		//}	
+		//else if(U::NearlyEq((M - k*F), kDenom, 0.00000001))
+		//{
+		//	uk = 1.0;
+		//}
+		//else
+		//{
+		//	return CCagdPoint(0,0,0);
+		//}
+
+		//if(U::NearlyEq(-(L - k*E), 0.0))
+		//{
+		//	vk = 0.0;
+		//}	
+		//else if(U::NearlyEq(-(L - k*E), kDenom, 0.00000001))
+		//{
+		//	vk = 1.0;
+		//}
+		//else
+		//{
+		//	return CCagdPoint(0,0,0);
+		//}
 	}
 
-	double uk = (M - k*F) / kDenom;
-	double vk = -(L - k*E) / kDenom;
+
 	double normVal = sqrt(uk*uk + vk*vk);
 	if(U::NearlyEq(normVal, 0))
 	{

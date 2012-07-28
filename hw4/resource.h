@@ -68,7 +68,6 @@
 #define IDC_SURF_GLOBALS_ISOS_U2        1021
 #define IDC_SURF_GLOBALS_ISOS_V         1021
 #define IDC_GLOBALS_KNOTSU              1022
-#define IDC_GLOBALS_KNOTSU2             1023
 #define IDC_GLOBALS_KNOTSV              1023
 #define ID_POPUP_CLOSE                  32776
 #define ID_STUFF_2                      32777
@@ -112,6 +111,8 @@
 #define ID_MODIFYKNOTVECTOR_V           32823
 #define ID_CONTEXTBG_NEWSURFACE         32824
 #define ID_SURFACES_GLOBALS             32825
+#define ID_SURFACES_STARTANIMATION      32826
+#define ID_SURFACES_STOPANIMATION       32827
 #define ID_INDICATOR_CURVATURE          61205
 #define ID_INDICATOR_TORSION            61206
 
@@ -121,7 +122,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        169
-#define _APS_NEXT_COMMAND_VALUE         32826
+#define _APS_NEXT_COMMAND_VALUE         32828
 #define _APS_NEXT_CONTROL_VALUE         1023
 #define _APS_NEXT_SYMED_VALUE           104
 #endif

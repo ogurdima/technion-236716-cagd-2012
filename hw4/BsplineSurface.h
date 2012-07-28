@@ -124,6 +124,10 @@ public:
 
 	void OnLButtonUp(int x = 0, int y = 0);
 
+	UVspace m_animStart;
+	UVspace m_animEnd;
+
+
 private:
 	//order for u and v splines
 	Order m_order;
@@ -155,8 +159,6 @@ private:
 	CCagdPoint m_draggedPt;
 	int m_draggedPtId;
 
-	UVspace m_animStart;
-	UVspace m_animEnd;
 	bool m_setAnimStart;
 
 	void fixEmptyKnotsU();

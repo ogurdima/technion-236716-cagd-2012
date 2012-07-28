@@ -20,7 +20,6 @@
 #include <vector>
 #include "Bezier.h"
 #include "CurveMgr.h"
-#include "KVgui.h"
 #include "NewSurfaceDlg.h"
 #include "GlobalsDlg.h"
 #include "BsplineSurface.h"
@@ -115,8 +114,6 @@ public:
 	};
 	ProgramState m_state;
 
-	CurveMgr m_mgr;
-	KVgui m_kvmgr;
 	int m_currCurveIdx;
 	CCagdPoint m_lastRbuttonUp;
 	CCagdPoint m_lastLbuttonUp;
@@ -138,7 +135,13 @@ public:
 	};
 
 	Axis m_modifiedAxis;
-
+	bool m_animStarted;
+	int m_animSteps;
+	int m_animCurrStep;
+	int m_animSpeed;
+	
+	void StartAnimation();
+	void StopAnimation();
 
 	// globals dialog
 	CGlobalsDlg m_globalsDlg;
@@ -219,6 +222,8 @@ public:
 	afx_msg void OnModifyknotvectorV();
 	afx_msg void OnContextbgNewsurface();
 	afx_msg void OnSurfacesGlobals();
+	afx_msg void OnSurfacesStartAnimation();
+	afx_msg void OnSurfacesStopAnimation();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp

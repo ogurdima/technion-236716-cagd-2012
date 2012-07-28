@@ -10,7 +10,6 @@
 #include "propdlg.h"
 #include "gl/gl.h"
 #include "gl/glu.h"
-#include "KVgui.h"
 #include "NewSurfaceDlg.h"
 
 #include <string>
@@ -89,6 +88,8 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_MODIFYKNOTVECTOR_V, &CMFCKit2004View::OnModifyknotvectorV)
 	ON_COMMAND(ID_CONTEXTBG_NEWSURFACE, &CMFCKit2004View::OnContextbgNewsurface)
 	ON_COMMAND(ID_SURFACES_GLOBALS, &CMFCKit2004View::OnSurfacesGlobals)
+	ON_COMMAND(ID_SURFACES_STARTANIMATION, &CMFCKit2004View::OnSurfacesStartAnimation)
+	ON_COMMAND(ID_SURFACES_STOPANIMATION, &CMFCKit2004View::OnSurfacesStopAnimation)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -125,7 +126,10 @@ CMFCKit2004View::CMFCKit2004View() {
 
 
 	m_modifiedAxis = AxisUndef;
-
+	m_animStarted = false;
+	m_animSteps = 50;
+	m_animCurrStep = 0;
+	m_animSpeed = 50;
 
 }
 
@@ -421,14 +425,22 @@ BOOL CMFCKit2004View::OnEraseBkgnd(CDC* pDC)
 }
 
 void CMFCKit2004View::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) {
+	
 	if (nChar == 61) //+
 	{
-		Scale(2.0);
+		StopAnimation();
+		m_animSpeed += 5;
+		StartAnimation();
 	}
+
 	if (nChar == 45) //-
 	{
-		Scale(0.5);
+		StopAnimation();
+		m_animSpeed -= 5;
+		StartAnimation();
 	}
+
+
 	Invalidate();
 //	CView::OnChar(nChar, nRepCnt, nFlags);
 }
@@ -446,20 +458,6 @@ void CMFCKit2004View::OnLButtonDown(UINT nFlags, CPoint point) {
 	}	
 
 
-	if(m_state == StateIdle)
-	{
-		bool found = m_kvmgr.attemptAnchor(point.x, point.y);
-		if (found)
-			return;
-		m_weightCtrlAnchor = m_mgr.AttemptWeightAnchor(point.x, point.y);
-		// look for the point within the curves
-		m_draggedPt.m_pt = m_mgr.PickControlPoint(point.x, point.y);
-		if(m_draggedPt.m_pt.IsValid())
-		{
-			// dragging stuff
-			m_draggedPt.m_startPosScreen = CCagdPoint(point.x, point.y);
-		}
-	}
 	
 
 	/*int frameIdx = m_ffmgr.PickFrame(point.x, point.y);
@@ -479,7 +477,7 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 	// release the dragged point
 	m_draggedPt.m_pt.Invalidate();
 	m_weightCtrlAnchor.Invalidate();
-	m_kvmgr.dropAnchor();
+	
 
 	CCagdPoint cp[2];
 	cagdToObject(point.x, point.y, cp);
@@ -489,46 +487,6 @@ void CMFCKit2004View::OnLButtonUp(UINT nFlags, CPoint point) {
 
 	m_bs.OnLButtonUp();
 	
-	//======================================================
-	// OLD BEZIER CODE
-	//======================================================
-	if(StateAddBezierPts == m_state)
-	{
-		CCagdPoint coord[2];
-		cagdToObject(point.x, point.y, coord);
-		coord[0].z = 0.0;
-		m_mgr.AddLastCtrlPt(coord[0], 1, m_currCurveIdx);
-		
-	}
-	else if(StateAddBSplinePts == m_state)
-	{
-		CCagdPoint coord[2];
-		cagdToObject(point.x, point.y, coord);
-		coord[0].z = 0.0;
-		m_mgr.AddLastCtrlPt(coord[0], 1, m_currCurveIdx);
-		if (m_modifiedCurveIdx == m_currCurveIdx)
-		{
-			vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
-			m_kvmgr.setVector(kv);
-			m_kvmgr.show();
-		}
-	}
-	else if (m_state == StateConnectingCurvesG0 || m_state == StateConnectingCurvesG1 || m_state == StateConnectingCurvesC1)
-	{
-		int idx2 = m_mgr.getCurveIndexByPointOnPolygon(m_lastLbuttonUp);
-		if (idx2 != -1)
-		{
-			if (m_state == StateConnectingCurvesG0)
-				m_mgr.connectG0(m_currCurveIdx, idx2);
-			else if (m_state == StateConnectingCurvesG1)
-				m_mgr.connectG1(m_currCurveIdx, idx2);
-			else if (m_state == StateConnectingCurvesC1)
-				m_mgr.connectC1(m_currCurveIdx, idx2);
-
-			m_state = StateIdle;
-		}
-	}
-
 	Invalidate();					// redraw scene
 }
 
@@ -606,21 +564,6 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 		cagdToObject(point.x, point.y, p2);
 		CCagdPoint diff = p2[0] - p1[0];
 		m_bs.OnMouseMove(diff);
-
-
-
-		if (m_kvmgr.isAnchored())
-		{
-			m_kvmgr.updateLastAnchor(point.x, point.y);
-			if (m_kvmgr.changedSinceLastGet(0.05))
-			{
-				vector<double> vec = m_kvmgr.getVector();
-				if (m_modifiedAxis == AxisU)
-					m_bs.SetKnotVectorU(vec);
-				if (m_modifiedAxis == AxisV)
-					m_bs.SetKnotVectorV(vec);
-			}
-		}
 	}
 
 	Invalidate();					// redraw scene
@@ -632,42 +575,66 @@ BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
 	UINT stateShift = ::GetAsyncKeyState(VK_SHIFT);
 	if(stateCtrl)
 	{
-		// u
-		DrawPt ptUV = m_bs.GetDrawPt();
-		double newU = ptUV.m_u + double(zDelta)/5000.0;
-		ptUV.m_u = newU;
-		m_bs.SetDrawPt(ptUV);
-		std::stringstream strm;
-		strm << "U updated. Eval point now (" << ptUV.m_u << "," << ptUV.m_v << ")." << std::endl;
-		::OutputDebugString((LPCSTR)strm.str().c_str());
-		m_bs.DrawAttributesOnly();
+		if(!m_animStarted)
+		{
+			// u
+			DrawPt ptUV = m_bs.GetDrawPt();
+			double newU = ptUV.m_u + double(zDelta)/5000.0;
+			ptUV.m_u = newU;
+			m_bs.SetDrawPt(ptUV);
+			std::stringstream strm;
+			strm << "U updated. Eval point now (" << ptUV.m_u << "," << ptUV.m_v << ")." << std::endl;
+			::OutputDebugString((LPCSTR)strm.str().c_str());
+			m_bs.DrawAttributesOnly();
+		}
 	}
 	else if(stateShift)
 	{
-		// v
-		DrawPt ptUV = m_bs.GetDrawPt();
-		double newV = ptUV.m_v + double(zDelta)/5000.0;
-		//newV = U::Clamp(newV, minV, maxV);
-		ptUV.m_v = newV;
-		m_bs.SetDrawPt(ptUV);	
+		if(!m_animStarted)
+		{
+			// v
+			DrawPt ptUV = m_bs.GetDrawPt();
+			double newV = ptUV.m_v + double(zDelta)/5000.0;
+			//newV = U::Clamp(newV, minV, maxV);
+			ptUV.m_v = newV;
+			m_bs.SetDrawPt(ptUV);	
 
-		std::stringstream strm;
-		strm << "V updated. Eval point now (" << ptUV.m_u << "," << ptUV.m_v << ")." << std::endl;
-		::OutputDebugString((LPCSTR)strm.str().c_str());
-		m_bs.DrawAttributesOnly();
+			std::stringstream strm;
+			strm << "V updated. Eval point now (" << ptUV.m_u << "," << ptUV.m_v << ")." << std::endl;
+			::OutputDebugString((LPCSTR)strm.str().c_str());
+			m_bs.DrawAttributesOnly();
+		}
+
 	}
 	else
 	{
 		Scale(1 + double(zDelta)/300);
-		m_kvmgr.setDimensions(m_WindowWidth, m_WindowHeight);
-		m_kvmgr.show();
 	}
 	Invalidate();
 	return true;
 }
 
-void CMFCKit2004View::OnTimer(UINT nIDEvent) {
-	return;
+void CMFCKit2004View::OnTimer(UINT nIDEvent) 
+{
+	CCagdPoint animStart(m_bs.m_animStart.m_u, m_bs.m_animStart.m_v);
+	CCagdPoint animEnd(m_bs.m_animEnd.m_u, m_bs.m_animEnd.m_v);
+	CCagdPoint diff = animEnd-animStart;
+	CCagdPoint currPos = animStart + double(m_animCurrStep)*(diff / double(m_animSteps));
+	m_bs.SetDrawPt(DrawPt(currPos.x, currPos.y));
+	m_bs.DrawAttributesOnly();
+	if(m_animSpeed > 0)
+	{
+		m_animCurrStep = (++m_animCurrStep) % m_animSteps;
+	}
+	else
+	{
+		m_animCurrStep = (--m_animCurrStep);
+		if(m_animCurrStep < 0)
+		{
+			m_animCurrStep += m_animSteps;
+		}
+	}
+	Invalidate();
 }
 
 
@@ -789,11 +756,9 @@ void CMFCKit2004View::OnFuzzinessLess() {
 	lessFuzziness();
 }
 void CMFCKit2004View::OnOptionsReset() {
-	m_kvmgr.dismiss();
 	m_modifiedAxis = AxisUndef;
 	m_bs.invalidate();
 	cagdFreeAllSegments();
-	cagdReset();
 	Invalidate();
 }
 
@@ -861,58 +826,36 @@ void CMFCKit2004View::DrawAxes()
 
 void CMFCKit2004View::OnContextbgNewbeziercurve()
 {
-	m_state = StateAddBezierPts;
-	m_currCurveIdx = m_mgr.NewBezierCurve();
-	// change cursor
 }
 
 void CMFCKit2004View::OnContextbgNewbsplinecurve()
 {
-	m_state = StateAddBSplinePts;
-	m_currCurveIdx = m_mgr.NewBsplineCurve(m_bsplineDegree);
 }
 
 void CMFCKit2004View::OnContextbgClearall()
 {
-	m_kvmgr.dismiss();
 	cagdFreeAllSegments();
 	Invalidate();
 }
 
 void CMFCKit2004View::OnContextpolygonInsertpoint()
 {
-	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	m_mgr.AddCtrlPt(m_lastRbuttonUp, 1, m_currCurveIdx);
-	if (m_modifiedCurveIdx == m_currCurveIdx)
-	{
-		vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
-		m_kvmgr.setVector(kv);
-		m_kvmgr.show();
-	}
 	Invalidate();
 }
 
 void CMFCKit2004View::OnContextpolygonAppendpoint()
 {
-	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	if (-1 != m_currCurveIdx)
-	{
-		m_state = StateAddBezierPts;
-	}
 	Invalidate();
 }
 
 void CMFCKit2004View::OnContextpolygonShowHideControlPolygon()
 {
-	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	m_mgr.ToggleShowPolygon(m_currCurveIdx);
 	Invalidate();
 }
 
 
 void CMFCKit2004View::OnContextptAdjustweight()
 {
-	m_lastWeightControlStatus = m_mgr.ToggleWeightConrol(m_lastRbuttonUp);
 	Invalidate();
 }
 
@@ -924,42 +867,23 @@ void CMFCKit2004View::OnUpdateContextptAdjustweight(CCmdUI *pCmdUI)
 
 void CMFCKit2004View::OnContextpolygonRaisedegree()
 {
-	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	if (-1 != m_currCurveIdx)
-	{
-		m_mgr.RaiseDegree(m_currCurveIdx);
-	}
 	Invalidate();
 }
 
 
 void CMFCKit2004View::OnContextpolygonSubdivide()
 {
-	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	if (-1 != m_currCurveIdx)
-	{
-		m_mgr.Subdivide(m_currCurveIdx);
-	}
 	Invalidate();
 }
 
 void CMFCKit2004View::OnContextptRemovepoint()
 {
-	m_mgr.RemoveCtrlPt(m_lastRbuttonUp);
-	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	if (m_modifiedCurveIdx == m_currCurveIdx)
-	{
-		vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
-		m_kvmgr.setVector(kv);
-		m_kvmgr.show();
-	}
 	Invalidate();
 }
 
 
 void CMFCKit2004View::OnOptionsShowgrid()
 {
-	m_mgr.showGrid();
 	Invalidate();
 }
 
@@ -981,11 +905,9 @@ void CMFCKit2004View::OnFileSaveGeometry()
 	string res;
 	if ("itd" == fileExt)
 	{
-		res = m_mgr.toIrit();
 	}
 	else if ("dat" == fileExt)
 	{
-		res = m_mgr.toDat();
 	}
 	else
 	{
@@ -1001,112 +923,55 @@ void CMFCKit2004View::OnFileSaveGeometry()
 
 void CMFCKit2004View::OnContextbsplinepolyModifyknotvector()
 {
-	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	if (-1 != m_currCurveIdx)
-	{
-		//do stuff
-		m_modifiedCurveIdx = m_currCurveIdx;
-		vector<double> kv = m_mgr.GetKnotVector(m_currCurveIdx);
-		m_kvmgr.setDimensions(m_WindowWidth, m_WindowHeight);
-		m_kvmgr.setVector(kv);
-		m_kvmgr.show();
-	}
 	Invalidate();
 }
 
 
 void CMFCKit2004View::OnConnecttowithcontinuityG0()
 {
-	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	m_state = StateConnectingCurvesG0;
 }
 
 
 void CMFCKit2004View::OnConnecttowithcontinuityG1()
 {
-	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	m_state = StateConnectingCurvesG1;
 }
 
 
 void CMFCKit2004View::OnConnecttowithcontinuityC1()
 {
-	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	m_state = StateConnectingCurvesC1;
 }
 
 
 void CMFCKit2004View::OnKnotguiRemoveknot()
 {
-	vector<double> kv = m_kvmgr.getVector();
-	int idx = m_kvmgr.idxAtPoint(m_lastRbuttonUp);
-	vector<double> newKv;
-	if (idx != -1)
-	{
-		for (int i = 0; i < kv.size(); i++)
-		{
-			if (i != idx)
-				newKv.push_back(kv[i]);
-		}
-		m_mgr.SetKnotVector(m_modifiedCurveIdx, newKv);
-		m_kvmgr.setVector(newKv);
-		m_kvmgr.show();
-	}
 }
 
 
 void CMFCKit2004View::OnKnotguiInsertknot()
 {
-	m_kvmgr.addKnotAtPoint(m_lastRbuttonUp);
-	vector<double> kv = m_kvmgr.getVector(); // It sorts it inside
-	m_mgr.SetKnotVector(m_modifiedCurveIdx, kv);
-	m_kvmgr.show();
+
 }
 
 
 void CMFCKit2004View::OnContextbsplinepolyAppendpoint()
 {
-	m_currCurveIdx = m_mgr.getCurveIndexByPointOnPolygon(m_lastRbuttonUp);
-	if (-1 != m_currCurveIdx)
-	{
-		m_state = StateAddBSplinePts;
-	}
 	Invalidate();
 }
 
 
 void CMFCKit2004View::OnKnotguiInsertknotBoehm()
 {
-	double knotval = m_kvmgr.guiXtoknot(m_lastRbuttonUp.x);
-	if(m_mgr.InsertKnot(m_modifiedCurveIdx, knotval))
-	{
-		m_kvmgr.addKnotAtPoint(m_lastRbuttonUp);
-	}
-	//vector<double> kv = m_kvmgr.getVector(); // It sorts it inside
-	//m_mgr.SetKnotVector(m_modifiedCurveIdx, kv);
 }
 
 
 void CMFCKit2004View::OnModifyknotvectorU()
 {
-	m_kvmgr.dismiss();
-	m_modifiedAxis = AxisU;
-	vector<double> kv = m_bs.KnotVectorU();
-	m_kvmgr.setDimensions(m_WindowWidth, m_WindowHeight);
-	m_kvmgr.setVector(kv);
-	m_kvmgr.show();
 	Invalidate();
 }
 
 
 void CMFCKit2004View::OnModifyknotvectorV()
 {
-	m_kvmgr.dismiss();
-	m_modifiedAxis = AxisV;
-	vector<double> kv = m_bs.KnotVectorU();
-	m_kvmgr.setDimensions(m_WindowWidth, m_WindowHeight);
-	m_kvmgr.setVector(kv);
-	m_kvmgr.show();
 	Invalidate();
 }
 
@@ -1184,4 +1049,27 @@ void CMFCKit2004View::OnSurfacesGlobals()
 		Invalidate();
 	}
 	
+}
+
+void CMFCKit2004View::StartAnimation()
+{
+	UINT timeMs = (int)(1000.0 * (1.0 / double(abs(m_animSpeed))));
+	this->SetTimer(1, timeMs, NULL);
+	m_animStarted = true;	
+}
+void CMFCKit2004View::StopAnimation()
+{
+	this->KillTimer(1);
+	m_animStarted = false;
+}
+
+void CMFCKit2004View::OnSurfacesStartAnimation()
+{
+	StartAnimation();
+}
+
+
+void CMFCKit2004View::OnSurfacesStopAnimation()
+{
+	StopAnimation();
 }
