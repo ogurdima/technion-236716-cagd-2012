@@ -30,7 +30,7 @@ BsplineSurface::BsplineSurface(ParsedSurface p)
 	m_idDir1 = 0;
 	m_idDir2 = 0;
 	
-
+	m_setAnimStart = true;
 	m_samplesPerCurve.m_u = 300;
 	m_samplesPerCurve.m_v = 300;
 
@@ -55,6 +55,7 @@ BsplineSurface& BsplineSurface::operator=(const BsplineSurface& rhs)
 	m_draggedPt = rhs.m_draggedPt;
 	m_draggedPtId = rhs.m_draggedPtId;
 	m_idToIdx =	rhs.m_idToIdx;
+	m_invisIdToUV = rhs.m_invisIdToUV;
 	m_dataIds = rhs.m_dataIds;
 	m_drawUV = rhs.m_drawUV;
 	m_idTangentU = rhs.m_idTangentU;
@@ -220,23 +221,78 @@ void BsplineSurface::OnLButtonDown(int x, int y)
 	m_draggedPtId = 0;
 	while (id = cagdPickNext())
 	{
-		if (! m_idToIdx.count(id))
+		if (m_idToIdx.count(id))
 		{
-			continue;
+			PickCtrlMeshPoint(id);
+			return;
 		}
-		UINT type = cagdGetSegmentType(id);
-		if (CAGD_SEGMENT_POINT == type)
+		if (m_invisIdToUV.count(id))
 		{
-			CCagdPoint p;
-			cagdGetSegmentLocation(id, &p);
-			m_draggedPt = p;
-			m_draggedPtId = id;
+			PickInvisiblePoint(id);
+			return;
 		}
-		else
+		for (int i = 0; i < m_dataIds.size(); i++)
 		{
-			m_draggedPtId = 0;
+			if (id == m_dataIds[i])
+			{
+				Pick3dPoint(x, y, id);
+				return;
+			}
 		}
+		
 	}
+}
+
+
+void BsplineSurface::Pick3dPoint(int x, int y, int id)
+{
+	int vertexIdx = cagdGetNearestVertex(id, x, y);
+	int len = cagdGetSegmentLength(id);
+	CCagdPoint* ptr = (CCagdPoint*) malloc(sizeof(CCagdPoint) * len);
+
+	cagdGetSegmentLocation(id, ptr);
+	CCagdPoint _3dp = ptr[vertexIdx];
+	
+	if (m_setAnimStart)
+	{
+		m_animStart = m_3dToUV[_3dp];
+	}
+	else
+	{
+		m_animEnd = m_3dToUV[_3dp];
+	}
+	m_setAnimStart = ! m_setAnimStart;
+
+	free(ptr);
+}
+
+void BsplineSurface::PickCtrlMeshPoint(int id)
+{
+	UINT type = cagdGetSegmentType(id);
+	if (CAGD_SEGMENT_POINT == type)
+	{
+		CCagdPoint p;
+		cagdGetSegmentLocation(id, &p);
+		m_draggedPt = p;
+		m_draggedPtId = id;
+	}
+	else
+	{
+		m_draggedPtId = 0;
+	}
+}
+
+void BsplineSurface::PickInvisiblePoint(int id)
+{
+	if (m_setAnimStart)
+	{
+		m_animStart = m_invisIdToUV[id];
+	}
+	else
+	{
+		m_animEnd = m_invisIdToUV[id];
+	}
+	m_setAnimStart = ! m_setAnimStart;
 }
 
 //-----------------------------------------------------------------------------
@@ -280,6 +336,7 @@ void BsplineSurface::OnLButtonUp(int x, int y)
 		DrawIsocurves(UVAxisV);
 	}
 	m_draggedPtId = 0;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -293,6 +350,8 @@ void BsplineSurface::Draw()
 		return;
 	}
 
+	m_3dToUV.clear();
+
 	// clear all of the points
 	for (int i = 0; i < m_dataIds.size(); i++)
 		cagdFreeSegment(m_dataIds[i]);
@@ -300,6 +359,7 @@ void BsplineSurface::Draw()
 
 	DrawSurface();
 	DrawAttributesAt(m_drawUV.m_u, m_drawUV.m_v);
+	//DrawInvisiblePoints();
 }
 
 //-----------------------------------------------------------------------------
@@ -505,6 +565,15 @@ void BsplineSurface::DrawIsocurves(UVAxis axis)
 		//now we have control polygon for specific u = t.
 		bsInner.SetPoly(tmpctrp);
 		UINT id = bsInner.DrawCurve();
+
+		vector<double> idToInnerArg = bsInner.GetIdxToArg();
+		vector<CCagdPoint> dataInner = bsInner.DataPoints();
+		for (int i = 0; i < idToInnerArg.size(); i++)
+		{
+			UVspace dest = (axis == UVAxisU) ? UVspace(t, idToInnerArg[i]) : UVspace(idToInnerArg[i], t);
+			m_3dToUV.insert(std::pair<CCagdPoint, UVspace>(dataInner[i], dest) );
+		}
+
 		if(0 != id)
 		{
 			m_dataIds.push_back(id);
@@ -521,94 +590,6 @@ void BsplineSurface::DrawIsocurves(UVAxis axis)
 	}
 
 }
-//
-//
-//void BsplineSurface::DrawIsocurvesConstU()
-//{
-//	double lU = m_knots.m_u[m_order.m_u - 1];
-//	double rU = m_knots.m_u[m_knots.m_u.size() - m_order.m_u];
-//	double uInc = (rU - lU) / ( (double) (m_isoNum.m_u + 1) );
-//
-//	double lV = m_knots.m_v[m_order.m_v - 1];
-//	double rV = m_knots.m_v[m_knots.m_v.size() - m_order.m_v];
-//	double vInc = (rV - lV) / ( (double) (m_samplesPerCurve.m_v) );
-//
-//	BSpline bsv;
-//	bsv.SetDegree(m_order.m_v - 1);
-//	bsv.SetKnotVector(m_knots.m_v);
-//	bsv.SetSamplingStep(vInc);
-//
-//	BSpline bsu;
-//	bsu.SetDegree(m_order.m_u - 1);
-//	bsu.SetKnotVector(m_knots.m_u);
-//	bsu.SetSamplingStep(uInc);
-//
-//
-//
-//	for (double t = lU; t <= rU; t += uInc)
-//	{
-//		vector<CCagdPoint> tmpctrp;
-//		CCagdPoint coeff;
-//		for (int i = 0; i < m_points.size(); i++)
-//		{
-//			bsu.SetPoly(m_points[i]);
-//			coeff = bsu.CalculateAtPoint(t);
-//			tmpctrp.push_back(coeff);
-//		}
-//
-//		//now we have control polygon for specific u = t.
-//		bsv.SetPoly(tmpctrp);
-//		UINT id = bsv.DrawCurve();
-//		m_dataIds.push_back(id);
-//		cagdSetSegmentColor(id, 255, 255, 100);
-//		tmpctrp.clear();
-//	}
-//}
-//
-//void BsplineSurface::DrawIsocurvesConstV()
-//{
-//	double lV = m_knots.m_v[m_order.m_v - 1];
-//	double rV = m_knots.m_v[m_knots.m_v.size() - m_order.m_v];
-//	double vInc = (rV - lV) / ( (double) (m_isoNum.m_v + 1) );
-//
-//	double lU = m_knots.m_u[m_order.m_u - 1];
-//	double rU = m_knots.m_u[m_knots.m_u.size() - m_order.m_u];
-//	double uInc = (rU - lU) / ( (double) (m_samplesPerCurve.m_u) );
-//
-//	BSpline bsv;
-//	bsv.SetDegree(m_order.m_v - 1);
-//	bsv.SetKnotVector(m_knots.m_v);
-//	bsv.SetSamplingStep(vInc);
-//
-//	BSpline bsu;
-//	bsu.SetDegree(m_order.m_u - 1);
-//	bsu.SetKnotVector(m_knots.m_u);
-//	bsu.SetSamplingStep(uInc);
-//
-//	
-//
-//	vector<vector<CCagdPoint>> pointsTransposed = transposeMatrixVectorOfPoints(m_points);
-//
-//	for (double t = lV; t <= rV; t += vInc)
-//	{
-//		vector<CCagdPoint> tmpctrp;
-//		CCagdPoint coeff;
-//		for (int i = 0; i < pointsTransposed.size(); i++)
-//		{
-//			bsv.SetPoly(pointsTransposed[i]);
-//			coeff = bsv.CalculateAtPoint(t);
-//			tmpctrp.push_back(coeff);
-//		}
-//
-//		//now we have control polygon for specific v = t.
-//		bsu.SetPoly(tmpctrp);
-//		UINT id = bsu.DrawCurve();
-//		m_dataIds.push_back(id);
-//		cagdSetSegmentColor(id, 100, 255, 255);
-//		tmpctrp.clear();
-//	}
-//}
-
 
 //-----------------------------------------------------------------------------
 void BsplineSurface::SetKnotVectorU(vector<double> kv)
@@ -688,6 +669,12 @@ CCagdPoint BsplineSurface::FirstDerivU(double t)
 	//bsv.SetSamplingStep(vInc);
 
 	return CCagdPoint(0,0,0);
+}
+
+CCagdPoint BsplineSurface::CalculateAtPoint(double u, double v)
+{
+	BSpline isocurve = CalcIsocurve(UVAxisV, v);
+	return isocurve.CalculateAtPoint(u);
 }
 
 //-----------------------------------------------------------------------------
@@ -969,4 +956,26 @@ CCagdPoint BsplineSurface::CalcNumNormalDeriv(double u, double v)
 
 	CCagdPoint der = ( normalPlus - normalMinus ) / sum;
 	return der;
+}
+
+void BsplineSurface::DrawInvisiblePoints()
+{
+	if (! m_isValid)
+		return;
+
+	m_invisIdToUV.clear();
+	for (	double u = m_extentsUV.m_extU.m_min; 
+			u <= m_extentsUV.m_extU.m_max; 
+			u += (m_extentsUV.m_extU.m_max - m_extentsUV.m_extU.m_min) / m_isoNum.m_u)
+	{
+		for (double v = m_extentsUV.m_extV.m_min; 
+			v <= m_extentsUV.m_extV.m_max; 
+			v += (m_extentsUV.m_extV.m_max - m_extentsUV.m_extV.m_min) / m_isoNum.m_v)
+		{
+			CCagdPoint p = CalculateAtPoint(u, v);
+			int id = cagdAddPoint(&p);
+			//cagdHideSegment(id);
+			m_invisIdToUV.insert( std::pair<int, UVspace>(id, UVspace(u, v)) );
+		}
+	}
 }

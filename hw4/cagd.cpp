@@ -439,6 +439,10 @@ bool operator==(const CCagdPoint& p1, const CCagdPoint& p2)
 	return (p1.x == p2.x && p1.y == p2.y && p1.z == p2.z);
 }
 
+bool operator<(const CCagdPoint& p1, const CCagdPoint& p2)
+{
+	return length(p1) < length(p2);
+}
 
 UINT DrawVector(const CCagdPoint& pt, const CCagdPoint& dir, double length, BYTE color[3])
 {

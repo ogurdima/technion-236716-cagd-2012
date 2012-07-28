@@ -38,6 +38,8 @@ public:
 
 	Extents1D GetExtents() const;
 
+	vector<double> GetIdxToArg();
+
 
 private:
 	void NormalizeKnotValues();
@@ -50,4 +52,5 @@ protected:
 	unsigned long m_degree;
 	bool m_autoKv;
 	double m_samplingStep;
+	vector<double> m_idxToArg;
 };

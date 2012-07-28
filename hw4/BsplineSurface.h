@@ -44,6 +44,14 @@ struct MatrixIdx
 	int m_col;
 };
 
+struct UVspace
+{
+	UVspace() : m_u(0), m_v(0) {}
+	UVspace(double u, double v) : m_u(u), m_v(v) {}
+	double m_u;
+	double m_v;
+};
+
 struct DrawPt
 {
 	DrawPt() : m_u(0.0), m_v(0.0) {}
@@ -104,6 +112,7 @@ public:
 		dudv
 	};
 	CCagdPoint DerivativeAtPoint(Deriv der, double u, double v);
+	CCagdPoint CalculateAtPoint(double u, double v);
 
 	CCagdPoint FirstDerivU(double t);
 	CCagdPoint FirstDerivV(double t);
@@ -127,6 +136,10 @@ private:
 	// ids of control points
 	map<int, MatrixIdx> m_idToIdx;
 
+	map<int, UVspace> m_invisIdToUV;
+
+	map<CCagdPoint, UVspace> m_3dToUV;
+
 	// ids of data points
 	vector<int> m_dataIds;
 
@@ -139,8 +152,11 @@ private:
 	bool m_isValid;
 
 	CCagdPoint m_draggedPt;
-
 	int m_draggedPtId;
+
+	UVspace m_animStart;
+	UVspace m_animEnd;
+	bool m_setAnimStart;
 
 	void fixEmptyKnotsU();
 	void fixEmptyKnotsV();
@@ -155,6 +171,7 @@ private:
 
 	// individual drawing/calculating functions
 	void DrawCtrlMesh();
+	void DrawInvisiblePoints();
 	BSpline CalcIsocurve(UVAxis axis, double t);
 	void DrawIsocurves(UVAxis axis);
 	void DrawTangentsAtPoint(double u, double v);
@@ -169,6 +186,10 @@ private:
 	CCagdPoint CalcSurfacePoint(double u, double v);
 	CCagdPoint CalcNumNormalDeriv(double u, double v);
 
+
+	void PickCtrlMeshPoint(int id);
+	void PickInvisiblePoint(int id);
+	void Pick3dPoint(int x, int y, int id);
 
 	Extents2D m_extentsUV;
 

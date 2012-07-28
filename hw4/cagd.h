@@ -148,6 +148,7 @@ CCagdPoint normalize(const CCagdPoint& p1);
 // cmp ==(vector, vector)
 bool operator==(const CCagdPoint& p1, const CCagdPoint& p2);
 
+bool operator<(const CCagdPoint& p1, const CCagdPoint& p2);
 
 /*********************************************************************
 * Custom drawing

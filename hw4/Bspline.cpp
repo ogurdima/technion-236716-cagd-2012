@@ -167,6 +167,7 @@ bool BSpline::InsertKnotBoehm(double val)
 void BSpline::Calculate()
 {
 	m_dataPts.clear();
+	m_idxToArg.clear();
 	
 	if (m_degree > m_kv.size() - 1 - m_degree)
 		return;
@@ -183,10 +184,14 @@ void BSpline::Calculate()
 			w += m_ctrlPts[i].m_weight * basis;
 		}
 		m_dataPts.push_back(cur / w);
+		m_idxToArg.push_back(t);
 	}
 }
 
-
+vector<double> BSpline::GetIdxToArg()
+{
+	return m_idxToArg;
+}
 
 CCagdPoint BSpline::CalculateAtPoint(double t)
 {
