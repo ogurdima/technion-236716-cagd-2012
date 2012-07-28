@@ -84,6 +84,16 @@ public:
 	const Extents2D& GetExtentsUV() const;
 	BsplineSurface& operator=(const BsplineSurface& rhs);
 
+	enum Deriv
+	{
+		du,
+		dv,
+		d2u,
+		d2v,
+		dudv
+	};
+	CCagdPoint DerivativeAtPoint(Deriv der, double u, double v);
+
 	CCagdPoint FirstDerivU(double t);
 	CCagdPoint FirstDerivV(double t);
 
@@ -133,7 +143,7 @@ private:
 
 	// individual drawing/calculating functions
 	void DrawCtrlMesh();
-	BSpline CalcIsocurve(UVAxis axis, double t, int deriv);
+	BSpline CalcIsocurve(UVAxis axis, double t);
 	void DrawIsocurves(UVAxis axis);
 	void DrawTangentsAtPoint(double u, double v);
 	void DrawSurfaceNormalAtPoint(double u, double v);

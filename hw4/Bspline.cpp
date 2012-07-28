@@ -208,17 +208,17 @@ CCagdPoint BSpline::CalculateAtPoint(double t)
 
 CCagdPoint BSpline::DerivativeAtPoint(double t, int j)
 {
-	/*CCagdPoint cur(0,0,0);
+	CCagdPoint cur(0,0,0);
 	double w = 0;
 	for (int i = 0; i < m_ctrlPts.size(); i++)
 	{
 		CCagdPoint Q = QforDeriv(j, i, m_degree);
-		double basis = BSplineBasis(t, i+1, m_degree-j); 
+		double basis = BSplineBasis(t, i, m_degree-j); 
 		cur = cur +  Q * m_ctrlPts[i].m_weight * basis;
 		w += m_ctrlPts[i].m_weight * basis;
 	}
-	return (cur / w);*/
-
+	return (cur / w);
+/*
 	CCagdPoint p0, p1;
 
 	double h = 0.1;
@@ -241,7 +241,7 @@ CCagdPoint BSpline::DerivativeAtPoint(double t, int j)
 		p0 = DerivativeAtPoint(t - h, j - 1);
 		res = (p1 - p0) / 2*h;
 	}
-	return res;
+	return res;*/
 }
 
 CCagdPoint BSpline::QforDeriv(int j, int ptidx, int k)
@@ -254,7 +254,7 @@ CCagdPoint BSpline::QforDeriv(int j, int ptidx, int k)
 	CCagdPoint Q = (k-j+1) * QforDeriv(j-1, ptidx, k);
 	if(ptidx > 0)
 	{
-		Q -= QforDeriv(j-1, ptidx-1, k);
+		Q -= (k-j+1)*QforDeriv(j-1, ptidx-1, k);
 	}
 	Q /= (m_kv[ptidx + k - j + 1] - m_kv[ptidx]);
 

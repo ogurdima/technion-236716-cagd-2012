@@ -792,7 +792,6 @@ void CMFCKit2004View::OnOptionsReset() {
 	m_bs.invalidate();
 	cagdFreeAllSegments();
 	cagdReset();
-	Scale(20.0);
 	Invalidate();
 }
 
@@ -1120,6 +1119,7 @@ void CMFCKit2004View::OnContextbgNewsurface()
 		// set the order
 		psurf.m_order.m_u = newSurfDlg.m_orderU;
 		psurf.m_order.m_v = newSurfDlg.m_orderV;
+		
 		// add points
 		vector<CCagdPoint> newArr;
 		for(int v=0; v<newSurfDlg.m_ctrlPtCountV; ++v)
@@ -1127,18 +1127,19 @@ void CMFCKit2004View::OnContextbgNewsurface()
 			psurf.m_points.push_back(newArr);
 			for(int u=0; u<newSurfDlg.m_ctrlPtCountU; ++u)			
 			{
-				CCagdPoint newPt(double(u)*(1.0/double(newSurfDlg.m_ctrlPtCountU-1)),
-					double(v)*(1.0/double(newSurfDlg.m_ctrlPtCountV-1)),
-					0.0);
+				double x = -5.0 + 10.0*double(u)*(1.0/double(newSurfDlg.m_ctrlPtCountU-1));
+				double y = -5.0 + 10.0*double(v)*(1.0/double(newSurfDlg.m_ctrlPtCountV-1));
+				CCagdPoint newPt(x,y,0.0);
 				psurf.m_points[v].push_back(newPt);
 			}
 			
 		}
 
 		// create the knot vector (parse)
-		//psurf.m_knots.m_u;
-		//psurf.m_knots.m_v;
+		psurf.m_knots.m_u.clear();
+		psurf.m_knots.m_v.clear();
 		
+		OnOptionsReset();
 		m_bs = BsplineSurface(psurf);		
 
 		m_bs.Draw();

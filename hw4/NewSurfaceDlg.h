@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "resource.h"
+#include <vector>
 // CNewSurfaceDlg dialog
 
 class CNewSurfaceDlg : public CDialog
@@ -28,9 +29,11 @@ public:
 
 	CString m_txtKnotVectorU;
 	CString m_txtKnotVectorUSave;
+	std::vector<double> m_knotsU;
 
 	CString m_txtKnotVectorV;
 	CString m_txtKnotVectorVSave;
+	std::vector<double> m_knotsV;
 
 	void SaveValues()
 	{
@@ -56,4 +59,6 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnBnClickedSurfdlgImportSurface2();
 };
