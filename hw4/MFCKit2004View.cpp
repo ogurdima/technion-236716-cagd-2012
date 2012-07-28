@@ -12,6 +12,7 @@
 #include "gl/glu.h"
 #include "KVgui.h"
 #include "NewSurfaceDlg.h"
+
 #include <string>
 #include <fstream>
 
@@ -87,6 +88,7 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_MODIFYKNOTVECTOR_U, &CMFCKit2004View::OnModifyknotvectorU)
 	ON_COMMAND(ID_MODIFYKNOTVECTOR_V, &CMFCKit2004View::OnModifyknotvectorV)
 	ON_COMMAND(ID_CONTEXTBG_NEWSURFACE, &CMFCKit2004View::OnContextbgNewsurface)
+	ON_COMMAND(ID_SURFACES_GLOBALS, &CMFCKit2004View::OnSurfacesGlobals)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1150,4 +1152,36 @@ void CMFCKit2004View::OnContextbgNewsurface()
 		newSurfDlg.RestoreSavedValues();
 	}
 
+}
+
+
+void CMFCKit2004View::OnSurfacesGlobals()
+{
+	m_globalsDlg.m_orderU = m_bs.GetOrder().m_u;
+	m_globalsDlg.m_orderV = m_bs.GetOrder().m_v;
+
+	m_globalsDlg.m_isoCurvesU = m_bs.numberOfIsocurves().m_u;
+	m_globalsDlg.m_isoCurvesV = m_bs.numberOfIsocurves().m_v;
+
+	m_globalsDlg.m_samplesPerCurveU = m_bs.samplesPerCurve().m_u;
+	m_globalsDlg.m_samplesPerCurveV = m_bs.samplesPerCurve().m_v;
+
+	m_globalsDlg.m_knotsU = m_bs.KnotVectorU();
+	m_globalsDlg.m_knotsV = m_bs.KnotVectorV();
+
+	if(IDOK == m_globalsDlg.DoModal())
+	{
+		m_bs.SetOrder(Order(m_globalsDlg.m_orderU, m_globalsDlg.m_orderV));
+		m_bs.samplesPerCurve(SamplingFreq(m_globalsDlg.m_samplesPerCurveU, m_globalsDlg.m_samplesPerCurveV));
+		m_bs.numberOfIsocurves(IsocurvesNumber(m_globalsDlg.m_isoCurvesU, m_globalsDlg.m_isoCurvesV));
+		m_bs.SetKnotVectorU(m_globalsDlg.m_knotsU);
+		m_bs.SetKnotVectorV(m_globalsDlg.m_knotsV);
+
+		m_bs.ClearSegments();
+		cagdFreeAllSegments();
+
+		m_bs.Draw();
+		Invalidate();
+	}
+	
 }

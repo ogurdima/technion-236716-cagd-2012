@@ -8,6 +8,8 @@ using std::map;
 
 struct Order
 {
+	Order() : m_u(0), m_v(0){}
+	Order(int u, int v) : m_u(u), m_v(v){}
 	int m_u;
 	int m_v;
 };
@@ -20,12 +22,16 @@ struct Knots
 
 struct IsocurvesNumber
 {
+	IsocurvesNumber(): m_u(0), m_v(0) {}
+	IsocurvesNumber(int u, int v): m_u(u), m_v(v) {}
 	int m_u;
 	int m_v;
 };
 
 struct SamplingFreq
 {
+	SamplingFreq(): m_u(0), m_v(0) {}
+	SamplingFreq(int u, int v): m_u(u), m_v(v) {}
 	int m_u;
 	int m_v;
 };
@@ -62,6 +68,8 @@ public:
 
 	void invalidate();
 
+	void ClearSegments(void);
+
 	void SetPoints(const vector<vector<CCagdPoint>>& pts);
 
 	void SetKnotVectorU(vector<double> kv);
@@ -69,6 +77,9 @@ public:
 	
 	vector<double> KnotVectorU();
 	vector<double> KnotVectorV();
+
+	void SetOrder(Order orderUV);
+	Order GetOrder() const;
 
 	void numberOfIsocurves(IsocurvesNumber n);
 	IsocurvesNumber numberOfIsocurves();
@@ -131,7 +142,8 @@ private:
 
 	int m_draggedPtId;
 
-	void fixEmptyKnots();
+	void fixEmptyKnotsU();
+	void fixEmptyKnotsV();
 	vector<vector<CCagdPoint>> transposeMatrixVectorOfPoints(vector<vector<CCagdPoint>> original);
 	//void DrawIsocurvesConstU();
 	//void DrawIsocurvesConstV();

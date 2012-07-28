@@ -22,6 +22,7 @@
 #include "CurveMgr.h"
 #include "KVgui.h"
 #include "NewSurfaceDlg.h"
+#include "GlobalsDlg.h"
 #include "BsplineSurface.h"
 
 #ifndef PI
@@ -139,6 +140,8 @@ public:
 	Axis m_modifiedAxis;
 
 
+	// globals dialog
+	CGlobalsDlg m_globalsDlg;
 
 
 // Overrides
@@ -215,6 +218,7 @@ public:
 	afx_msg void OnModifyknotvectorU();
 	afx_msg void OnModifyknotvectorV();
 	afx_msg void OnContextbgNewsurface();
+	afx_msg void OnSurfacesGlobals();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp

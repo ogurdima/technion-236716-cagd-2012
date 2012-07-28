@@ -137,6 +137,7 @@
     <ClCompile Include="BsplineSurface.cpp" />
     <ClCompile Include="cagd.cpp" />
     <ClCompile Include="Curve.cpp" />
+    <ClCompile Include="GlobalsDlg.cpp" />
     <ClCompile Include="KVgui.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MFCKit2004.cpp" />
@@ -164,6 +165,7 @@
     <ClInclude Include="BsplineSurface.h" />
     <ClInclude Include="cagd.h" />
     <ClInclude Include="Curve.h" />
+    <ClInclude Include="GlobalsDlg.h" />
     <ClInclude Include="internal.h" />
     <ClInclude Include="KVgui.h" />
     <ClInclude Include="MainFrm.h" />

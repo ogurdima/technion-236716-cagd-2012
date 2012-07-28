@@ -55,6 +55,9 @@
     <ClCompile Include="NewSurfaceDlg.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="GlobalsDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bezier.h">
@@ -112,6 +115,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="NewSurfaceDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalsDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

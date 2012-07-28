@@ -22,7 +22,7 @@ BsplineSurface::BsplineSurface(ParsedSurface p)
 	// Important: copy order and points before knots, because fixEmptyKnots() uses them
 	SetKnotVectorU(p.m_knots.m_u);
 	SetKnotVectorV(p.m_knots.m_v);
-	fixEmptyKnots();
+	
 	
 	m_idTangentU = 0;
 	m_idTangentV = 0;
@@ -76,9 +76,15 @@ const Extents2D& BsplineSurface::GetExtentsUV() const
 	return m_extentsUV;
 }
 
+//-----------------------------------------------------------------------------
+void BsplineSurface::invalidate()
+{
+	m_draggedPtId = 0;
+	m_isValid = false;
+}
 
 //-----------------------------------------------------------------------------
-BsplineSurface::~BsplineSurface(void)
+void BsplineSurface::ClearSegments(void)
 {
 	// clear all of the points
 	for (int i = 0; i < m_dataIds.size(); i++)
@@ -100,14 +106,13 @@ BsplineSurface::~BsplineSurface(void)
 }
 
 //-----------------------------------------------------------------------------
-void BsplineSurface::invalidate()
+BsplineSurface::~BsplineSurface(void)
 {
-	m_draggedPtId = 0;
-	m_isValid = false;
+	ClearSegments();
 }
 
 //-----------------------------------------------------------------------------
-void BsplineSurface::fixEmptyKnots()
+void BsplineSurface::fixEmptyKnotsU()
 {
 	// If knot vector is empty, then we create uniform open-end condition by
 	// putting |order| knots at the ends of the interval (0,1)
@@ -136,6 +141,9 @@ void BsplineSurface::fixEmptyKnots()
 		}
 		UpdateExtentsU();
 	}
+}
+void BsplineSurface::fixEmptyKnotsV()
+{
 	// same for the second dimension
 	if (m_knots.m_v.empty())
 	{
@@ -490,16 +498,18 @@ void BsplineSurface::DrawIsocurves(UVAxis axis)
 		//now we have control polygon for specific u = t.
 		bsInner.SetPoly(tmpctrp);
 		UINT id = bsInner.DrawCurve();
-		m_dataIds.push_back(id);
-		if(axis == UVAxisU)
+		if(0 != id)
 		{
-			cagdSetSegmentColor(id, 255, 255, 0);
-		}
-		else
-		{
-			cagdSetSegmentColor(id, 0, 255, 255);
-		}
-		
+			m_dataIds.push_back(id);
+			if(axis == UVAxisU)
+			{
+				cagdSetSegmentColor(id, 255, 255, 0);
+			}
+			else
+			{
+				cagdSetSegmentColor(id, 0, 255, 255);
+			}
+		}		
 		tmpctrp.clear();
 	}
 
@@ -599,6 +609,7 @@ void BsplineSurface::SetKnotVectorU(vector<double> kv)
 	m_knots.m_u = kv;
 
 	// clamp the draw value to the extents of the new knot vector
+	fixEmptyKnotsU();
 	UpdateExtentsU();
 }
 
@@ -608,6 +619,7 @@ void BsplineSurface::SetKnotVectorV(vector<double> kv)
 	m_knots.m_v = kv;
 
 	// clamp the draw value to the extents of the new knot vector	
+	fixEmptyKnotsV();
 	UpdateExtentsV();
 }
 
@@ -642,6 +654,16 @@ vector<double> BsplineSurface::KnotVectorU()
 vector<double> BsplineSurface::KnotVectorV()
 {
 	return m_knots.m_v;
+}
+
+void BsplineSurface::SetOrder(Order orderUV)
+{
+	m_order = orderUV;
+}
+
+Order BsplineSurface::GetOrder() const
+{
+	return m_order;
 }
 
 //-----------------------------------------------------------------------------
