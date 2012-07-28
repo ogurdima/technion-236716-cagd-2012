@@ -640,7 +640,7 @@ BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
 		std::stringstream strm;
 		strm << "U updated. Eval point now (" << ptUV.m_u << "," << ptUV.m_v << ")." << std::endl;
 		::OutputDebugString((LPCSTR)strm.str().c_str());
-		m_bs.Draw();
+		m_bs.DrawAttributesOnly();
 	}
 	else if(stateShift)
 	{
@@ -654,7 +654,7 @@ BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
 		std::stringstream strm;
 		strm << "V updated. Eval point now (" << ptUV.m_u << "," << ptUV.m_v << ")." << std::endl;
 		::OutputDebugString((LPCSTR)strm.str().c_str());
-		m_bs.Draw();
+		m_bs.DrawAttributesOnly();
 	}
 	else
 	{

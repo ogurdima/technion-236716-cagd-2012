@@ -2,6 +2,7 @@
 #include "BsplineSurface.h"
 #include <assert.h>
 #include "BezierMath.h"
+#include "cagd.h" 
 
 //-----------------------------------------------------------------------------
 BsplineSurface::BsplineSurface()
@@ -342,6 +343,26 @@ void BsplineSurface::OnLButtonUp(int x, int y)
 //-----------------------------------------------------------------------------
 void BsplineSurface::Draw()
 {
+	DrawSurface();
+	DrawAttributesAt(m_drawUV.m_u, m_drawUV.m_v);
+}
+
+//-----------------------------------------------------------------------------
+void BsplineSurface::DrawAttributesOnly()
+{
+	DrawAttributesAt(m_drawUV.m_u, m_drawUV.m_v);
+}
+
+//-----------------------------------------------------------------------------
+void BsplineSurface::DrawSurface()
+{
+	// clear all of the points
+	for (int i = 0; i < m_dataIds.size(); i++)
+		cagdFreeSegment(m_dataIds[i]);
+	m_dataIds.clear();
+
+	m_3dToUV.clear();
+
 	if (! m_isValid)
 		return;
 	if (! m_extentsUV.m_extU.m_min < m_extentsUV.m_extU.m_max ||
@@ -350,21 +371,6 @@ void BsplineSurface::Draw()
 		return;
 	}
 
-	m_3dToUV.clear();
-
-	// clear all of the points
-	for (int i = 0; i < m_dataIds.size(); i++)
-		cagdFreeSegment(m_dataIds[i]);
-	m_dataIds.clear();
-
-	DrawSurface();
-	DrawAttributesAt(m_drawUV.m_u, m_drawUV.m_v);
-	//DrawInvisiblePoints();
-}
-
-//-----------------------------------------------------------------------------
-void BsplineSurface::DrawSurface()
-{
 	DrawCtrlMesh();
 	DrawIsocurves(UVAxisU);
 	DrawIsocurves(UVAxisV);
@@ -373,6 +379,14 @@ void BsplineSurface::DrawSurface()
 //-----------------------------------------------------------------------------
 void BsplineSurface::DrawAttributesAt(double u, double v)
 {
+	if (! m_isValid)
+		return;
+	if (! m_extentsUV.m_extU.m_min < m_extentsUV.m_extU.m_max ||
+		! m_extentsUV.m_extV.m_min < m_extentsUV.m_extV.m_max)
+	{
+		return;
+	}
+
 	DrawTangentsAtPoint(u, v);
 	DrawSurfaceNormalAtPoint(u, v);
 	DrawPrincipalCurvatureAtPoint(u, v);
@@ -753,7 +767,18 @@ void BsplineSurface::DrawTangentsAtPoint(double u, double v)
 	m_idTangentU = 0;
 	cagdFreeSegment(m_idTangentV);
 	m_idTangentV = 0;
-	CCagdPoint ptu = CalcSurfacePoint(u,v);
+
+	CCagdPoint ptu;
+	try
+	{
+		ptu = CalcSurfacePoint(u,v);
+	}
+	catch(const std::exception& e)
+	{
+		m_tangentU = CCagdPoint(0,0,0);
+		m_tangentV = CCagdPoint(0,0,0);
+		return;
+	}
 	CCagdPoint dSdu = CalcTangentAtPoint(UVAxisU, u, v);
 	CCagdPoint dSdv = CalcTangentAtPoint(UVAxisV, u, v);
 
@@ -798,7 +823,8 @@ CCagdPoint BsplineSurface::CalcTangentAtPoint(UVAxis axis, double u, double v)
 CCagdPoint BsplineSurface::CalcSurfacePoint(double u, double v)
 {
 	BSpline bsu = CalcIsocurve(UVAxisV, v);
-	CCagdPoint ptu = bsu.CalculateAtPoint(u);
+	CCagdPoint ptu;
+	ptu = bsu.CalculateAtPoint(u);
 	return ptu;
 }
 
@@ -831,7 +857,10 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	cagdFreeSegment(m_idDir2);
 	m_idDir2 = 0;
 
-
+	if(U::NearlyEq(length(m_tangentU), 0) || U::NearlyEq(length(m_tangentV), 0))
+	{
+		return;
+	}
 	// calculate G
 	double g11 = dot(m_tangentU, m_tangentU);
 	double g12 = dot(m_tangentU, m_tangentV);
@@ -874,53 +903,72 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	double k1 = (-b - sqrt(descriminant)) / (2*a);
 	double k2 = (-b + sqrt(descriminant)) / (2*a);
 
-	if(!U::NearlyEq(k1, 0.0))
+	CCagdPoint direction1 = GetPrincipalDir(E, F, L, M, k1);
+	bool dir1Valid = !U::NearlyEq(length(direction1), 0);
+	CCagdPoint direction2 = GetPrincipalDir(E, F, L, M, k2);
+	bool dir2Valid = !U::NearlyEq(length(direction2), 0);
+
+	if(dir1Valid && dir2Valid)
 	{
-		return;
+		if (! U::NearlyEq( dot( direction1, direction2 ), 0 ) )
+		{
+			assert(false);
+		}
 	}
 
-	if(U::NearlyEq(k2, 0.0))
+	if(dir1Valid)
 	{
-		return;
+		// k1 curvature
+		CCagdPoint vec[2];
+		vec[0] = m_point;
+		vec[1] = 0.5*normalize(direction1) + m_point;
+		double k1Rad = 1.0 / k1;
+		CCagdPoint k1Ctr = m_point + k1Rad*normalize(m_normal);
+		m_idDir1 = DrawCircle(k1Ctr, normalize(m_normal), direction2, k1Rad);
+		cagdSetSegmentColor(m_idDir1, 1,1,1);
 	}
 
 
-	double k1Denom = sqrt( (M-k1*F)*(M-k1*F) + (L - k1*E)*(L - k1*E) );
-	double k2Denom = sqrt( (M-k2*F)*(M-k2*F) + (L - k2*E)*(L - k2*E) );
-
-	double uk1 = (M - k1*F) / k1Denom;
-	double vk1 = -(L - k1*E) / k1Denom;
-	double uk1n = uk1 / sqrt(uk1*uk1 + vk1*vk1);
-	double vk1n = vk1 / sqrt(uk1*uk1 + vk1*vk1);
-	//CCagdPoint p3 = m_point + (normalize(m_tangentU) * uk1n) + (normalize(m_tangentV) * vk1n);
-	CCagdPoint p3 = m_point + (m_tangentU * uk1n) + (m_tangentV * vk1n);
-	CCagdPoint direction1 = p3 - m_point;
-
-
-	double uk2 = (M - k2*F) / k2Denom;
-	double vk2 = -(L - k2*E) / k2Denom;
-	double uk2n = uk2 / sqrt(uk2*uk2 + vk2*vk2);
-	double vk2n = vk2 / sqrt(uk2*uk2 + vk2*vk2);
-	//p3 = m_point + (normalize(m_tangentU) * uk2n) + (normalize(m_tangentV) * vk2n);
-	p3 = m_point + (m_tangentU * uk2n) + (m_tangentV * vk2n);
-	CCagdPoint direction2 = p3 - m_point;
-
-	if (! U::NearlyEq( dot( direction1, direction2 ), 0 ) )
+	if(dir2Valid)
 	{
-		assert(false);
+		// k2 curvature
+		CCagdPoint vec[2];
+		vec[0] = m_point;
+		vec[1] = 0.5*normalize(direction2) + m_point;
+		double k2Rad = 1.0 / k2;
+		CCagdPoint k2Ctr = m_point + k2Rad*normalize(m_normal);
+		m_idDir2 = DrawCircle(k2Ctr, normalize(m_normal), direction1, k2Rad);
+		cagdSetSegmentColor(m_idDir2, 255,50,255);	
 	}
 
-	CCagdPoint vec[2];
 
-	vec[0] = m_point;
-	vec[1] = 0.5*normalize(direction1) + m_point;
-	m_idDir1 = cagdAddPolyline(vec, 2, CAGD_SEGMENT_POLYLINE);
-	cagdSetSegmentColor(m_idDir1, 1,1,1);
+}
+CCagdPoint BsplineSurface::GetPrincipalDir(double E, double F, double L, double M, double k)
+{
+	if(U::NearlyEq(k, 0.0))
+	{
+		return CCagdPoint(0,0,0);
+	}
 
-	vec[0] = m_point;
-	vec[1] = 0.5*normalize(direction2) + m_point;
-	m_idDir2 = cagdAddPolyline(vec, 2, CAGD_SEGMENT_POLYLINE);
-	cagdSetSegmentColor(m_idDir2, 255,50,255);
+	double kDenom = sqrt( (M-k*F)*(M-k*F) + (L - k*E)*(L - k*E) );
+	if(U::NearlyEq(kDenom, 0))
+	{
+		return CCagdPoint(0,0,0);
+	}
+
+	double uk = (M - k*F) / kDenom;
+	double vk = -(L - k*E) / kDenom;
+	double normVal = sqrt(uk*uk + vk*vk);
+	if(U::NearlyEq(normVal, 0))
+	{
+		return CCagdPoint(0,0,0);
+	}
+
+	double ukn = uk / normVal;
+	double vkn = vk / normVal;
+	CCagdPoint p3 = m_point + (m_tangentU * ukn) + (m_tangentV * vkn);
+	CCagdPoint direction = p3 - m_point;
+	return direction;
 
 }
 

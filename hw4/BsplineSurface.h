@@ -99,6 +99,7 @@ public:
 	void SetDrawPt(const DrawPt& pt);
 	
 	void Draw();
+	void DrawAttributesOnly();
 
 	const Extents2D& GetExtentsUV() const;
 	BsplineSurface& operator=(const BsplineSurface& rhs);
@@ -178,6 +179,7 @@ private:
 	void DrawSurfaceNormalAtPoint(double u, double v);
 	void DrawTangentPlaneAtPoint(double u, double v);
 	void DrawPrincipalCurvatureAtPoint(double u, double v);
+	CCagdPoint GetPrincipalDir(double E, double F, double L, double M, double k);
 
 	void BsplineSurface::UpdateExtentsU();
 	void BsplineSurface::UpdateExtentsV();

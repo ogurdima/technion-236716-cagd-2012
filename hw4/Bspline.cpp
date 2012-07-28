@@ -208,6 +208,12 @@ CCagdPoint BSpline::CalculateAtPoint(double t)
 		cur = cur +  m_ctrlPts[i].m_pt * m_ctrlPts[i].m_weight * basis;
 		w += m_ctrlPts[i].m_weight * basis;
 	}
+	
+	if(U::NearlyEq(w, 0.0))
+	{
+		throw std::exception();
+	}
+	
 	return (cur / w);
 }
 
