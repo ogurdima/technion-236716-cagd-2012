@@ -165,6 +165,10 @@ private:
 	void BsplineSurface::UpdateExtentsU();
 	void BsplineSurface::UpdateExtentsV();
 
+	CCagdPoint CalcTangentAtPoint(UVAxis axis, double u, double v);
+	CCagdPoint CalcSurfacePoint(double u, double v);
+	CCagdPoint CalcNumNormalDeriv(double u, double v);
+
 
 	Extents2D m_extentsUV;
 

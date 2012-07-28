@@ -124,9 +124,9 @@ void BsplineSurface::fixEmptyKnotsU()
 			m_knots.m_u.push_back(0);
 		}
 
-		if (m_points.size() > atEachSide)
+		if (m_points[0].size() > atEachSide)
 		{
-			int toFill = m_points.size() - atEachSide;
+			int toFill = m_points[0].size() - atEachSide;
 			double inc = 1 / (double)(toFill + 1);
 			double t = inc;
 			for (int i = 0; i < toFill; i++, t += inc)
@@ -153,9 +153,9 @@ void BsplineSurface::fixEmptyKnotsV()
 			m_knots.m_v.push_back(0);
 		}
 
-		if (m_points[0].size() > atEachSide)
+		if (m_points.size() > atEachSide)
 		{
-			int toFill = m_points[0].size() - atEachSide;
+			int toFill = m_points.size() - atEachSide;
 			double inc = 1 / (double)(toFill + 1);
 			double t = inc;
 			for (int i = 0; i < toFill; i++, t += inc)
@@ -287,6 +287,11 @@ void BsplineSurface::Draw()
 {
 	if (! m_isValid)
 		return;
+	if (! m_extentsUV.m_extU.m_min < m_extentsUV.m_extU.m_max ||
+		! m_extentsUV.m_extV.m_min < m_extentsUV.m_extV.m_max)
+	{
+		return;
+	}
 
 	// clear all of the points
 	for (int i = 0; i < m_dataIds.size(); i++)
@@ -482,6 +487,8 @@ void BsplineSurface::DrawIsocurves(UVAxis axis)
 		assert(false);
 	}
 
+	if (0 == incOuter || 0 == incInner)
+		return;
 
 	// now do the evaluation
 	for (double t = lOuter; t <= rOuter; t += incOuter)
@@ -759,21 +766,16 @@ void BsplineSurface::DrawTangentsAtPoint(double u, double v)
 	m_idTangentU = 0;
 	cagdFreeSegment(m_idTangentV);
 	m_idTangentV = 0;
-
-	BSpline bsu = CalcIsocurve(UVAxisV, v);
-	CCagdPoint ptu = bsu.CalculateAtPoint(u);
-	CCagdPoint dSdu = bsu.DerivativeAtPoint(u, 1);
-
-	BSpline bsv = CalcIsocurve(UVAxisU, u);
-	CCagdPoint ptv = bsv.CalculateAtPoint(v);
-	CCagdPoint dSdv = bsv.DerivativeAtPoint(v, 1);
+	CCagdPoint ptu = CalcSurfacePoint(u,v);
+	CCagdPoint dSdu = CalcTangentAtPoint(UVAxisU, u, v);
+	CCagdPoint dSdv = CalcTangentAtPoint(UVAxisV, u, v);
 
 	CCagdPoint tangentU[2];
 	tangentU[0] = ptu;
 	tangentU[1] = ptu + normalize(dSdu);
 	CCagdPoint tangentV[2];
-	tangentV[0] = ptv;
-	tangentV[1] = ptv + normalize(dSdv);
+	tangentV[0] = ptu;
+	tangentV[1] = ptu + normalize(dSdv);
 	
 	UINT idu = cagdAddPolyline(tangentU, 2, CAGD_SEGMENT_POLYLINE);
 	cagdSetSegmentColor(idu, 255, 0, 0);
@@ -786,6 +788,31 @@ void BsplineSurface::DrawTangentsAtPoint(double u, double v)
 	m_idTangentU = idu;
 	m_idTangentV = idv;
 
+}
+
+CCagdPoint BsplineSurface::CalcTangentAtPoint(UVAxis axis, double u, double v)
+{
+	if (UVAxisU == axis)
+	{
+		BSpline bsu = CalcIsocurve(UVAxisV, v);
+		CCagdPoint dSdu = bsu.DerivativeAtPoint(u, 1);
+		return dSdu;
+	}
+	if (UVAxisV == axis)
+	{
+		BSpline bsv = CalcIsocurve(UVAxisU, u);
+		CCagdPoint dSdv = bsv.DerivativeAtPoint(v, 1);
+		return dSdv;
+	}
+	assert(false);
+	return CCagdPoint();
+}
+
+CCagdPoint BsplineSurface::CalcSurfacePoint(double u, double v)
+{
+	BSpline bsu = CalcIsocurve(UVAxisV, v);
+	CCagdPoint ptu = bsu.CalculateAtPoint(u);
+	return ptu;
 }
 
 //-----------------------------------------------------------------------------
@@ -817,40 +844,6 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	cagdFreeSegment(m_idDir2);
 	m_idDir2 = 0;
 
-	//double maxXdiff = 0;
-	//bool writeToFile = true;
-	//{
-	//	/*BSpline splineC = CalcIsocurve(UVAxisV, 0, 0);		
-	//	BSpline splinedCdu = CalcIsocurve(UVAxisV, 0, 1);*/
-	//	
-	//	std::ofstream fd("fd1.csv");
-	//	std::ofstream fd2("fd2.csv");
-	//	std::ofstream fd3("fd3.csv");
-	//	if(fd && fd2 && fd3)
-	//	{
-	//		for(double u=0.0; u<0.999; u+=0.01)
-	//		{
-	//			CCagdPoint pt = DerivativeAtPoint(d2u, u, 0.5);
-	//			fd << pt.x << "," << pt.y << "," << pt.z << std::endl;
-
-	//			CCagdPoint pt2 = DerivativeAtPoint(du, 0.5, u/*this is v*/);
-	//			fd2 << pt2.x << "," << pt2.y << "," << pt2.z << std::endl;
-
-	//			CCagdPoint pt3 = DerivativeAtPoint(dudv, 0.5, u/*this is v*/);
-	//			fd3 << pt3.x << "," << pt3.y << "," << pt3.z << std::endl;
-
-	//			if (maxXdiff < abs(pt.x - pt2.x))
-	//				maxXdiff = abs(pt.x - pt2.x);
-	//		}
-
-
-
-	//		fd.close();
-	//		fd2.close();
-	//		fd3.close();
-	//	}
-	//}
-
 
 	// calculate G
 	double g11 = dot(m_tangentU, m_tangentU);
@@ -866,10 +859,15 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	//dudv
 	CCagdPoint d2Sdudv = DerivativeAtPoint(dudv, u, v);
 
+	// normal deriv, trying using theorem from class instead of using d2Sdudv
+	CCagdPoint normalDeriv = CalcNumNormalDeriv(u, v);
+
+
 	// II
 	double l11 = dot(d2Sdu2, m_normal);
 	double l22 = dot(d2Sdv2, m_normal);
-	double l12 = dot(d2Sdudv, m_normal);
+	//double l12 = dot(d2Sdudv, m_normal);
+	double l12 = - dot ( m_tangentU, normalDeriv );
 
 	// Different names
 	double E = g11;
@@ -889,34 +887,41 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	double k1 = (-b - sqrt(descriminant)) / (2*a);
 	double k2 = (-b + sqrt(descriminant)) / (2*a);
 
-	//if(!U::NearlyEq(k1, 0.0))
-	//{
-	//	return;
-	//}
+	if(!U::NearlyEq(k1, 0.0))
+	{
+		return;
+	}
 
-	//if(U::NearlyEq(k2, 0.0))
-	//{
-	//	return;
-	//}
+	if(U::NearlyEq(k2, 0.0))
+	{
+		return;
+	}
 
 
 	double k1Denom = sqrt( (M-k1*F)*(M-k1*F) + (L - k1*E)*(L - k1*E) );
 	double k2Denom = sqrt( (M-k2*F)*(M-k2*F) + (L - k2*E)*(L - k2*E) );
 
 	double uk1 = (M - k1*F) / k1Denom;
-	double vk1 = (L - k1*E) / k1Denom;
+	double vk1 = -(L - k1*E) / k1Denom;
 	double uk1n = uk1 / sqrt(uk1*uk1 + vk1*vk1);
 	double vk1n = vk1 / sqrt(uk1*uk1 + vk1*vk1);
-	CCagdPoint p3 = m_point + (normalize(m_tangentU) * uk1n) + (normalize(m_tangentV) * vk1n);
+	//CCagdPoint p3 = m_point + (normalize(m_tangentU) * uk1n) + (normalize(m_tangentV) * vk1n);
+	CCagdPoint p3 = m_point + (m_tangentU * uk1n) + (m_tangentV * vk1n);
 	CCagdPoint direction1 = p3 - m_point;
 
 
 	double uk2 = (M - k2*F) / k2Denom;
-	double vk2 = (L - k2*E) / k2Denom;
+	double vk2 = -(L - k2*E) / k2Denom;
 	double uk2n = uk2 / sqrt(uk2*uk2 + vk2*vk2);
 	double vk2n = vk2 / sqrt(uk2*uk2 + vk2*vk2);
-	p3 = m_point + (normalize(m_tangentU) * uk2n) + (normalize(m_tangentV) * vk2n);
+	//p3 = m_point + (normalize(m_tangentU) * uk2n) + (normalize(m_tangentV) * vk2n);
+	p3 = m_point + (m_tangentU * uk2n) + (m_tangentV * vk2n);
 	CCagdPoint direction2 = p3 - m_point;
+
+	if (! U::NearlyEq( dot( direction1, direction2 ), 0 ) )
+	{
+		assert(false);
+	}
 
 	CCagdPoint vec[2];
 
@@ -933,3 +938,35 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 }
 
 
+CCagdPoint BsplineSurface::CalcNumNormalDeriv(double u, double v)
+{
+	double h=0.01;
+	double lo = v-h;
+	double hi = v+h;
+	double sum = 2*h;
+	if(lo < m_extentsUV.m_extV.m_min)
+	{
+		lo = v;
+		sum = h;
+	}
+	if(hi > m_extentsUV.m_extV.m_max)
+	{
+		hi = v;
+		sum -= h;
+		if(U::NearlyEq(sum, 0.0))
+		{
+			assert(false);
+		}
+	}
+
+	CCagdPoint dSdUplus = CalcTangentAtPoint(UVAxisU, u, hi);
+	CCagdPoint dSdVplus = CalcTangentAtPoint(UVAxisV, u, hi);
+	CCagdPoint normalPlus = normalize( cross(dSdUplus, dSdVplus) );
+
+	CCagdPoint dSdUminus = CalcTangentAtPoint(UVAxisU, u, lo);
+	CCagdPoint dSdVminus = CalcTangentAtPoint(UVAxisV, u, lo);
+	CCagdPoint normalMinus = normalize( cross(dSdUminus, dSdVminus) );
+
+	CCagdPoint der = ( normalPlus - normalMinus ) / sum;
+	return der;
+}
