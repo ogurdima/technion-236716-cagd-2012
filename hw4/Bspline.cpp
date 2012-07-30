@@ -4,6 +4,7 @@
 #include <vector>
 #include <iosfwd>
 #include <fstream>
+#include <assert.h>
 
 using std::vector;
 
@@ -253,6 +254,11 @@ CCagdPoint BSpline::DerivativeAtPoint(double t, int j)
 		res = (p1 - p0) / 2*h;
 	}
 	return res;*/
+}
+
+CCagdPoint BSpline::RationalDerivativeAtPoint(double t, int j)
+{
+	return NURBS::ActualDerivative(t, j, m_kv, m_ctrlPts, m_degree);
 }
 
 CCagdPoint BSpline::QforDeriv(int j, int ptidx, int k)

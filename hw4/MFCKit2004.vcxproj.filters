@@ -58,6 +58,7 @@
     <ClCompile Include="GlobalsDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="NURBS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bezier.h">
@@ -120,6 +121,7 @@
     <ClInclude Include="GlobalsDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NURBS.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\MFCKit2004.ico">

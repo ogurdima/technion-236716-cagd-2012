@@ -144,6 +144,7 @@
     <ClCompile Include="MFCKit2004Doc.cpp" />
     <ClCompile Include="MFCKit2004View.cpp" />
     <ClCompile Include="NewSurfaceDlg.cpp" />
+    <ClCompile Include="NURBS.cpp" />
     <ClCompile Include="PropDlg.cpp" />
     <ClCompile Include="segment.cpp" />
     <ClCompile Include="StdAfx.cpp">
@@ -173,6 +174,7 @@
     <ClInclude Include="MFCKit2004Doc.h" />
     <ClInclude Include="MFCKit2004View.h" />
     <ClInclude Include="NewSurfaceDlg.h" />
+    <ClInclude Include="NURBS.h" />
     <ClInclude Include="PropDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="StdAfx.h" />

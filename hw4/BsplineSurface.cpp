@@ -705,25 +705,25 @@ CCagdPoint BsplineSurface::DerivativeAtPoint(Deriv der, double u, double v)
 	case du:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisV, v);
-			return isocurve.DerivativeAtPoint(u, 1);
+			return isocurve.RationalDerivativeAtPoint(u, 1);
 		}
 		break;
 	case dv:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisU, u);
-			return isocurve.DerivativeAtPoint(v, 1);
+			return isocurve.RationalDerivativeAtPoint(v, 1);
 		}
 		break;
 	case d2u:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisV, v);
-			return isocurve.DerivativeAtPoint(u, 2);
+			return isocurve.RationalDerivativeAtPoint(u, 2);
 		}
 		break;
 	case d2v:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisU, u);
-			return isocurve.DerivativeAtPoint(v, 2);
+			return isocurve.RationalDerivativeAtPoint(v, 2);
 		}
 		break;
 	case dudv:
@@ -748,9 +748,9 @@ CCagdPoint BsplineSurface::DerivativeAtPoint(Deriv der, double u, double v)
 				}
 			}
 			BSpline isocurvePlus = CalcIsocurve(UVAxisV, hi);
-			CCagdPoint pPlus = isocurvePlus.DerivativeAtPoint(u, 1);
+			CCagdPoint pPlus = isocurvePlus.RationalDerivativeAtPoint(u, 1);
 			BSpline isocurveMinus = CalcIsocurve(UVAxisV, lo);
-			CCagdPoint pMinus = isocurveMinus.DerivativeAtPoint(u, 1);
+			CCagdPoint pMinus = isocurveMinus.RationalDerivativeAtPoint(u, 1);
 			CCagdPoint res = (pPlus-pMinus) / sum;
 			return res;
 		}
@@ -812,13 +812,13 @@ CCagdPoint BsplineSurface::CalcTangentAtPoint(UVAxis axis, double u, double v)
 	if (UVAxisU == axis)
 	{
 		BSpline bsu = CalcIsocurve(UVAxisV, v);
-		CCagdPoint dSdu = bsu.DerivativeAtPoint(u, 1);
+		CCagdPoint dSdu = bsu.RationalDerivativeAtPoint(u, 1);
 		return dSdu;
 	}
 	if (UVAxisV == axis)
 	{
 		BSpline bsv = CalcIsocurve(UVAxisU, u);
-		CCagdPoint dSdv = bsv.DerivativeAtPoint(v, 1);
+		CCagdPoint dSdv = bsv.RationalDerivativeAtPoint(v, 1);
 		return dSdv;
 	}
 	assert(false);
@@ -887,8 +887,8 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	// II
 	double l11 = dot(d2Sdu2, m_normal);
 	double l22 = dot(d2Sdv2, m_normal);
-	//double l12 = dot(d2Sdudv, m_normal);
-	double l12 = - dot ( m_tangentU, normalDeriv );
+	double l12 = dot(d2Sdudv, m_normal);
+	//double l12 = - dot ( m_tangentU, normalDeriv );
 
 	// Different names
 	double E = g11;
@@ -917,7 +917,7 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	{
 		if (! U::NearlyEq( dot( direction1, direction2 ), 0 ) )
 		{
-			assert(false);
+			//assert(false);
 		}
 	}
 

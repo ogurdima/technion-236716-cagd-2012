@@ -1,5 +1,6 @@
 #pragma once
 #include "Curve.h"
+#include "NURBS.h"
 
 struct Extents1D
 {
@@ -35,6 +36,7 @@ public:
 	CCagdPoint CalculateAtPoint(double t);
 	CCagdPoint DerivativeAtPoint(double t, int j);
 	CCagdPoint QforDeriv(int i, int ptidx, int k);
+	CCagdPoint RationalDerivativeAtPoint(double t, int j);
 
 	Extents1D GetExtents() const;
 
