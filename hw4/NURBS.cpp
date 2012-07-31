@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "NURBS.h"
-
+#include "BezierMath.h"
 
 vector<CCagdPoint> NURBS::RatCurveDervs(vector<CCagdPoint> Aders, vector<double> wders, int d)
 {
@@ -19,7 +19,7 @@ vector<CCagdPoint> NURBS::RatCurveDervs(vector<CCagdPoint> Aders, vector<double>
 
 int NURBS::BinomialCoefficients(int n, int k)
 {
-	if (n > k || n < 0 || k < 0)
+	if (n < k || n < 0 || k < 0)
 		return 0;
 	if (n == k)
 		return 1;
@@ -33,7 +33,7 @@ int NURBS::BinomialCoefficients(int n, int k)
 
 int NURBS::FindSpan(int n, int p , double u, vector<double> U)
 {
-	if (u == U[n + 1])
+	if(U::NearlyEq(u, U[n + 1]))
 		return n;
 	int low = p;
 	int high = n + 1;

@@ -862,6 +862,46 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	cagdFreeSegment(m_idDir2);
 	m_idDir2 = 0;
 
+	
+	//double maxXdiff = 0;
+	//bool writeToFile = true;
+	//{
+	//	//BSpline splineC = CalcIsocurve(UVAxisV, 0, 0);
+	//	
+	//	//std::ofstream fd1("t1_u.csv");
+	//	//std::ofstream fd2("t1_v.csv");
+	//	std::ofstream fd3("t1_derivu.csv");
+	//	std::ofstream fd4("t1_derivv.csv");
+	//	std::ofstream fd5("t1_derivuu.csv");
+	//	std::ofstream fd6("t1_derivvv.csv");
+
+	//	if(fd3 && fd4)
+	//	{
+	//		for(double u=0.0; u<0.999; u+=0.01)
+	//		{
+
+	//			CCagdPoint pt3 = DerivativeAtPoint(du, u, 0.5/*this is v*/);
+	//			fd3 << pt3.x << "," << pt3.y << "," << pt3.z << std::endl;
+
+	//			CCagdPoint pt4 = DerivativeAtPoint(dv, 0.5, u/*this is v*/);
+	//			fd4 << pt4.x << "," << pt4.y << "," << pt4.z << std::endl;
+
+	//			CCagdPoint pt5 = DerivativeAtPoint(d2u, u, 0.5);
+	//			fd5 << pt5.x << "," << pt5.y << "," << pt5.z << std::endl;
+
+	//			CCagdPoint pt6 = DerivativeAtPoint(d2v, 0.5, u);
+	//			fd6 << pt6.x << "," << pt6.y << "," << pt6.z << std::endl;
+	//		}
+
+
+
+	//		fd3.close();
+	//		fd4.close();
+	//		fd5.close();
+	//		fd6.close();
+	//	}
+	//}
+
 	if(U::NearlyEq(length(m_tangentU), 0) || U::NearlyEq(length(m_tangentV), 0))
 	{
 		return;
@@ -915,9 +955,16 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 
 	if(dir1Valid && dir2Valid)
 	{
-		if (! U::NearlyEq( dot( direction1, direction2 ), 0 ) )
+		if (!U::NearlyEq( dot( direction1, direction2 ), 0 ))
 		{
-			//assert(false);
+			//if(U::NearlyEq(k1, k2, 0.05))
+			//{
+			//	return;
+			//}
+			//else
+			//{
+			//	assert(false);
+			//}
 		}
 	}
 
@@ -929,8 +976,6 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 		vec[1] = 0.5*normalize(direction1) + m_point;
 		double k1Rad = 1.0 / k1;
 		CCagdPoint k1Ctr = m_point + k1Rad*normalize(m_normal);
-		
-		cagdAddPoint(&k1Ctr);
 		m_idDir1 = DrawCircle(k1Ctr, normalize(m_normal), cross(m_normal, normalize(direction1)), k1Rad);
 		cagdSetSegmentColor(m_idDir1, 1,1,1);
 	}
