@@ -23,6 +23,7 @@
 #include "NewSurfaceDlg.h"
 #include "GlobalsDlg.h"
 #include "BsplineSurface.h"
+#include "InsertKnotDlg.h"
 
 #ifndef PI
 #define PI (3.1415926535897932384626433832795) 
@@ -54,6 +55,8 @@ public:
 	void Scale (double val);
 	CCagdPoint *findCtlPoint(int x, int y);
 	UINT findCircle(int x, int y);
+
+	void DrawTangentPlane();
 
 	double SSense, TSense, RSense;
 
@@ -145,7 +148,7 @@ public:
 
 	// globals dialog
 	CGlobalsDlg m_globalsDlg;
-
+	CInsertKnotDlg m_insertKnotDlg;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -224,6 +227,9 @@ public:
 	afx_msg void OnSurfacesGlobals();
 	afx_msg void OnSurfacesStartAnimation();
 	afx_msg void OnSurfacesStopAnimation();
+	afx_msg void OnSurfacesInsertknotu();
+	afx_msg void OnSurfacesInsertknotv();
+	void OnUpdateUVStatus();
 };
 
 #ifndef _DEBUG  // debug version in MFCKit2004View.cpp

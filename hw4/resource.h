@@ -40,11 +40,13 @@
 #define IDR_MENU3                       166
 #define IDR_MENU4                       167
 #define IDD_SURF_GLOBALS                168
+#define IDD_SURFACES_INSERTKNOTDLG      169
 #define IDC_X_T                         1007
 #define IDC_X_DEGREE                    1007
 #define IDC_EDIT2                       1008
 #define IDC_Z_T                         1008
 #define IDC_SURFDLG_KVTXTV              1008
+#define IDC_INSERT_NEW_KNOT_VALUE       1008
 #define IDC_Y_T                         1009
 #define IDC_X_SAMPLING_STEP             1009
 #define IDC_SURFDLG_KVTXTU              1009
@@ -69,6 +71,8 @@
 #define IDC_SURF_GLOBALS_ISOS_V         1021
 #define IDC_GLOBALS_KNOTSU              1022
 #define IDC_GLOBALS_KNOTSV              1023
+#define IDC_INSERT_KNOTS_U              1023
+#define IDC_INSERT_KNOTS_V              1024
 #define ID_POPUP_CLOSE                  32776
 #define ID_STUFF_2                      32777
 #define ID_STUFF_3                      32778
@@ -113,7 +117,12 @@
 #define ID_SURFACES_GLOBALS             32825
 #define ID_SURFACES_STARTANIMATION      32826
 #define ID_SURFACES_STOPANIMATION       32827
+#define ID_SURFACES_INSERTKNOT          32828
+#define ID_SURFACES_INSERTKNOTU         32829
+#define ID_SURFACES_INSERTKNOTV         32830
+#define ID_INDICATOR_U                 61204
 #define ID_INDICATOR_CURVATURE          61205
+#define ID_INDICATOR_V                 61205
 #define ID_INDICATOR_TORSION            61206
 
 // Next default values for new objects
@@ -121,9 +130,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        169
-#define _APS_NEXT_COMMAND_VALUE         32828
-#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_RESOURCE_VALUE        170
+#define _APS_NEXT_COMMAND_VALUE         32831
+#define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

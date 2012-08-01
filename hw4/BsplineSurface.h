@@ -104,6 +104,10 @@ public:
 	const Extents2D& GetExtentsUV() const;
 	BsplineSurface& operator=(const BsplineSurface& rhs);
 
+	CCagdPoint GetTangentU() const;
+	CCagdPoint GetTangentV() const;
+	CCagdPoint GetSurfacePoint() const;
+
 	enum Deriv
 	{
 		du,
@@ -117,6 +121,8 @@ public:
 
 	CCagdPoint FirstDerivU(double t);
 	CCagdPoint FirstDerivV(double t);
+
+	bool InsertKnotBoehm(UVAxis axis, double val);
 
 	void OnLButtonDown(int x, int y);
 
@@ -189,7 +195,6 @@ private:
 	CCagdPoint CalcTangentAtPoint(UVAxis axis, double u, double v);
 	CCagdPoint CalcSurfacePoint(double u, double v);
 	CCagdPoint CalcNumNormalDeriv(double u, double v);
-
 
 	void PickCtrlMeshPoint(int id);
 	void PickInvisiblePoint(int id);

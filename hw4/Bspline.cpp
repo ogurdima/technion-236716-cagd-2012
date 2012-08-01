@@ -6,6 +6,8 @@
 #include <fstream>
 #include <assert.h>
 
+//#define BSPLINE_RATIONAL
+
 using std::vector;
 
 //=============================================================================
@@ -90,6 +92,7 @@ bool BSpline::InsertPt(const CCagdPoint& pt, double weight, int ptIdxAt)
 bool BSpline::InsertKnotBoehm(double val)
 {
 	int insertedIn = -1;
+
 	vector<double> refinedKv;
 	for(unsigned int i = 0; i < m_kv.size(); ++i)
 	{
@@ -107,9 +110,13 @@ bool BSpline::InsertKnotBoehm(double val)
 	}
 
 	if (insertedIn <= m_degree)
+	{
 		return false;
-  else if(insertedIn > m_ctrlPts.size())
-    return false;
+	}
+	else if(insertedIn > m_ctrlPts.size())
+	{
+		return false;
+	}
 
 	int initialI = insertedIn - m_degree;
 	if (initialI < 0)
@@ -125,29 +132,30 @@ bool BSpline::InsertKnotBoehm(double val)
 			double coeffA = ( abs(refinedKv[i+m_degree+1] - refinedKv[i]) > 0.0001) ? (val - refinedKv[i]) / ( refinedKv[i+m_degree+1] - refinedKv[i]) : 0;
 			double coeffB = ( abs(refinedKv[i+m_degree+1] - refinedKv[i]) > 0.0001) ? (refinedKv[i+m_degree+1] - val) / ( refinedKv[i+m_degree+1] - refinedKv[i]) : 0;
 			CCagdPoint np(0,0,0);
-      double nw = 0.0;
-      if(!U::NearlyEq(coeffA,0.0))
-      {
-        np += coeffA * m_ctrlPts[i].m_pt;  
-        nw += coeffA * m_ctrlPts[i].m_weight;
-      }
-      else{
-        bool ok =true;
-      }
-      if(!U::NearlyEq(coeffB,0.0))
-      {
-        np += coeffB * m_ctrlPts[i-1].m_pt;
-        nw += coeffB * m_ctrlPts[i-1].m_weight;
-      }
-      else{
-        bool ok =true;
-      }
-			 
+			double nw = 0.0;
+			if(!U::NearlyEq(coeffA,0.0))
+			{
+				np += coeffA * m_ctrlPts[i].m_pt;  
+				nw += coeffA * m_ctrlPts[i].m_weight;
+			}
+			else{
+				bool ok =true;
+			}
+			if(!U::NearlyEq(coeffB,0.0))
+			{
+				np += coeffB * m_ctrlPts[i-1].m_pt;
+				nw += coeffB * m_ctrlPts[i-1].m_weight;
+			}
+			else{
+				bool ok =true;
+			}
+
 			newCtrl.push_back(WeightedPt(np, nw));
 		}
 		else
 		{
 			stopped = i;
+			break;
 		}
 	}
 	if (stopped != -1)
@@ -181,10 +189,18 @@ void BSpline::Calculate()
 		for (int i = 0; i < m_ctrlPts.size(); i++)
 		{
 			double basis = BSplineBasis(t, i, m_degree); 
+#ifdef BSPLINE_RATIONAL
 			cur = cur +  m_ctrlPts[i].m_pt * m_ctrlPts[i].m_weight * basis;
 			w += m_ctrlPts[i].m_weight * basis;
+#else
+			cur = cur +  m_ctrlPts[i].m_pt * basis;
+#endif
 		}
+#ifdef BSPLINE_RATIONAL
 		m_dataPts.push_back(cur / w);
+#else
+		m_dataPts.push_back(cur);
+#endif
 		m_idxToArg.push_back(t);
 	}
 }
@@ -206,16 +222,24 @@ CCagdPoint BSpline::CalculateAtPoint(double t)
 	for (int i = 0; i < m_ctrlPts.size(); i++)
 	{
 		double basis = BSplineBasis(t, i, m_degree); 
+#ifdef BSPLINE_RATIONAL
 		cur = cur +  m_ctrlPts[i].m_pt * m_ctrlPts[i].m_weight * basis;
 		w += m_ctrlPts[i].m_weight * basis;
+#else
+		cur = cur +  m_ctrlPts[i].m_pt * basis;
+#endif
 	}
 	
+#ifdef BSPLINE_RATIONAL
 	if(U::NearlyEq(w, 0.0))
 	{
 		throw std::exception();
 	}
 	
 	return (cur / w);
+#else
+	return cur;
+#endif
 }
 
 CCagdPoint BSpline::DerivativeAtPoint(double t, int j)
@@ -226,10 +250,19 @@ CCagdPoint BSpline::DerivativeAtPoint(double t, int j)
 	{
 		CCagdPoint Q = QforDeriv(j, i, m_degree);
 		double basis = BSplineBasis(t, i, m_degree-j); 
+#ifdef BSPLINE_RATIONAL
 		cur = cur +  Q * m_ctrlPts[i].m_weight * basis;
 		w += m_ctrlPts[i].m_weight * basis;
+#else
+		cur = cur +  Q * basis;
+#endif
 	}
+#ifdef BSPLINE_RATIONAL
 	return (cur / w);
+#else
+	return cur;
+#endif
+
 /*
 	CCagdPoint p0, p1;
 

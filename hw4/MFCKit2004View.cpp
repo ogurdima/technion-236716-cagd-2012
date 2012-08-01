@@ -11,6 +11,7 @@
 #include "gl/gl.h"
 #include "gl/glu.h"
 #include "NewSurfaceDlg.h"
+#include "BezierMath.h"
 
 #include <string>
 #include <fstream>
@@ -90,6 +91,8 @@ BEGIN_MESSAGE_MAP(CMFCKit2004View, CView)
 	ON_COMMAND(ID_SURFACES_GLOBALS, &CMFCKit2004View::OnSurfacesGlobals)
 	ON_COMMAND(ID_SURFACES_STARTANIMATION, &CMFCKit2004View::OnSurfacesStartAnimation)
 	ON_COMMAND(ID_SURFACES_STOPANIMATION, &CMFCKit2004View::OnSurfacesStopAnimation)
+	ON_COMMAND(ID_SURFACES_INSERTKNOTU, &CMFCKit2004View::OnSurfacesInsertknotu)
+	ON_COMMAND(ID_SURFACES_INSERTKNOTV, &CMFCKit2004View::OnSurfacesInsertknotv)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -370,7 +373,7 @@ void CMFCKit2004View::OnPaint() {
 	CPaintDC dc(this); // device context for painting
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		// clear screen and zbuffer
 	drawSegments(GL_RENDER);
-
+	DrawTangentPlane();
 	glFlush();
 	SwapBuffers(wglGetCurrentDC());
 
@@ -378,6 +381,46 @@ void CMFCKit2004View::OnPaint() {
 //	drawSegments(GL_RENDER);
 //	glFlush();
 //	SwapBuffers(wglGetCurrentDC());
+}
+
+void CMFCKit2004View::DrawTangentPlane()
+{
+	CCagdPoint tanU = m_bs.GetTangentU();
+	CCagdPoint tanV = m_bs.GetTangentV();
+
+	if(U::NearlyEq(length(tanU), 0.0))
+	{ return ; }
+	if(U::NearlyEq(length(tanV), 0.0))
+	{ return ; }
+
+	tanU = normalize(tanU);
+	tanV = normalize(tanV);
+	CCagdPoint surfacePoint = m_bs.GetSurfacePoint();
+
+	glColor4ub(128, 0, 128, 100);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE); // need for blending
+	glEnable(GL_BLEND); // turn on blending
+	glDisable(GL_DEPTH_TEST); // don't think we need this
+	glPointSize(40);
+
+	CCagdPoint tr = surfacePoint + 0.25*tanU + 0.25*tanV;
+	CCagdPoint br = surfacePoint + 0.25*tanU - 0.25*tanV;
+	CCagdPoint tl = surfacePoint - 0.25*tanU + 0.25*tanV;
+	CCagdPoint bl = surfacePoint - 0.25*tanU - 0.25*tanV;
+	
+
+	glBegin(GL_TRIANGLES);
+		glVertex3dv((GLdouble *)&tr);
+		glVertex3dv((GLdouble *)&br);
+		glVertex3dv((GLdouble *)&bl);
+		glVertex3dv((GLdouble *)&tr);
+		glVertex3dv((GLdouble *)&bl);
+		glVertex3dv((GLdouble *)&tl);
+	glEnd();
+
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+
 }
 /////////////////////////////////////////////////////////////////////////////
 // CMFCKit2004View diagnostics
@@ -571,8 +614,8 @@ void CMFCKit2004View::OnMouseMove(UINT nFlags, CPoint point) {
 }
 
 BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
-	UINT stateCtrl	= ::GetAsyncKeyState(VK_CONTROL);
-	UINT stateShift = ::GetAsyncKeyState(VK_SHIFT);
+	bool stateCtrl = (::GetAsyncKeyState(VK_CONTROL) & 0x80000000);
+	bool stateShift = (::GetAsyncKeyState(VK_SHIFT) & 0x80000000);
 	if(stateCtrl)
 	{
 		if(!m_animStarted)
@@ -586,6 +629,7 @@ BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
 			strm << "U updated. Eval point now (" << ptUV.m_u << "," << ptUV.m_v << ")." << std::endl;
 			::OutputDebugString((LPCSTR)strm.str().c_str());
 			m_bs.DrawAttributesOnly();
+			OnUpdateUVStatus();
 		}
 	}
 	else if(stateShift)
@@ -603,6 +647,7 @@ BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
 			strm << "V updated. Eval point now (" << ptUV.m_u << "," << ptUV.m_v << ")." << std::endl;
 			::OutputDebugString((LPCSTR)strm.str().c_str());
 			m_bs.DrawAttributesOnly();
+			OnUpdateUVStatus();
 		}
 
 	}
@@ -949,7 +994,7 @@ void CMFCKit2004View::OnKnotguiRemoveknot()
 
 void CMFCKit2004View::OnKnotguiInsertknot()
 {
-
+	m_bs.InsertKnotBoehm(UVAxisU, 0.5);
 }
 
 
@@ -1072,4 +1117,76 @@ void CMFCKit2004View::OnSurfacesStartAnimation()
 void CMFCKit2004View::OnSurfacesStopAnimation()
 {
 	StopAnimation();
+}
+
+
+void CMFCKit2004View::OnSurfacesInsertknotu()
+{
+	m_insertKnotDlg.m_knots = m_bs.KnotVectorU();
+
+	if(IDOK == m_insertKnotDlg.DoModal())
+	{
+		double newKnotVal = m_insertKnotDlg.m_newKnotValue;
+		
+		if(m_bs.InsertKnotBoehm(UVAxisU, newKnotVal))
+		{
+			m_bs.ClearSegments();
+			cagdFreeAllSegments();
+			m_bs.Draw();
+			Invalidate();
+		}
+		else
+		{
+			::AfxMessageBox("Could not insert knot.");
+		}
+	}
+
+}
+
+
+void CMFCKit2004View::OnSurfacesInsertknotv()
+{
+	m_insertKnotDlg.m_knots = m_bs.KnotVectorV();
+
+	if(IDOK == m_insertKnotDlg.DoModal())
+	{
+		double newKnotVal = m_insertKnotDlg.m_newKnotValue;
+		
+		if(m_bs.InsertKnotBoehm(UVAxisV, newKnotVal))
+		{
+			m_bs.ClearSegments();
+			cagdFreeAllSegments();
+			m_bs.Draw();
+			Invalidate();
+		}
+		else
+		{
+			::AfxMessageBox("Could not insert knot.");
+		}
+	}
+}
+
+void CMFCKit2004View::OnUpdateUVStatus()
+{
+	CString strU;
+	
+	strU.Format("U: %f", m_bs.GetDrawPt().m_u);
+	CString strV;
+	strV.Format("V: %f", m_bs.GetDrawPt().m_v);
+	CMainFrame *pmw = (CMainFrame*)AfxGetMainWnd();
+	pmw->m_wndStatusBar.SetPaneText(
+		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_U),
+		strU);
+	pmw->m_wndStatusBar.SetPaneInfo(
+		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_U),
+		ID_INDICATOR_U, 0, 100);
+
+
+	pmw->m_wndStatusBar.SetPaneText(
+		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_V),
+		strV);
+	pmw->m_wndStatusBar.SetPaneInfo(
+		pmw->m_wndStatusBar.CommandToIndex(ID_INDICATOR_V),
+		ID_INDICATOR_V, 0, 100);
+
 }

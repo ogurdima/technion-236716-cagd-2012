@@ -79,6 +79,22 @@ const Extents2D& BsplineSurface::GetExtentsUV() const
 }
 
 //-----------------------------------------------------------------------------
+CCagdPoint BsplineSurface::GetSurfacePoint() const
+{
+	return m_point;
+}
+//-----------------------------------------------------------------------------
+CCagdPoint BsplineSurface::GetTangentU() const
+{
+	return m_tangentU;
+}
+//-----------------------------------------------------------------------------
+CCagdPoint BsplineSurface::GetTangentV() const
+{
+	return m_tangentV;
+}
+
+//-----------------------------------------------------------------------------
 void BsplineSurface::invalidate()
 {
 	m_draggedPtId = 0;
@@ -690,6 +706,78 @@ CCagdPoint BsplineSurface::FirstDerivU(double t)
 	return CCagdPoint(0,0,0);
 }
 
+//-----------------------------------------------------------------------------
+bool BsplineSurface::InsertKnotBoehm(UVAxis axis, double val)
+{
+	vector<vector<CCagdPoint>> ctrlPtsToUse;
+	vector<vector<CCagdPoint>> newCtrlPts;
+	vector<double> newKnotVector;
+	if(UVAxisU == axis)
+	{
+		ctrlPtsToUse = m_points; //[v][u]
+		int vCount = ctrlPtsToUse.size();
+
+		BSpline tmpSplineV;
+		tmpSplineV.SetDegree(m_order.m_u - 1);
+		tmpSplineV.SetKnotVector(m_knots.m_u);
+		// loop through all the v's
+		for(int i=0; i<vCount; ++i)
+		{
+			tmpSplineV.SetPoly(ctrlPtsToUse[i]);
+			tmpSplineV.SetKnotVector(m_knots.m_u);
+			if(!tmpSplineV.InsertKnotBoehm(val))
+			{
+				return false;
+			}
+			vector<WeightedPt> newWPts = tmpSplineV.ControlPoints();
+			vector<CCagdPoint> newPts;
+			for(int j=0; j<newWPts.size(); ++j)
+			{
+				newPts.push_back(newWPts[j].m_pt);
+			}
+			newCtrlPts.push_back(newPts);
+		}
+		newKnotVector = tmpSplineV.GetKnotVector();
+
+		SetPoints(newCtrlPts);
+		SetKnotVectorU(newKnotVector);
+	}
+	else if (UVAxisV == axis)
+	{
+		ctrlPtsToUse = transposeMatrixVectorOfPoints(m_points); // [v][u] -> [u][v]
+		int uCount = ctrlPtsToUse.size();
+
+		BSpline tmpSplineU;
+		tmpSplineU.SetDegree(m_order.m_v - 1);
+		tmpSplineU.SetKnotVector(m_knots.m_v);
+
+		// loop through all the u's
+		for(int i=0; i<uCount; ++i)
+		{
+			tmpSplineU.SetPoly(ctrlPtsToUse[i]);
+			tmpSplineU.SetKnotVector(m_knots.m_v);
+			if(!tmpSplineU.InsertKnotBoehm(val))
+			{
+				return false;
+			}
+			vector<WeightedPt> newWPts = tmpSplineU.ControlPoints();
+			vector<CCagdPoint> newPts;
+			for(int j=0; j<newWPts.size(); ++j)
+			{
+				newPts.push_back(newWPts[j].m_pt);
+			}
+			newCtrlPts.push_back(newPts);
+		}
+		newKnotVector = tmpSplineU.GetKnotVector();
+		newCtrlPts = transposeMatrixVectorOfPoints(newCtrlPts);
+
+		SetPoints(newCtrlPts);
+		SetKnotVectorV(newKnotVector);
+	}
+	return true;
+}
+
+//-----------------------------------------------------------------------------
 CCagdPoint BsplineSurface::CalculateAtPoint(double u, double v)
 {
 	BSpline isocurve = CalcIsocurve(UVAxisV, v);
@@ -705,25 +793,29 @@ CCagdPoint BsplineSurface::DerivativeAtPoint(Deriv der, double u, double v)
 	case du:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisV, v);
-			return isocurve.RationalDerivativeAtPoint(u, 1);
+			//return isocurve.RationalDerivativeAtPoint(u, 1);
+			return isocurve.DerivativeAtPoint(u, 1);
 		}
 		break;
 	case dv:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisU, u);
-			return isocurve.RationalDerivativeAtPoint(v, 1);
+			//return isocurve.RationalDerivativeAtPoint(v, 1);
+			return isocurve.DerivativeAtPoint(v, 1);
 		}
 		break;
 	case d2u:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisV, v);
-			return isocurve.RationalDerivativeAtPoint(u, 2);
+			//return isocurve.RationalDerivativeAtPoint(u, 2);
+			return isocurve.DerivativeAtPoint(u, 2);
 		}
 		break;
 	case d2v:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisU, u);
-			return isocurve.RationalDerivativeAtPoint(v, 2);
+			//return isocurve.RationalDerivativeAtPoint(v, 2);
+			return isocurve.DerivativeAtPoint(v, 2);
 		}
 		break;
 	case dudv:
@@ -748,9 +840,11 @@ CCagdPoint BsplineSurface::DerivativeAtPoint(Deriv der, double u, double v)
 				}
 			}
 			BSpline isocurvePlus = CalcIsocurve(UVAxisV, hi);
-			CCagdPoint pPlus = isocurvePlus.RationalDerivativeAtPoint(u, 1);
+			//CCagdPoint pPlus = isocurvePlus.RationalDerivativeAtPoint(u, 1);
+			CCagdPoint pPlus = isocurvePlus.DerivativeAtPoint(u, 1);
 			BSpline isocurveMinus = CalcIsocurve(UVAxisV, lo);
-			CCagdPoint pMinus = isocurveMinus.RationalDerivativeAtPoint(u, 1);
+			//CCagdPoint pMinus = isocurveMinus.RationalDerivativeAtPoint(u, 1);
+			CCagdPoint pMinus = isocurveMinus.DerivativeAtPoint(u, 1);
 			CCagdPoint res = (pPlus-pMinus) / sum;
 			return res;
 		}
@@ -812,13 +906,15 @@ CCagdPoint BsplineSurface::CalcTangentAtPoint(UVAxis axis, double u, double v)
 	if (UVAxisU == axis)
 	{
 		BSpline bsu = CalcIsocurve(UVAxisV, v);
-		CCagdPoint dSdu = bsu.RationalDerivativeAtPoint(u, 1);
+		//CCagdPoint dSdu = bsu.RationalDerivativeAtPoint(u, 1);
+		CCagdPoint dSdu = bsu.DerivativeAtPoint(u, 1);
 		return dSdu;
 	}
 	if (UVAxisV == axis)
 	{
 		BSpline bsv = CalcIsocurve(UVAxisU, u);
-		CCagdPoint dSdv = bsv.RationalDerivativeAtPoint(v, 1);
+		//CCagdPoint dSdv = bsv.RationalDerivativeAtPoint(v, 1);
+		CCagdPoint dSdv = bsv.DerivativeAtPoint(v, 1);
 		return dSdv;
 	}
 	assert(false);
@@ -866,9 +962,9 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	//double maxXdiff = 0;
 	//bool writeToFile = true;
 	//{
-	//	//BSpline splineC = CalcIsocurve(UVAxisV, 0, 0);
+	//	BSpline splineCu = CalcIsocurve(UVAxisV, 0.5);
 	//	
-	//	//std::ofstream fd1("t1_u.csv");
+	//	std::ofstream fd1("t1_u.csv");
 	//	//std::ofstream fd2("t1_v.csv");
 	//	std::ofstream fd3("t1_derivu.csv");
 	//	std::ofstream fd4("t1_derivv.csv");
@@ -879,6 +975,11 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	//	{
 	//		for(double u=0.0; u<0.999; u+=0.01)
 	//		{
+	//			CCagdPoint pt1 = splineCu.CalculateAtPoint(u);
+	//			fd1 << pt1.x << "," << pt1.y << "," << pt1.z << std::endl;
+
+	//			//CCagdPoint pt2 = splineCv.CalculateAtPoint(u);
+	//			//fd1 << pt2.x << "," << pt2.y << "," << pt2.z << std::endl;
 
 	//			CCagdPoint pt3 = DerivativeAtPoint(du, u, 0.5/*this is v*/);
 	//			fd3 << pt3.x << "," << pt3.y << "," << pt3.z << std::endl;
@@ -893,8 +994,8 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	//			fd6 << pt6.x << "," << pt6.y << "," << pt6.z << std::endl;
 	//		}
 
-
-
+	//		fd1.close();
+	//		//fd2.close();
 	//		fd3.close();
 	//		fd4.close();
 	//		fd5.close();
@@ -1088,6 +1189,7 @@ CCagdPoint BsplineSurface::CalcNumNormalDeriv(double u, double v)
 	CCagdPoint der = ( normalPlus - normalMinus ) / sum;
 	return der;
 }
+
 
 void BsplineSurface::DrawInvisiblePoints()
 {

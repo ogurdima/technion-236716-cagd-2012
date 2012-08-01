@@ -138,6 +138,7 @@
     <ClCompile Include="cagd.cpp" />
     <ClCompile Include="Curve.cpp" />
     <ClCompile Include="GlobalsDlg.cpp" />
+    <ClCompile Include="InsertKnotDlg.cpp" />
     <ClCompile Include="KVgui.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MFCKit2004.cpp" />
@@ -167,6 +168,7 @@
     <ClInclude Include="cagd.h" />
     <ClInclude Include="Curve.h" />
     <ClInclude Include="GlobalsDlg.h" />
+    <ClInclude Include="InsertKnotDlg.h" />
     <ClInclude Include="internal.h" />
     <ClInclude Include="KVgui.h" />
     <ClInclude Include="MainFrm.h" />

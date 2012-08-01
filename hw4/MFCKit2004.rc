@@ -155,7 +155,9 @@ BEGIN
     END
     POPUP "Surfaces"
     BEGIN
-        MENUITEM "Globals",                     ID_SURFACES_GLOBALS
+        MENUITEM "Surface Attributes",          ID_SURFACES_GLOBALS
+        MENUITEM "Insert Knot U",               ID_SURFACES_INSERTKNOTU
+        MENUITEM "Insert Knot V",               ID_SURFACES_INSERTKNOTV
         MENUITEM "Start Animation",             ID_SURFACES_STARTANIMATION
         MENUITEM "Stop Animation",              ID_SURFACES_STOPANIMATION
     END
@@ -451,8 +453,8 @@ STRINGTABLE
 BEGIN
     AFX_IDS_SCRESTORE       "Restore the window to normal size"
     AFX_IDS_SCTASKLIST      "Activate Task List"
-    ID_INDICATOR_CURVATURE  "Default"
-    ID_INDICATOR_TORSION    "Default"
+    ID_INDICATOR_U			"0.0"
+    ID_INDICATOR_V			"0.0"
 END
 
 #endif    // English (United States) resources
@@ -517,6 +519,20 @@ BEGIN
     EDITTEXT        IDC_GLOBALS_KNOTSV,78,76,135,14,ES_AUTOHSCROLL
 END
 
+IDD_SURFACES_INSERTKNOTDLG DIALOGEX 0, 0, 321, 186
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Insert Knot"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,205,165,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,264,165,50,14
+    EDITTEXT        IDC_INSERT_KNOTS_U,19,38,277,46,ES_AUTOHSCROLL | ES_READONLY
+    EDITTEXT        IDC_INSERT_KNOTS_V,7,165,40,14,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    LTEXT           "Current Knots:",IDC_STATIC,21,25,48,8
+    LTEXT           "Insert Knot:",IDC_STATIC,25,100,40,8
+    EDITTEXT        IDC_INSERT_NEW_KNOT_VALUE,72,98,75,14,ES_AUTOHSCROLL
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -541,6 +557,14 @@ BEGIN
         VERTGUIDE, 15
         TOPMARGIN, 7
         BOTTOMMARGIN, 203
+    END
+
+    IDD_SURFACES_INSERTKNOTDLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 314
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 179
     END
 END
 #endif    // APSTUDIO_INVOKED
