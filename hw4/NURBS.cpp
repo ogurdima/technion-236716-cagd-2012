@@ -33,7 +33,7 @@ int NURBS::BinomialCoefficients(int n, int k)
 
 int NURBS::FindSpan(int n, int p , double u, vector<double> U)
 {
-	if(U::NearlyEq(u, U[n + 1]))
+	if(U.size() > (n+1) && U::NearlyEq(u, U[n + 1]))
 		return n;
 	int low = p;
 	int high = n + 1;

@@ -15,6 +15,7 @@
 
 #include <string>
 #include <fstream>
+#include <strstream>
 
 #pragma warning (disable : 4800)
 #pragma warning (disable : 4018)
@@ -150,7 +151,7 @@ BOOL CMFCKit2004View::PreCreateWindow(CREATESTRUCT& cs) {
 //  reset the scene, wither create new curve by specifying the params in the
 // dialog box, or proceed to load a new curve from a file:
 void CMFCKit2004View::OnFileNew() {
-	// TODO: Add your command handler code here
+	OnContextbgNewsurface();
 }
 
 
@@ -623,6 +624,12 @@ BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
 			// u
 			DrawPt ptUV = m_bs.GetDrawPt();
 			double newU = ptUV.m_u + double(zDelta)/5000.0;
+
+			const Extents2D& ext = m_bs.GetExtentsUV();
+			double numericThresh = (ext.m_extU.m_max - ext.m_extU.m_min) / 1000;
+			newU = (newU >= ext.m_extU.m_max) ? ext.m_extU.m_max - numericThresh : newU;
+			newU = (newU <= ext.m_extU.m_min) ? ext.m_extU.m_min + numericThresh : newU;
+
 			ptUV.m_u = newU;
 			m_bs.SetDrawPt(ptUV);
 			std::stringstream strm;
@@ -639,7 +646,12 @@ BOOL CMFCKit2004View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt) {
 			// v
 			DrawPt ptUV = m_bs.GetDrawPt();
 			double newV = ptUV.m_v + double(zDelta)/5000.0;
-			//newV = U::Clamp(newV, minV, maxV);
+			
+			const Extents2D& ext = m_bs.GetExtentsUV();
+			double numericThresh = (ext.m_extV.m_max - ext.m_extV.m_min) / 1000;
+			newV = (newV >= ext.m_extV.m_max) ? ext.m_extV.m_max - numericThresh : newV;
+			newV = (newV <= ext.m_extV.m_min) ? ext.m_extV.m_min + numericThresh : newV;
+
 			ptUV.m_v = newV;
 			m_bs.SetDrawPt(ptUV);	
 
@@ -935,8 +947,8 @@ void CMFCKit2004View::OnOptionsShowgrid()
 
 void CMFCKit2004View::OnFileSaveGeometry()
 {
-	char strFilter[] = { "ITD Files (*.itd)|*.itd|DAT Diles (*.dat)|*.dat||" };
-	CFileDialog fileDialog = CFileDialog(FALSE, "itd", NULL, OFN_OVERWRITEPROMPT, strFilter, NULL);
+	char strFilter[] = { "DAT Diles (*.dat)|*.dat||" };
+	CFileDialog fileDialog = CFileDialog(FALSE, "dat", NULL, OFN_OVERWRITEPROMPT, strFilter, NULL);
 	INT_PTR nResult = fileDialog.DoModal();
 	if(IDCANCEL == nResult) 
 	{
@@ -947,20 +959,10 @@ void CMFCKit2004View::OnFileSaveGeometry()
 	CString fileName = fileDialog.GetFileTitle();
 	string fileExt	 = std::string(fileDialog.GetFileExt());
 	string filename = std::string(pathName);
-	string res;
-	if ("itd" == fileExt)
-	{
-	}
-	else if ("dat" == fileExt)
-	{
-	}
-	else
-	{
-		Invalidate();
-		return;
-	}
+	
+	std::string res = m_bs.toDat();
 	std::ofstream out(filename.c_str());
-	out << res;
+	out << res << std::endl;
 	out.close();
 	Invalidate();	
 }

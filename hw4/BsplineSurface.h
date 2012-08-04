@@ -3,8 +3,11 @@
 #include "SurfaceFileParser.h"
 #include "Bspline.h"
 #include <map>
+#include <string>
 
 using std::map;
+using std::vector;
+using std::string;
 
 struct Order
 {
@@ -108,6 +111,8 @@ public:
 	CCagdPoint GetTangentV() const;
 	CCagdPoint GetSurfacePoint() const;
 
+	bool stateIsValid() const;
+
 	enum Deriv
 	{
 		du,
@@ -132,6 +137,8 @@ public:
 
 	UVspace m_animStart;
 	UVspace m_animEnd;
+
+	string toDat() const;
 
 
 private:

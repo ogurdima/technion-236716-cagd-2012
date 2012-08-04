@@ -6,7 +6,7 @@
 #include <fstream>
 #include <assert.h>
 
-//#define BSPLINE_RATIONAL
+#define BSPLINE_RATIONAL
 
 using std::vector;
 
@@ -244,49 +244,18 @@ CCagdPoint BSpline::CalculateAtPoint(double t)
 
 CCagdPoint BSpline::DerivativeAtPoint(double t, int j)
 {
+#ifdef BSPLINE_RATIONAL
+	return RationalDerivativeAtPoint(t, j);
+#endif
 	CCagdPoint cur(0,0,0);
 	double w = 0;
 	for (int i = 0; i < m_ctrlPts.size(); i++)
 	{
 		CCagdPoint Q = QforDeriv(j, i, m_degree);
 		double basis = BSplineBasis(t, i, m_degree-j); 
-#ifdef BSPLINE_RATIONAL
-		cur = cur +  Q * m_ctrlPts[i].m_weight * basis;
-		w += m_ctrlPts[i].m_weight * basis;
-#else
 		cur = cur +  Q * basis;
-#endif
 	}
-#ifdef BSPLINE_RATIONAL
-	return (cur / w);
-#else
 	return cur;
-#endif
-
-/*
-	CCagdPoint p0, p1;
-
-	double h = 0.1;
-
-	if (0 == j)
-	{
-		return CalculateAtPoint(t);
-	}
-
-	CCagdPoint res;
-	if(U::NearlyEq(t, 0.0, 0.001))
-	{
-		p1 = DerivativeAtPoint(t + h, j - 1);
-		p0 = DerivativeAtPoint(t, j - 1);
-		res = (p1 - p0) / h;
-	}
-	else
-	{
-		p1 = DerivativeAtPoint(t + h, j - 1);
-		p0 = DerivativeAtPoint(t - h, j - 1);
-		res = (p1 - p0) / 2*h;
-	}
-	return res;*/
 }
 
 CCagdPoint BSpline::RationalDerivativeAtPoint(double t, int j)
@@ -330,25 +299,6 @@ void BSpline::UpdateKnotVector()
 
 	if(m_autoKv)
 	{
-		/*m_kv.clear();
-		for (int i = 0; i <= m_degree; i++)
-		{
-			m_kv.push_back(0.0);
-		}
-		if (m_ctrlPts.size() + m_degree + 1 > (2 * m_degree))
-		{
-			int innerKnots = m_ctrlPts.size() + m_degree + 1 - (2 * m_degree);
-			double inc = 1.0 / (innerKnots + 2);
-			for (double i = inc; i < 1.0; i += inc)
-			{
-				m_kv.push_back(i);
-			}
-		}
-		
-		for (int i = 0; i <= m_degree; i++)
-		{
-			m_kv.push_back(1.0);
-		}*/
 		m_kv.clear();
 		int numOfKnots = m_ctrlPts.size() + m_degree + 1;
 		double inc = 1.0 / (numOfKnots);
@@ -484,8 +434,6 @@ void BSpline::TestBasisFunctions(int k)
 		}
 		o0.close();
 	}
-
-
 }
 
 //=============================================================================

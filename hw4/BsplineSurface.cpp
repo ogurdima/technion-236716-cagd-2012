@@ -3,6 +3,7 @@
 #include <assert.h>
 #include "BezierMath.h"
 #include "cagd.h" 
+#include <strstream>
 
 //-----------------------------------------------------------------------------
 BsplineSurface::BsplineSurface()
@@ -142,7 +143,7 @@ void BsplineSurface::fixEmptyKnotsU()
 			m_knots.m_u.push_back(0);
 		}
 
-		if (m_points[0].size() > atEachSide)
+		if (m_points.size() > 0 && m_points[0].size() > atEachSide)
 		{
 			int toFill = m_points[0].size() - atEachSide;
 			double inc = 1 / (double)(toFill + 1);
@@ -236,18 +237,20 @@ void BsplineSurface::OnLButtonDown(int x, int y)
 	cagdPick(x, y);
 	UINT id = 0;
 	m_draggedPtId = 0;
+	vector<UINT> pickedIds;
 	while (id = cagdPickNext())
 	{
+		pickedIds.push_back(id);
 		if (m_idToIdx.count(id))
 		{
 			PickCtrlMeshPoint(id);
 			return;
 		}
-		if (m_invisIdToUV.count(id))
-		{
-			PickInvisiblePoint(id);
-			return;
-		}
+	}
+
+	for (int i = 0; i < pickedIds.size(); i++)
+	{
+		id = pickedIds[i];
 		for (int i = 0; i < m_dataIds.size(); i++)
 		{
 			if (id == m_dataIds[i])
@@ -256,7 +259,6 @@ void BsplineSurface::OnLButtonDown(int x, int y)
 				return;
 			}
 		}
-		
 	}
 }
 
@@ -319,48 +321,42 @@ void BsplineSurface::OnMouseMove(CCagdPoint diff)
 		return;
 	
 	CCagdPoint n = m_draggedPt + diff;
+	MatrixIdx midx = m_idToIdx[m_draggedPtId];
+
 	cagdReusePoint(m_draggedPtId, &n);
 	cagdSetSegmentColor(m_draggedPtId, 0, 255, 0);
 	m_draggedPt = n;
-
-	MatrixIdx midx = m_idToIdx[m_draggedPtId];
 	m_points[midx.m_row][midx.m_col] = m_draggedPt;
-
-	//if (m_draggedPtId)
-	//{
-	//	// User moved control points
-	//	for (int i = 0; i < m_dataIds.size(); i++)
-	//		cagdFreeSegment(m_dataIds[i]);
-	//	m_dataIds.clear();
-	//	DrawIsocurvesConstU();
-	//	DrawIsocurvesConstV();
-	//}
 }
 
 //-----------------------------------------------------------------------------
 void BsplineSurface::OnLButtonUp(int x, int y)
 {
-	if (! m_isValid)
+	if (! stateIsValid())
 		return;
 
 	if (m_draggedPtId)
 	{
 		// User moved control points
-		for (int i = 0; i < m_dataIds.size(); i++)
-			cagdFreeSegment(m_dataIds[i]);
-		m_dataIds.clear();
-		DrawIsocurves(UVAxisU);
-		DrawIsocurves(UVAxisV);
+		Draw();
 	}
-	m_draggedPtId = 0;
-
 }
 
 //-----------------------------------------------------------------------------
 void BsplineSurface::Draw()
 {
-	DrawSurface();
-	DrawAttributesAt(m_drawUV.m_u, m_drawUV.m_v);
+	m_draggedPtId = 0;
+	if (! stateIsValid())
+		return;
+	try 
+	{
+		DrawSurface();
+		DrawAttributesAt(m_drawUV.m_u, m_drawUV.m_v);
+	}
+	catch(...) 
+	{
+		bool OK = true;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -376,16 +372,15 @@ void BsplineSurface::DrawSurface()
 	for (int i = 0; i < m_dataIds.size(); i++)
 		cagdFreeSegment(m_dataIds[i]);
 	m_dataIds.clear();
-
+	for (map<int, MatrixIdx>::iterator i = m_idToIdx.begin(); i != m_idToIdx.end(); i++)
+	{
+		std::pair<int, MatrixIdx> p = *i;
+		cagdFreeSegment(p.first);
+	}
 	m_3dToUV.clear();
 
-	if (! m_isValid)
+	if (! stateIsValid())
 		return;
-	if (! m_extentsUV.m_extU.m_min < m_extentsUV.m_extU.m_max ||
-		! m_extentsUV.m_extV.m_min < m_extentsUV.m_extV.m_max)
-	{
-		return;
-	}
 
 	DrawCtrlMesh();
 	DrawIsocurves(UVAxisU);
@@ -395,14 +390,8 @@ void BsplineSurface::DrawSurface()
 //-----------------------------------------------------------------------------
 void BsplineSurface::DrawAttributesAt(double u, double v)
 {
-	if (! m_isValid)
+	if (! stateIsValid())
 		return;
-	if (! m_extentsUV.m_extU.m_min < m_extentsUV.m_extU.m_max ||
-		! m_extentsUV.m_extV.m_min < m_extentsUV.m_extV.m_max)
-	{
-		return;
-	}
-
 	DrawTangentsAtPoint(u, v);
 	DrawSurfaceNormalAtPoint(u, v);
 	DrawPrincipalCurvatureAtPoint(u, v);
@@ -793,28 +782,24 @@ CCagdPoint BsplineSurface::DerivativeAtPoint(Deriv der, double u, double v)
 	case du:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisV, v);
-			//return isocurve.RationalDerivativeAtPoint(u, 1);
 			return isocurve.DerivativeAtPoint(u, 1);
 		}
 		break;
 	case dv:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisU, u);
-			//return isocurve.RationalDerivativeAtPoint(v, 1);
 			return isocurve.DerivativeAtPoint(v, 1);
 		}
 		break;
 	case d2u:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisV, v);
-			//return isocurve.RationalDerivativeAtPoint(u, 2);
 			return isocurve.DerivativeAtPoint(u, 2);
 		}
 		break;
 	case d2v:
 		{
 			BSpline isocurve = CalcIsocurve(UVAxisU, u);
-			//return isocurve.RationalDerivativeAtPoint(v, 2);
 			return isocurve.DerivativeAtPoint(v, 2);
 		}
 		break;
@@ -840,10 +825,8 @@ CCagdPoint BsplineSurface::DerivativeAtPoint(Deriv der, double u, double v)
 				}
 			}
 			BSpline isocurvePlus = CalcIsocurve(UVAxisV, hi);
-			//CCagdPoint pPlus = isocurvePlus.RationalDerivativeAtPoint(u, 1);
 			CCagdPoint pPlus = isocurvePlus.DerivativeAtPoint(u, 1);
 			BSpline isocurveMinus = CalcIsocurve(UVAxisV, lo);
-			//CCagdPoint pMinus = isocurveMinus.RationalDerivativeAtPoint(u, 1);
 			CCagdPoint pMinus = isocurveMinus.DerivativeAtPoint(u, 1);
 			CCagdPoint res = (pPlus-pMinus) / sum;
 			return res;
@@ -906,14 +889,12 @@ CCagdPoint BsplineSurface::CalcTangentAtPoint(UVAxis axis, double u, double v)
 	if (UVAxisU == axis)
 	{
 		BSpline bsu = CalcIsocurve(UVAxisV, v);
-		//CCagdPoint dSdu = bsu.RationalDerivativeAtPoint(u, 1);
 		CCagdPoint dSdu = bsu.DerivativeAtPoint(u, 1);
 		return dSdu;
 	}
 	if (UVAxisV == axis)
 	{
 		BSpline bsv = CalcIsocurve(UVAxisU, u);
-		//CCagdPoint dSdv = bsv.RationalDerivativeAtPoint(v, 1);
 		CCagdPoint dSdv = bsv.DerivativeAtPoint(v, 1);
 		return dSdv;
 	}
@@ -1082,7 +1063,7 @@ void BsplineSurface::DrawPrincipalCurvatureAtPoint(double u, double v)
 	}
 
 
-	if(dir2Valid)
+	if(dir2Valid && U::NearlyEq( dot( direction1, direction2 ), 0 ))
 	{
 		// k2 curvature
 		CCagdPoint vec[2];
@@ -1193,7 +1174,7 @@ CCagdPoint BsplineSurface::CalcNumNormalDeriv(double u, double v)
 
 void BsplineSurface::DrawInvisiblePoints()
 {
-	if (! m_isValid)
+	if (! stateIsValid())
 		return;
 
 	m_invisIdToUV.clear();
@@ -1211,4 +1192,60 @@ void BsplineSurface::DrawInvisiblePoints()
 			m_invisIdToUV.insert( std::pair<int, UVspace>(id, UVspace(u, v)) );
 		}
 	}
+}
+
+bool BsplineSurface::stateIsValid() const
+{
+	if (! m_isValid)
+		return false;
+
+	bool uKvIsValid = (m_extentsUV.m_extU.m_min < m_extentsUV.m_extU.m_max) ? true : false;
+	bool vKvIsValid = (m_extentsUV.m_extV.m_min < m_extentsUV.m_extV.m_max) ? true : false;
+
+	if ( (!uKvIsValid) || !(vKvIsValid) )
+	{
+		return false;
+	}
+
+	if (m_order.m_v > m_points.size())
+		return false;
+
+	if (m_points.size() < 1 || m_order.m_u > m_points[0].size())
+		return false;
+
+	if (m_order.m_v < 1 || m_order.m_u < 1)
+		return false;
+
+	return true;
+}
+
+string BsplineSurface::toDat() const
+{
+	std::strstream buf;
+	buf << m_order.m_u << " " << m_order.m_v << std::endl;
+
+	buf << "u_knots[" << m_knots.m_u.size() << "] = ";
+	for (int i = 0; i < m_knots.m_u.size(); i++)
+	{
+		buf << m_knots.m_u[i] << " ";
+	}
+	buf << std::endl;
+	buf << "v_knots[" << m_knots.m_v.size() << "] = ";
+	for (int i = 0; i < m_knots.m_v.size(); i++)
+	{
+		buf << m_knots.m_v[i] << " ";
+	}
+	buf << std::endl;
+
+	buf << "points[" << m_points.size() << "][" << m_points[0].size() << "] = " << std::endl;
+
+	for (int i = 0; i < m_points.size(); i++)
+	{
+		for (int j = 0; j < m_points[i].size(); j++)
+		{
+			buf << m_points[i][j].x << " " << m_points[i][j].y << " " << m_points[i][j].z << std::endl;
+		}
+		buf << std::endl;
+	}
+	return string(buf.str());
 }
